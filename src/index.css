@@ -1,0 +1,200 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: light;
+    --color-theme-bg: #f8fafc;
+    --color-theme-secondary: #f1f5f9;
+    --color-theme-text: #0f172a;
+    --color-theme-muted: #64748b;
+    --color-theme-border: #e2e8f0;
+    --color-theme-card: rgba(255, 255, 255, 0.7);
+  }
+
+  .dark {
+    color-scheme: dark;
+    --color-theme-bg: #080b16;
+    --color-theme-secondary: #0b0f1c;
+    --color-theme-text: #ffffff;
+    --color-theme-muted: #9ca3af;
+    --color-theme-border: rgba(255, 255, 255, 0.1);
+    --color-theme-card: rgba(255, 255, 255, 0.04);
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    @apply bg-theme-bg text-theme-text font-sans antialiased transition-colors duration-300;
+    background-image:
+      radial-gradient(60rem 60rem at 110% -10%, rgba(56, 189, 248, 0.06), transparent 60%),
+      radial-gradient(50rem 50rem at -10% 110%, rgba(16, 185, 129, 0.05), transparent 60%);
+    background-attachment: fixed;
+  }
+
+  html[dir='rtl'] body {
+    font-family: 'Cairo', 'Outfit', sans-serif;
+  }
+
+  ::selection {
+    @apply bg-accent-500/30 text-accent-900 dark:text-accent-100;
+  }
+}
+
+@layer components {
+  .glass {
+    @apply bg-theme-card backdrop-blur-xl border border-theme-border;
+  }
+
+  .glass-strong {
+    @apply bg-theme-card backdrop-blur-2xl border border-theme-border;
+  }
+
+  .card {
+    @apply glass rounded-2xl;
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold
+      transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed
+      focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-theme-bg;
+  }
+
+  .btn-primary {
+    @apply btn bg-accent-500 text-white hover:bg-accent-600 focus-visible:ring-accent-400
+      shadow-lg shadow-accent-500/20;
+  }
+
+  .btn-secondary {
+    @apply btn bg-theme-card text-theme-text hover:bg-theme-secondary focus-visible:ring-theme-border
+      border border-theme-border;
+  }
+
+  .btn-ghost {
+    @apply btn text-theme-muted hover:text-theme-text hover:bg-theme-secondary focus-visible:ring-theme-border;
+  }
+
+  .btn-danger {
+    @apply btn bg-rose-500/90 text-white hover:bg-rose-500 focus-visible:ring-rose-400
+      shadow-lg shadow-rose-500/20;
+  }
+
+  .input {
+    @apply w-full rounded-xl bg-theme-card border border-theme-border px-4 py-3 text-sm
+      text-theme-text placeholder:text-theme-muted
+      focus:outline-none focus:border-accent-500/60 focus:ring-2 focus:ring-accent-500/20
+      transition-colors;
+  }
+
+  select.input option {
+    @apply bg-theme-bg text-theme-text;
+  }
+
+  .label {
+    @apply block text-xs font-semibold uppercase tracking-wider text-theme-muted mb-2;
+  }
+
+  .badge {
+    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold;
+  }
+
+  .skeleton {
+    @apply animate-pulse rounded-xl bg-theme-card;
+  }
+
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-theme-border) transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    @apply bg-theme-border rounded-full;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .animate-fade-up {
+    animation: fade-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  @keyframes fade-up {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-scale-in {
+    animation: scale-in 0.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  @keyframes scale-in {
+    from {
+      opacity: 0;
+      transform: scale(0.97);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  .animate-checkmark {
+    animation: checkmark 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  @keyframes checkmark {
+    0% {
+      opacity: 0;
+      transform: scale(0.5) rotate(-10deg);
+    }
+    60% {
+      transform: scale(1.1) rotate(2deg);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1) rotate(0);
+    }
+  }
+
+  .shimmer {
+    background: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.02) 0%,
+      rgba(255, 255, 255, 0.06) 50%,
+      rgba(255, 255, 255, 0.02) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+
+  @keyframes shimmer {
+    0% {
+      background-position: 200% 0;
+    }
+    100% {
+      background-position: -200% 0;
+    }
+  }
+}
