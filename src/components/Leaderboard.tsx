@@ -16,13 +16,14 @@ export function Leaderboard() {
         const { data } = await api.get('/gamification/leaderboard');
         // The backend returns rank natively or just an array ordered by xp.
         // Let's add rank based on index.
-        const mapped = data.map((d: any, i: number) => ({
+        const mapped = (Array.isArray(data) ? data : []).map((d: any, i: number) => ({
           ...d,
           rank: i + 1,
         }));
         setEntries(mapped);
       } catch (e) {
         console.error(e);
+        setEntries([]);
       }
       setLoading(false);
     })();
