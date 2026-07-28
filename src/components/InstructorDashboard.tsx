@@ -43,16 +43,18 @@ export function InstructorDashboard() {
 
     try {
       const [coursesRes, statsRes] = await Promise.all([
-        api.get('/courses'),
-        api.get('/instructor-dashboard/stats'),
+        api.get('/courses').catch(() => ({ data: [] })),
+        api.get('/instructor-dashboard/stats').catch(() => ({ data: {} })),
       ]);
 
-      setCourses(coursesRes.data.items || coursesRes.data);
-      setStudentCount(statsRes.data.totalStudents);
-      setPendingGrading(statsRes.data.pendingGrading);
-      setCodesGenerated(statsRes.data.codesGenerated);
+      const fetched = coursesRes.data?.items || coursesRes.data || [];
+      setCourses(Array.isArray(fetched) ? fetched : []);
+      setStudentCount(statsRes.data?.totalStudents || 0);
+      setPendingGrading(statsRes.data?.pendingGrading || 0);
+      setCodesGenerated(statsRes.data?.codesGenerated || 0);
     } catch (e) {
       console.error(e);
+      setCourses([]);
     }
 
     setLoading(false);
@@ -115,7 +117,7 @@ export function InstructorDashboard() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {[1, 2, 3].map((i) => <Skeleton key={i} className="h-44" />)}
           </div>
-        ) : courses.length === 0 ? (
+        ) : (!Array.isArray(courses) || courses.length === 0) ? (
           <EmptyState
             icon={<BookOpen className="w-8 h-8" />}
             title={t('dashboard.noCoursesYet')}
@@ -128,7 +130,7 @@ export function InstructorDashboard() {
           />
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {courses.map((c) => (
+            {(Array.isArray(courses) ? courses : []).map((c) => (
               <Link
                 key={c.id}
                 to={`/instructor/course/${c.id}`}
@@ -307,7 +309,7 @@ export function InstructorCourses() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {[1, 2].map((i) => <Skeleton key={i} className="h-32" />)}
         </div>
-      ) : courses.length === 0 ? (
+      ) : (!Array.isArray(courses) || courses.length === 0) ? (
         <EmptyState
           icon={<BookOpen className="w-8 h-8" />}
           title="No courses"
@@ -316,7 +318,7 @@ export function InstructorCourses() {
         />
       ) : (
         <div className="glass rounded-2xl overflow-hidden divide-y divide-white/[0.04]">
-          {courses.map((c) => (
+          {(Array.isArray(courses) ? courses : []).map((c) => (
             <Link key={c.id} to={`/instructor/course/${c.id}`} className="flex items-center gap-4 p-4 hover:bg-white/[0.02] transition-colors group relative">
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-theme-text truncate">{c.title}</p>

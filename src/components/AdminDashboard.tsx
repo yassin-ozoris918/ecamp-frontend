@@ -206,9 +206,8 @@ export function AdminUsers() {
       if (roleFilter !== 'All') query += `role=${roleFilter}&`;
       if (statusFilter !== 'All') query += `isActive=${statusFilter === 'Active' ? 'true' : 'false'}&`;
       
-      const { data } = await api.get(query);
-      const usersList = data.items || data;
-      return usersList.map((u: UserListItem) => ({
+      const usersList = data?.items || data || [];
+      return (Array.isArray(usersList) ? usersList : []).map((u: UserListItem) => ({
         ...u,
         full_name: u.fullName || 'Unknown',
         device_id: u.deviceId ?? null,
@@ -1081,10 +1080,12 @@ export function AdminCourses() {
       if (search) query += `search=${encodeURIComponent(search)}&`;
       if (statusFilter !== 'All') query += `isPublished=${statusFilter === 'PUBLISHED' ? 'true' : 'false'}&`;
       
-      const { data } = await api.get(query);
-      setCourses(data.items || data);
+      const { data } = await api.get(query).catch(() => ({ data: [] }));
+      const fetched = data?.items || data || [];
+      setCourses(Array.isArray(fetched) ? fetched : []);
     } catch(e) {
       console.error(e);
+      setCourses([]);
     }
     setLoading(false);
   }, [search, statusFilter]);
@@ -1093,7 +1094,7 @@ export function AdminCourses() {
     loadCourses();
   }, [loadCourses]);
 
-  const filtered = courses; // Filtering is now handled securely by the backend
+  const filtered = Array.isArray(courses) ? courses : []; // Filtering is now handled securely by the backend
 
   async function handleDelete(courseId: string) {
     if (!confirm('Are you absolutely sure you want to permanently delete this course and all of its content? This cannot be undone.')) return;

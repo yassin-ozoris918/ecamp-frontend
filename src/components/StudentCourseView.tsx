@@ -42,10 +42,10 @@ export function StudentCourseView({ courseId }: { courseId: string }) {
     setLoading(true);
     try {
       const { data } = await api.get(`/progress/course/${courseId}/syllabus`);
-      setCourse(data.course);
-      setChapters(data.chapters || []);
-      setStandaloneLectures(data.standaloneLectures || []);
-      setExams(data.exams || []);
+      setCourse(data?.course || null);
+      setChapters(Array.isArray(data?.chapters) ? data.chapters : []);
+      setStandaloneLectures(Array.isArray(data?.standaloneLectures) ? data.standaloneLectures : []);
+      setExams(Array.isArray(data?.exams) ? data.exams : []);
     } catch (e: unknown) {
       setError((e as any)?.response?.data?.message || 'Failed to load course syllabus.');
     } finally {

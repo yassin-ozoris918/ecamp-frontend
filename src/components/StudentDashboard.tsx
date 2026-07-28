@@ -27,22 +27,24 @@ export function StudentDashboard() {
   const [loading, setLoading] = useState(true);
   const { t } = useTranslation();
 
-  const ownedCourseIds = useMemo(() => new Set(courses.map(c => c.id)), [courses]);
+  const ownedCourseIds = useMemo(() => new Set((Array.isArray(courses) ? courses : []).map(c => c.id)), [courses]);
 
   const loadData = useCallback(async () => {
     if (!profile) return;
     setLoading(true);
     try {
       const [dashboardData, catalogData, statsData] = await Promise.all([
-        client.get<CourseProgressItem[]>('/progress/dashboard'),
-        client.get<Course[]>('/courses/student'),
-        client.get<{ xp: number; streakDays: number; rank: number | null }>('/gamification/my-stats'),
+        client.get<CourseProgressItem[]>('/progress/dashboard').catch(() => []),
+        client.get<Course[]>('/courses/student').catch(() => []),
+        client.get<{ xp: number; streakDays: number; rank: number | null }>('/gamification/my-stats').catch(() => null),
       ]);
-      setCourses(dashboardData);
-      setCatalogCourses(catalogData);
+      setCourses(Array.isArray(dashboardData) ? dashboardData : []);
+      setCatalogCourses(Array.isArray(catalogData) ? catalogData : []);
       setStats(statsData);
     } catch (e) {
       console.error(e);
+      setCourses([]);
+      setCatalogCourses([]);
     } finally {
       setLoading(false);
     }
@@ -131,7 +133,7 @@ export function StudentDashboard() {
             ))}
           </div>
         ) : activeTab === 'my-courses' ? (
-          courses.length === 0 ? (
+          (!Array.isArray(courses) || courses.length === 0) ? (
             <EmptyState
               icon={<KeyRound className="w-8 h-8" />}
               title={t('dashboard.noCoursesYet')}
@@ -145,7 +147,7 @@ export function StudentDashboard() {
             />
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {courses.map((course) => {
+              {(Array.isArray(courses) ? courses : []).map((course) => {
                 const pct = course.progressPct ?? 0;
                 const cover = COURSE_COVERS[course.id] ?? COURSE_COVERS.default;
                 return (
@@ -202,7 +204,7 @@ export function StudentDashboard() {
             </div>
           )
         ) : (
-          catalogCourses.length === 0 ? (
+          (!Array.isArray(catalogCourses) || catalogCourses.length === 0) ? (
             <EmptyState
               icon={<BookOpen className="w-8 h-8" />}
               title={t('dashboard.catalogEmpty')}
@@ -210,7 +212,7 @@ export function StudentDashboard() {
             />
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {catalogCourses.map((course) => {
+              {(Array.isArray(catalogCourses) ? catalogCourses : []).map((course) => {
                 const cover = COURSE_COVERS[course.id] ?? COURSE_COVERS.default;
                 const isOwned = ownedCourseIds.has(course.id);
                 return (
