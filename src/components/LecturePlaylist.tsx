@@ -61,20 +61,27 @@ export function LecturePlaylist({ lectureId }: { lectureId: string }) {
     try {
       const { data } = await api.get(`/progress/playlist/${lectureId}`);
       
-      setLecture(data.lecture);
-      setCourse(data.course);
-      setAllLectures(data.allLectures);
-      setItems(data.playlist); // Just use the whole playlist array as the source
-      setIsFullyLocked(data.isFullyLocked);
+      if (!data || typeof data !== 'object' || 'statusCode' in data) {
+        setError(data?.message || 'Failed to load lecture playlist.');
+        setLoading(false);
+        return;
+      }
+
+      setLecture(data.lecture || null);
+      setCourse(data.course || null);
+      setAllLectures(Array.isArray(data.allLectures) ? data.allLectures : []);
+      const playlistData = Array.isArray(data.playlist) ? data.playlist : [];
+      setItems(playlistData);
+      setIsFullyLocked(data.isFullyLocked ?? false);
       
       const compIds = new Set<string>();
-      for (const p of data.playlist) {
+      for (const p of playlistData) {
         if (p.isCompleted) compIds.add(p.id);
       }
       setCompletedIds(compIds);
 
-      const firstUnlocked = data.playlist.find((p: PlaylistItem) => !p.isLocked && !p.isCompleted && !p.isExhausted);
-      setActiveItemId(firstUnlocked?.id ?? data.playlist[0]?.id ?? null);
+      const firstUnlocked = playlistData.find((p: PlaylistItem) => !p.isLocked && !p.isCompleted && !p.isExhausted);
+      setActiveItemId(firstUnlocked?.id ?? playlistData[0]?.id ?? null);
 
       const expiration = data.expiresAt || data.access_expires_at;
       if (expiration) {

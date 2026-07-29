@@ -8,7 +8,7 @@ import { useTranslation } from 'react-i18next';
 
 export function CourseCatalog() {
   const { data, loading, error, execute } = useApi<Course[]>(true);
-  const courses = data || [];
+  const courses = Array.isArray(data) ? data : [];
   const { t } = useTranslation();
 
   useEffect(() => {

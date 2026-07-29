@@ -20,9 +20,11 @@ export function Student360Workspace() {
     setLoading(true);
     try {
       const result = await client.get<{ items: any[] }>('/admin/users?role=STUDENT&take=100');
-      setStudents((result as any).items || result);
+      const items = (result as any)?.items || result;
+      setStudents(Array.isArray(items) ? items : []);
     } catch (e) {
       console.error(e);
+      setStudents([]);
     }
     setLoading(false);
   };

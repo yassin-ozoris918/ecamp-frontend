@@ -49,19 +49,21 @@ export function MyStats() {
       if (!profile) return;
       try {
         const [statsData, certsData] = await Promise.all([
-          client.get<GamificationStats>('/gamification/my-stats'),
-          client.get<CertificateItem[]>('/certificates/my'),
+          client.get<GamificationStats>('/gamification/my-stats').catch(() => null),
+          client.get<CertificateItem[]>('/certificates/my').catch(() => []),
         ]);
-        setStats({
-          totalXP: statsData.xp,
-          streak: statsData.streakDays,
-          rank: statsData.rank,
-          courses: statsData.courseCount,
-          completed: statsData.completedCount,
-        });
-        const awarded = new Set((statsData.badges ?? []).map((b) => b.name));
-        setAwardedBadges(awarded);
-        setCertificates(certsData);
+        if (statsData && typeof statsData === 'object' && !('statusCode' in (statsData as any))) {
+          setStats({
+            totalXP: statsData.xp ?? 0,
+            streak: statsData.streakDays ?? 0,
+            rank: statsData.rank ?? null,
+            courses: statsData.courseCount ?? 0,
+            completed: statsData.completedCount ?? 0,
+          });
+          const awarded = new Set((Array.isArray(statsData.badges) ? statsData.badges : []).map((b) => b.name));
+          setAwardedBadges(awarded);
+        }
+        setCertificates(Array.isArray(certsData) ? certsData : []);
       } catch (e) {
         console.error(e);
       }

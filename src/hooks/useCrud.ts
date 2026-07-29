@@ -18,8 +18,9 @@ export function useCrud<T extends { id: string }>(endpoint: string) {
     setState((s) => ({ ...s, loading: true, error: null }));
     try {
       const result = await client.get<T[]>(endpoint);
-      setState({ data: result, loading: false, error: null });
-      return result;
+      const safeResult = Array.isArray(result) ? result : [];
+      setState({ data: safeResult, loading: false, error: null });
+      return safeResult;
     } catch (err) {
       const normalized = normalizeError(err);
       setState({ data: [], loading: false, error: normalized });

@@ -10,14 +10,15 @@ export function CourseGrid() {
   const { profile } = useAuth();
   const isHighSchool = profile?.education_level === 'HIGH_SCHOOL';
 
-  const { data: courses = [], isLoading, error } = useQuery({
+  const { data: rawCourses, isLoading, error } = useQuery({
     queryKey: ['student_courses'],
     queryFn: async () => {
       const res = await api.get('/courses/student');
-      return res.data;
+      return Array.isArray(res.data) ? res.data : [];
     },
     enabled: !!profile,
   });
+  const courses = Array.isArray(rawCourses) ? rawCourses : [];
 
   if (!profile) {
     return (
@@ -60,7 +61,7 @@ export function CourseGrid() {
         />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {courses.map((course: Course, idx: number) => (
+          {(Array.isArray(courses) ? courses : []).map((course: Course, idx: number) => (
             <div 
               key={course.id} 
               className="group glass rounded-3xl overflow-hidden hover:border-white/[0.12] transition-all hover:-translate-y-1 hover:shadow-2xl hover:shadow-accent-500/10 animate-fade-up"

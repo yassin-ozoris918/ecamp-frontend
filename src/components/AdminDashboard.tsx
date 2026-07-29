@@ -205,7 +205,7 @@ export function AdminUsers() {
       if (search) query += `search=${encodeURIComponent(search)}&`;
       if (roleFilter !== 'All') query += `role=${roleFilter}&`;
       if (statusFilter !== 'All') query += `isActive=${statusFilter === 'Active' ? 'true' : 'false'}&`;
-      
+      const { data } = await api.get(query);
       const usersList = data?.items || data || [];
       return (Array.isArray(usersList) ? usersList : []).map((u: UserListItem) => ({
         ...u,

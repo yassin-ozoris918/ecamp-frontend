@@ -183,7 +183,7 @@ export function ExamScreen({ examId }: { examId: string }) {
   }
 
   // --- Exam Taking UI ---
-  const questions = exam.questions || [];
+  const questions = Array.isArray(exam.questions) ? exam.questions : [];
   const answeredCount = Object.keys(answers).filter(k => 
     answers[k].selectedOptionIndex !== undefined || (answers[k].textResponse && answers[k].textResponse.trim().length > 0)
   ).length;
