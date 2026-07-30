@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { api } from '../lib/api';
-import { Loader2, Save, Trash2, Plus, Sparkles } from 'lucide-react';
-import { Badge } from './Badge';
+import { Loader2, Save, Trash2, Sparkles } from 'lucide-react';
+import { QuestionType } from '../lib/types';
 
 interface AIQuestion {
   text: string;
-  type: 'MCQ' | 'TRUE_FALSE' | 'SHORT_ANSWER' | 'ESSAY' | 'READ_ONLY_TEXT';
+  type: QuestionType;
   points: number;
   options?: string[];
   correctOptionIndex?: number;

@@ -4,7 +4,6 @@ import {
   ArrowLeft,
   Plus,
   BookOpen,
-  PlayCircle,
   FileQuestion,
   Trash2,
   Sparkles,
@@ -14,16 +13,15 @@ import {
   ChevronRight,
   Users,
   GraduationCap,
-  ShieldAlert,
   Pencil,
 } from 'lucide-react';
 import { api } from '../lib/api';
 import { useAuth } from '../lib/authContext';
 import { Link } from '../lib/router';
-import type { Course, Lecture, BuilderChapter, BuilderLecture, BuilderItem, ActivationCode, CourseInstructor, UserListItem, ExamQuestion, ExamAnswer, GeneratedQuestion, CertificateItem, CourseExamItem } from '../lib/types';
+import type { Course, BuilderChapter, BuilderLecture, BuilderItem, CourseInstructor, UserListItem, ExamQuestion, ExamAnswer, GeneratedQuestion } from '../lib/types';
 import { Badge, EmptyState, Skeleton } from './ui';
 import { Modal } from './Modal';
-import { AIQuizModal, CopyButton } from './InstructorDashboard';
+import { AIQuizModal } from './InstructorDashboard';
 import { QuizBuilderModal } from './QuizBuilderModal';
 import { AttachmentsModal } from './AttachmentsModal';
 import { LectureSequenceBuilder } from './LectureSequenceBuilder';
@@ -186,7 +184,6 @@ export function CourseBuilder({ courseId }: { courseId: string }) {
   const [attachmentsTargetType, setAttachmentsTargetType] = useState<'COURSE' | 'CHAPTER'>('COURSE');
   const [attachmentsTitle, setAttachmentsTitle] = useState<string>('');
   
-  const [certificates, setCertificates] = useState<CertificateItem[]>([]);
   const [issueCertOpen, setIssueCertOpen] = useState(false);
 
   const [aiModalLecInfo, setAiModalLecInfo] = useState<{
@@ -214,10 +211,9 @@ export function CourseBuilder({ courseId }: { courseId: string }) {
     setLoading(true);
 
     try {
-      const [builderRes, examsRes, certsRes] = await Promise.all([
+      const [builderRes, examsRes] = await Promise.all([
         api.get(`/courses/${courseId}/builder`),
-        api.get(`/exams/course/${courseId}`),
-        api.get(`/certificates/course/${courseId}`)
+        api.get(`/exams/course/${courseId}`)
       ]);
 
       setCourse(builderRes.data.course);
@@ -235,7 +231,6 @@ export function CourseBuilder({ courseId }: { courseId: string }) {
       setItems(itemsMap);
 
       setExams(examsRes.data);
-      setCertificates(certsRes.data);
     } catch (e) {
       console.error(e);
     }
@@ -268,39 +263,7 @@ export function CourseBuilder({ courseId }: { courseId: string }) {
     }
   };
 
-  async function saveGeneratedQuiz(lectureId: string, questions: GeneratedQuestion[]) {
-    // FIX: /lectures/:id/quiz/ai does not exist. Use the proper flow:
-    // 1. Create a new quiz for the lecture
-    // 2. Add each question individually via POST /quizzes/questions
-    try {
-      const { data: quiz } = await api.post('/quizzes', {
-        lectureId,
-        title: 'AI-Generated Quiz',
-        sortOrder: 100,
-        passGrade: 60,
-      });
 
-      for (let qi = 0; qi < questions.length; qi++) {
-        const q = questions[qi];
-        const options = q.answers?.map((a: any) => a.text) ?? q.options ?? [];
-        let correctOptionIndex = q.answers?.findIndex((a: any) => a.is_correct || a.isCorrect) ?? -1;
-        if (correctOptionIndex === -1) correctOptionIndex = q.correctOptionIndex ?? 0;
-
-        await api.post('/quizzes/questions', {
-          quizId: quiz.id,
-          text: q.text ?? (q as any).question,
-          options,
-          correctOptionIndex,
-          points: q.points ?? 1,
-        });
-      }
-
-      await load();
-    } catch (e: any) {
-      console.error('Failed to save AI quiz:', e);
-      alert('Failed to save quiz: ' + (e?.response?.data?.message || e?.message || 'Unknown error'));
-    }
-  }
 
   function toggleLec(id: string) {
     setExpandedLecs((prev) => {
@@ -817,13 +780,6 @@ export function CourseBuilder({ courseId }: { courseId: string }) {
   );
 }
 
-function ItemIcon({ type, className }: { type: string; className?: string }) {
-  if (type === 'QUIZ') return <FileQuestion className={className} />;
-
-  return <PlayCircle className={className} />;
-}
-
-
 function LectureActions({ lecture, onUpdated }: { lecture: BuilderLecture; onUpdated: () => void }) {
   return (
     <div className="flex items-center gap-2">
@@ -848,25 +804,7 @@ function LectureActions({ lecture, onUpdated }: { lecture: BuilderLecture; onUpd
 }
 
 
-function DeleteItemButton({ itemId, type, onDeleted }: { itemId: string; type: 'SESSION' | 'QUIZ'; onDeleted: () => void }) {
-  return (
-    <button
-      onClick={async () => {
-        if (!confirm('Delete this item?')) return;
-        try {
-          const endpoint = type === 'SESSION' ? 'sessions' : 'quizzes';
-          await api.delete(`/${endpoint}/${itemId}`);
-          onDeleted();
-        } catch(e) {
-          console.error(e);
-        }
-      }}
-      className="p-1.5 rounded-lg text-theme-muted hover:text-rose-700 dark:text-rose-300 hover:bg-rose-500/10 transition-colors"
-    >
-      <Trash2 className="w-3.5 h-3.5" />
-    </button>
-  );
-}
+
 
 function AddItemButton({
   lectureId,
@@ -901,6 +839,149 @@ function AddItemButton({
         />
       )}
     </>
+  );
+}
+function AddItemModal({
+  open,
+  lectureId,
+  type,
+  sortOrder,
+  onClose,
+  onAdded,
+  onAIGenerate,
+}: {
+  open: boolean;
+  lectureId: string;
+  type: 'SESSION' | 'QUIZ' | 'HOMEWORK';
+  sortOrder: number;
+  onClose: () => void;
+  onAdded: () => void;
+  onAIGenerate?: (info: { title: string; description?: string; passGrade?: number; timeLimit?: number }) => void;
+}) {
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [videoFile, setVideoFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [passingScore, setPassingScore] = useState('70');
+  const [timeLimit, setTimeLimit] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const allowedTypes = ['video/mp4', 'video/webm', 'video/quicktime', 'video/x-matroska'];
+    if (!allowedTypes.includes(file.type)) {
+      setError('Invalid file type. Only MP4, MOV, MKV, and WebM are allowed.');
+      return;
+    }
+    if (file.size > 500 * 1024 * 1024) {
+      setError('File too large. Max 500MB.');
+      return;
+    }
+    setError(null);
+    setVideoFile(file);
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (type === 'SESSION' && !videoFile) {
+      setError('Please select a video file.');
+      return;
+    }
+    setBusy(true);
+    setError(null);
+
+    try {
+      const endpoint = type === 'SESSION' ? '/sessions' : type === 'QUIZ' ? '/quizzes' : '/homeworks';
+      const { data } = await api.post(endpoint, {
+        lectureId,
+        title: title.trim(),
+        description: description.trim() || null,
+        timeLimit: type === 'QUIZ' && timeLimit ? Number(timeLimit) : undefined,
+        passGrade: type === 'QUIZ' && passingScore ? Number(passingScore) : undefined,
+        sortOrder,
+      });
+
+      if (type === 'SESSION' && videoFile) {
+        setUploading(true);
+        const formData = new FormData();
+        formData.append('video', videoFile);
+        await api.post(`/sessions/${data.id}/upload-video`, formData);
+      }
+
+      setTitle('');
+      setDescription('');
+      setVideoFile(null);
+      setPassingScore('70');
+      setTimeLimit('');
+      onAdded();
+    } catch (err: any) {
+      setError(err.response?.data?.message || err.message);
+    } finally {
+      setBusy(false);
+      setUploading(false);
+    }
+  }
+
+  return (
+    <Modal open={open} onClose={onClose} title={`Add ${type.charAt(0) + type.slice(1).toLowerCase()}`}>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label className="label">Title</label>
+          <input className="input" value={title} onChange={(e) => setTitle(e.target.value)} required autoFocus />
+        </div>
+        {type === 'SESSION' && (
+          <div>
+            <label className="label">Video</label>
+            {videoFile ? (
+              <div className="rounded-xl bg-secondary-500/10 border border-secondary-500/20 p-3 flex items-center gap-2">
+                <Check className="w-4 h-4 text-secondary-300" />
+                <span className="text-sm text-secondary-200 flex-1">{videoFile.name} (ready to upload)</span>
+                <button type="button" onClick={() => setVideoFile(null)} disabled={uploading} className="btn-ghost text-xs">Remove</button>
+              </div>
+            ) : (
+              <label className="flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-white/[0.08] p-6 cursor-pointer hover:border-accent-500/40 transition-colors">
+                <Upload className="w-6 h-6 text-neutral-400" />
+                <span className="text-sm text-neutral-400">
+                  Click to select video
+                </span>
+                <span className="text-xs text-neutral-500">MP4, MOV, MKV, WebM (max 500MB)</span>
+                <input type="file" accept="video/mp4,video/webm,video/quicktime,video/x-matroska" className="hidden" onChange={handleUpload} />
+              </label>
+            )}
+          </div>
+        )}
+        {type === 'QUIZ' && (
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="label">Passing Score (%)</label>
+              <input type="number" min={0} max={100} className="input" value={passingScore} onChange={(e) => setPassingScore(e.target.value)} />
+            </div>
+            <div>
+              <label className="label">Time Limit (min)</label>
+              <input type="number" min={1} className="input" value={timeLimit} onChange={(e) => setTimeLimit(e.target.value)} placeholder="Optional" />
+            </div>
+          </div>
+        )}
+        <div>
+          <label className="label">Description (optional)</label>
+          <textarea className="input min-h-[80px]" value={description} onChange={(e) => setDescription(e.target.value)} />
+        </div>
+        {error && <p className="text-sm text-error-300 bg-error-500/10 p-3 rounded-lg">{error}</p>}
+        <div className="flex justify-end gap-2">
+          {type === 'QUIZ' && onAIGenerate && (
+            <button type="button" onClick={() => onAIGenerate({ title: title || 'Generated Quiz' })} className="btn-ghost">
+              <Sparkles className="w-4 h-4" /> Generate with AI
+            </button>
+          )}
+          <button type="button" onClick={onClose} className="btn-ghost">Cancel</button>
+          <button type="submit" disabled={busy || uploading} className="btn-primary">
+            {busy ? 'Saving…' : 'Add'}
+          </button>
+        </div>
+      </form>
+    </Modal>
   );
 }
 
@@ -1165,158 +1246,7 @@ function IssueCertificateModal({
   );
 }
 
-function CreateItemModal({
-  open,
-  lectureId,
-  sortOrder,
-  onClose,
-  onCreated,
-  onAIGenerate,
-}: {
-  open: boolean;
-  lectureId: string;
-  sortOrder: number;
-  onClose: () => void;
-  onCreated: () => void;
-  onAIGenerate?: (info: { title: string; description?: string; passGrade?: number; timeLimit?: number }) => void;
-}) {
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [videoFile, setVideoFile] = useState<File | null>(null);
-  const [uploading, setUploading] = useState(false);
-  const [passingScore, setPassingScore] = useState('70');
-  const [timeLimit, setTimeLimit] = useState('');
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
-  async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const allowedTypes = ['video/mp4', 'video/webm', 'video/quicktime', 'video/x-matroska'];
-    if (!allowedTypes.includes(file.type)) {
-      setError('Invalid file type. Only MP4, MOV, MKV, and WebM are allowed.');
-      return;
-    }
-    if (file.size > 500 * 1024 * 1024) {
-      setError('File too large. Max 500MB.');
-      return;
-    }
-    setError(null);
-    setVideoFile(file);
-  }
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (type === 'SESSION' && !videoFile) {
-      setError('Please select a video file.');
-      return;
-    }
-    setBusy(true);
-    setError(null);
-
-    try {
-      const endpoint = type === 'SESSION' ? '/sessions' : '/quizzes';
-      const { data } = await api.post(endpoint, {
-        lectureId,
-        title: title.trim(),
-        description: description.trim() || null,
-        timeLimit: type === 'QUIZ' && timeLimit ? Number(timeLimit) : undefined,
-        passGrade: type === 'QUIZ' && passingScore ? Number(passingScore) : undefined,
-        sortOrder,
-      });
-
-      if (type === 'SESSION' && videoFile) {
-        setUploading(true);
-        const formData = new FormData();
-        formData.append('video', videoFile);
-        await api.post(`/sessions/${data.id}/upload-video`, formData);
-      }
-
-      setTitle('');
-      setDescription('');
-      setVideoFile(null);
-      setPassingScore('70');
-      setTimeLimit('');
-      onAdded();
-    } catch (err: unknown) {
-      setError((err as any)?.response?.data?.message || (err as any)?.message);
-    } finally {
-      setBusy(false);
-      setUploading(false);
-    }
-  }
-
-  return (
-    <Modal open={open} onClose={onClose} title={`Add ${type.charAt(0) + type.slice(1).toLowerCase()}`}>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="label">Title</label>
-          <input className="input" value={title} onChange={(e) => setTitle(e.target.value)} required autoFocus />
-        </div>
-        {type === 'SESSION' && (
-          <div>
-            <label className="label">Video</label>
-            {videoFile ? (
-              <div className="rounded-xl bg-secondary-500/10 border border-secondary-500/20 p-3 flex items-center gap-2">
-                <Check className="w-4 h-4 text-secondary-700 dark:text-secondary-300" />
-                <span className="text-sm text-secondary-200 flex-1">{videoFile.name} (ready to upload)</span>
-                <button type="button" onClick={() => setVideoFile(null)} disabled={uploading} className="btn-ghost text-xs">Remove</button>
-              </div>
-            ) : (
-              <label className="flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-theme-border p-6 cursor-pointer hover:border-accent-500/40 transition-colors">
-                <Upload className="w-6 h-6 text-theme-muted" />
-                <span className="text-sm text-theme-muted">
-                  Click to select video
-                </span>
-                <span className="text-xs text-theme-muted">MP4, MOV, MKV, WebM (max 500MB)</span>
-                <input type="file" accept="video/mp4,video/webm,video/quicktime,video/x-matroska" className="hidden" onChange={handleUpload} />
-              </label>
-            )}
-          </div>
-        )}
-        {type === 'QUIZ' && (
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="label">Passing Score (%)</label>
-              <input type="number" min={0} max={100} className="input" value={passingScore} onChange={(e) => setPassingScore(e.target.value)} />
-            </div>
-            <div>
-              <label className="label">Time Limit (min)</label>
-              <input type="number" min={1} className="input" value={timeLimit} onChange={(e) => setTimeLimit(e.target.value)} placeholder="Optional" />
-            </div>
-          </div>
-        )}
-        <div>
-          <label className="label">Description (optional)</label>
-          <textarea className="input min-h-[80px]" value={description} onChange={(e) => setDescription(e.target.value)} />
-        </div>
-        {error && <p className="text-sm text-error-300 bg-error-500/10 p-3 rounded-lg">{error}</p>}
-        <div className="flex justify-end gap-2">
-          {type === 'QUIZ' && onAIGenerate && (
-            <button 
-              type="button" 
-              onClick={() => {
-                onAIGenerate({
-                  title,
-                  description,
-                  passGrade: passingScore ? Number(passingScore) : undefined,
-                  timeLimit: timeLimit ? Number(timeLimit) : undefined,
-                });
-              }} 
-              className="btn-ghost"
-            >
-              <Sparkles className="w-4 h-4" /> Generate with AI
-            </button>
-          )}
-          <button type="button" onClick={onClose} className="btn-ghost">Cancel</button>
-          <button type="submit" disabled={busy || uploading} className="btn-primary">
-            {busy ? 'Saving…' : 'Add'}
-          </button>
-        </div>
-      </form>
-    </Modal>
-  );
-}
 
   async function saveGeneratedQuiz(
     lectureId: string,
