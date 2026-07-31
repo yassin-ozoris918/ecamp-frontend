@@ -1,4 +1,4 @@
-import { Phone, MessageCircle, Laptop, BookOpen, HelpCircle, Facebook, Youtube, Linkedin, Send } from 'lucide-react';
+import { Phone, MessageCircle, Laptop, BookOpen, HelpCircle, Facebook, Youtube, Instagram } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 export function ContactScreen() {
@@ -10,8 +10,8 @@ export function ContactScreen() {
       icon: <Laptop className="w-6 h-6 text-accent-500" />,
       title: t('contact.techSupport'),
       description: t('contact.techSupportDesc'),
-      phone: '+20 100 000 0001',
-      whatsapp: '+20 100 000 0001',
+      phone: '01287111806',
+      whatsapp: '01287111806',
       bgClass: 'bg-accent-500/10 border-accent-500/20'
     },
     {
@@ -19,8 +19,8 @@ export function ContactScreen() {
       icon: <BookOpen className="w-6 h-6 text-secondary-500" />,
       title: t('contact.academicSupport'),
       description: t('contact.academicSupportDesc'),
-      phone: '+20 100 000 0002',
-      whatsapp: '+20 100 000 0002',
+      phone: '01202617107',
+      whatsapp: '01202617107',
       bgClass: 'bg-secondary-500/10 border-secondary-500/20'
     },
     {
@@ -28,17 +28,16 @@ export function ContactScreen() {
       icon: <HelpCircle className="w-6 h-6 text-gold-500" />,
       title: t('contact.inquiries'),
       description: t('contact.inquiriesDesc'),
-      phone: '+20 100 000 0003',
-      whatsapp: '+20 100 000 0003',
+      phone: '01064763583',
+      whatsapp: '01064763583',
       bgClass: 'bg-gold-500/10 border-gold-500/20'
     }
   ];
 
   const socialLinks = [
-    { name: 'Facebook', icon: <Facebook className="w-6 h-6" />, href: '#', color: 'text-blue-500', bg: 'bg-blue-500/10 hover:bg-blue-500/20' },
-    { name: 'YouTube', icon: <Youtube className="w-6 h-6" />, href: '#', color: 'text-red-500', bg: 'bg-red-500/10 hover:bg-red-500/20' },
-    { name: 'LinkedIn', icon: <Linkedin className="w-6 h-6" />, href: '#', color: 'text-sky-600', bg: 'bg-sky-600/10 hover:bg-sky-600/20' },
-    { name: 'Telegram', icon: <Send className="w-6 h-6" />, href: '#', color: 'text-cyan-500', bg: 'bg-cyan-500/10 hover:bg-cyan-500/20' }
+    { name: 'Facebook', icon: <Facebook className="w-6 h-6" />, href: 'https://www.facebook.com/groups/247564274046300', color: 'text-blue-500', bg: 'bg-blue-500/10 hover:bg-blue-500/20' },
+    { name: 'YouTube', icon: <Youtube className="w-6 h-6" />, href: 'https://www.youtube.com/@e.camp.2020', color: 'text-red-500', bg: 'bg-red-500/10 hover:bg-red-500/20' },
+    { name: 'Instagram', icon: <Instagram className="w-6 h-6" />, href: 'https://www.instagram.com/e_camp2/', color: 'text-pink-500', bg: 'bg-pink-500/10 hover:bg-pink-500/20' }
   ];
 
   return (
