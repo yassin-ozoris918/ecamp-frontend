@@ -163,6 +163,7 @@ export interface LeaderboardEntry {
   xp: number;
   streak_days: number;
   rank: number;
+  profilePictureUrl?: string | null;
 }
 
 export interface Chapter {

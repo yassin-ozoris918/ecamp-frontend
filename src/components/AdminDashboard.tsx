@@ -213,7 +213,8 @@ export function AdminUsers() {
         device_id: u.deviceId ?? null,
         is_active: u.isActive === undefined ? true : u.isActive,
         created_at: u.createdAt,
-      } as UserListItem & { full_name: string; device_id: string | null; is_active: boolean; created_at: string }));
+        profilePictureUrl: u.profilePictureUrl ?? null,
+      } as UserListItem & { full_name: string; device_id: string | null; is_active: boolean; created_at: string; profilePictureUrl: string | null }));
     }
   });
 
@@ -337,9 +338,18 @@ export function AdminUsers() {
                 <tr key={u.id} className="hover:bg-white/[0.02]">
                   <td className="p-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-full bg-gradient-to-br from-accent-500 to-secondary-500 flex items-center justify-center text-white font-bold text-sm">
-                        {u.full_name.charAt(0).toUpperCase()}
-                      </div>
+                      {u.profilePictureUrl ? (
+                        <img 
+                          src={u.profilePictureUrl} 
+                          alt={u.full_name} 
+                          loading="lazy"
+                          className="w-9 h-9 rounded-full object-cover border border-white/[0.1]" 
+                        />
+                      ) : (
+                        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-accent-500 to-secondary-500 flex items-center justify-center text-white font-bold text-sm">
+                          {u.full_name.charAt(0).toUpperCase()}
+                        </div>
+                      )}
                       <div>
                         <p className="font-semibold text-theme-text">{u.full_name}</p>
                         <p className="text-xs text-theme-muted">{u.email}</p>

@@ -395,9 +395,13 @@ export function GradingQueue() {
                   <tr key={s.attemptId} className="hover:bg-white/[0.02]">
                     <td className="p-4">
                       <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-accent-500 to-secondary-500 flex items-center justify-center text-white text-xs font-bold">
-                          {s.studentName?.charAt(0).toUpperCase() ?? '?'}
-                        </div>
+                        {s.studentProfilePictureUrl ? (
+                          <img src={s.studentProfilePictureUrl} alt={s.studentName} className="w-8 h-8 rounded-full object-cover border border-white/[0.1]" />
+                        ) : (
+                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-accent-500 to-secondary-500 flex items-center justify-center text-white text-xs font-bold">
+                            {s.studentName?.charAt(0).toUpperCase() ?? '?'}
+                          </div>
+                        )}
                         <span className="text-theme-muted">{s.studentName ?? 'Unknown'}</span>
                       </div>
                     </td>

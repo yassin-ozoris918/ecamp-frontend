@@ -126,9 +126,13 @@ export function Student360Workspace() {
                   onClick={() => setSelectedStudentId(s.id)}
                   className={`w-full text-left p-4 hover:bg-white/[0.02] transition-colors flex items-center gap-3 ${selectedStudentId === s.id ? 'bg-theme-card border-l-4 border-accent-400' : 'border-l-4 border-transparent'}`}
                 >
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-accent-500 to-secondary-500 flex items-center justify-center text-white font-bold">
-                    {s.fullName.charAt(0).toUpperCase()}
-                  </div>
+                  {s.profilePictureUrl ? (
+                    <img src={s.profilePictureUrl} alt={s.fullName} className="w-10 h-10 rounded-full object-cover border border-white/[0.1]" />
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-accent-500 to-secondary-500 flex items-center justify-center text-white font-bold">
+                      {s.fullName.charAt(0).toUpperCase()}
+                    </div>
+                  )}
                   <div className="flex-1 min-w-0">
                     <p className="font-bold text-theme-text truncate">{s.fullName}</p>
                     <p className="text-xs text-theme-muted truncate">{s.email}</p>
@@ -160,9 +164,13 @@ export function Student360Workspace() {
             <div className="flex-1 overflow-y-auto p-6 space-y-8 scrollbar-thin">
               {/* Header Info */}
               <div className="flex items-start gap-4">
-                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-accent-500 to-secondary-500 flex items-center justify-center text-white font-bold text-3xl shrink-0">
-                  {(profileData.fullName || '?').charAt(0).toUpperCase()}
-                </div>
+                {profileData.profilePictureUrl ? (
+                  <img src={profileData.profilePictureUrl} alt={profileData.fullName} className="w-20 h-20 rounded-full object-cover border-4 border-theme-bg shadow-lg shrink-0" />
+                ) : (
+                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-accent-500 to-secondary-500 flex items-center justify-center text-white font-bold text-3xl shrink-0">
+                    {(profileData.fullName || '?').charAt(0).toUpperCase()}
+                  </div>
+                )}
                 <div className="flex-1">
                   <h2 className="text-2xl font-display font-bold text-theme-text">{profileData.fullName}</h2>
                   <p className="text-theme-muted text-sm mb-2">

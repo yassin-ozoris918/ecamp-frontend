@@ -66,16 +66,35 @@ export function Leaderboard() {
                   isFirst ? 'sm:pt-8 pb-6' : 'pt-4 pb-4'
                 } ${isFirst ? 'border-gold-500/30 order-2' : isSecond ? 'order-1' : 'order-3'}`}
               >
-                <div
-                  className={`w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mb-2 ${
-                    isFirst
-                      ? 'bg-gradient-to-br from-gold-400 to-gold-600 text-white shadow-glow-gold'
-                      : isSecond
-                        ? 'bg-gradient-to-br from-neutral-300 to-neutral-500 text-white'
-                        : 'bg-gradient-to-br from-amber-600 to-amber-800 text-theme-text'
-                  }`}
-                >
-                  {isFirst ? <Crown className="w-5 h-5 sm:w-7 sm:h-7" /> : <Medal className="w-5 h-5 sm:w-6 sm:h-6" />}
+                <div className="relative mb-2">
+                  {entry.profilePictureUrl ? (
+                    <img
+                      src={entry.profilePictureUrl}
+                      alt={entry.full_name}
+                      className={`w-12 h-12 sm:w-16 sm:h-16 rounded-full object-cover ${
+                        isFirst ? 'ring-4 ring-gold-400 shadow-glow-gold' : 
+                        isSecond ? 'ring-4 ring-neutral-400' : 'ring-4 ring-amber-700'
+                      }`}
+                    />
+                  ) : (
+                    <div
+                      className={`w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center ${
+                        isFirst
+                          ? 'bg-gradient-to-br from-gold-400 to-gold-600 text-white shadow-glow-gold'
+                          : isSecond
+                            ? 'bg-gradient-to-br from-neutral-300 to-neutral-500 text-white'
+                            : 'bg-gradient-to-br from-amber-600 to-amber-800 text-theme-text'
+                      }`}
+                    >
+                      <span className="font-bold text-xl">{entry.full_name?.charAt(0).toUpperCase()}</span>
+                    </div>
+                  )}
+                  <div className={`absolute -bottom-2 -right-2 w-7 h-7 rounded-full flex items-center justify-center ${
+                    isFirst ? 'bg-gold-500 text-white' : 
+                    isSecond ? 'bg-neutral-500 text-white' : 'bg-amber-700 text-white'
+                  }`}>
+                    {isFirst ? <Crown className="w-4 h-4" /> : <Medal className="w-4 h-4" />}
+                  </div>
                 </div>
                 <p className="font-semibold text-theme-text text-xs sm:text-sm truncate max-w-full">
                   {entry.full_name}
@@ -101,9 +120,17 @@ export function Leaderboard() {
                 <div className="w-8 text-center font-display font-bold text-theme-muted">
                   {entry.rank}
                 </div>
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-accent-500 to-secondary-500 flex items-center justify-center text-white font-bold">
-                  {entry.full_name?.charAt(0).toUpperCase()}
-                </div>
+                {entry.profilePictureUrl ? (
+                  <img
+                    src={entry.profilePictureUrl}
+                    alt={entry.full_name}
+                    className="w-10 h-10 rounded-full object-cover border border-white/[0.1]"
+                  />
+                ) : (
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-accent-500 to-secondary-500 flex items-center justify-center text-white font-bold">
+                    {entry.full_name?.charAt(0).toUpperCase()}
+                  </div>
+                )}
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-theme-text truncate">
                     {entry.full_name} {isMe && <span className="text-accent-700 dark:text-accent-300 text-xs">(You)</span>}

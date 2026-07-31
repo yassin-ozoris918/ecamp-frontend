@@ -124,8 +124,12 @@ export function CourseCatalog() {
                     <div className="pt-5 border-t border-theme-border flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                       <div className="flex -space-x-2">
                         {course.instructors?.map((inst: CourseInstructor) => (
-                          <div key={inst.instructor.id} className="w-8 h-8 rounded-full border-2 border-base-900 bg-neutral-800 flex items-center justify-center text-xs font-bold text-theme-text shadow-sm relative z-[1]">
-                            {inst.instructor?.fullName?.charAt(0) || '?'}
+                          <div key={inst.instructor.id} className="w-8 h-8 rounded-full border-2 border-base-900 bg-neutral-800 flex items-center justify-center text-xs font-bold text-theme-text shadow-sm relative z-[1]" title={inst.instructor.fullName}>
+                            {inst.instructor?.profilePictureUrl ? (
+                              <img src={inst.instructor.profilePictureUrl} alt={inst.instructor.fullName} className="w-full h-full rounded-full object-cover" />
+                            ) : (
+                              inst.instructor?.fullName?.charAt(0) || '?'
+                            )}
                           </div>
                         ))}
                       </div>
