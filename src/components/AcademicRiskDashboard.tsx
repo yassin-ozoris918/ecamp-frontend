@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast';
 import React, { useState, useEffect, useMemo } from 'react';
 import { ShieldAlert, Phone, Activity, Search, RefreshCw, Smartphone } from 'lucide-react';
 import { client } from '../lib/api';
@@ -37,10 +38,10 @@ export function AcademicRiskDashboard() {
     setPendingStudentId(studentId);
     try {
       await client.put(`/admin/users/${studentId}`, { deviceId: null });
-      alert("Device lock reset successfully.");
+      toast.success("Device lock reset successfully.");
     } catch (e) {
       console.error(e);
-      alert("Failed to reset device lock.");
+      toast.error("Failed to reset device lock.");
     }
     setPendingStudentId(null);
   };

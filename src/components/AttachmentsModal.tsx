@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast';
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../lib/api';
@@ -54,7 +55,7 @@ export function AttachmentsModal({ isOpen, onClose, targetId, targetType, title 
     onError: (err: any) => {
       setIsUploading(false);
       const msg = err.response?.data?.message || err.response?.data?.error || err.message || 'Unknown error';
-      alert(`Upload failed: ${msg}`);
+      toast.error(`Upload failed: ${msg}`);
       console.error('Upload Error:', err.response?.data || err);
     }
   });

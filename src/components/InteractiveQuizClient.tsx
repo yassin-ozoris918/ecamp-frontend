@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast';
 import React, { useState, useEffect } from 'react';
 import { api } from '../lib/api';
 import { Clock, CheckCircle2, XCircle, ArrowRight } from 'lucide-react';
@@ -205,7 +206,7 @@ export function InteractiveQuizClient({
       if (onResumeTimer) onResumeTimer();
     } catch (err: any) {
       console.error(err);
-      alert('Failed to surrender quiz.');
+      toast.error('Failed to surrender quiz.');
     } finally {
       setSubmitting(false);
     }

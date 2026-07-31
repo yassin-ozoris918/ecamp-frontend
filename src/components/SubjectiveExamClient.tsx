@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast';
 import React, { useState } from 'react';
 import { api } from '../lib/api';
 import { Loader2, Send } from 'lucide-react';
@@ -41,7 +42,7 @@ export function SubjectiveExamClient({ examId, attemptId, questions, onComplete 
       onComplete();
     } catch (err) {
       console.error('Submission failed', err);
-      alert('Failed to submit exam.');
+      toast.error('Failed to submit exam.');
       setIsSubmitting(false);
     }
   };

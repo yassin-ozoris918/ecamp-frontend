@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   KeyRound,
@@ -223,7 +224,7 @@ export function StudentDashboard() {
                     onClick={(e) => {
                       if (isOwned) {
                         e.preventDefault();
-                        alert('You have already purchased and enrolled in this course! Check your "Your Courses" tab.');
+                        toast.error('You have already purchased and enrolled in this course! Check your "Your Courses" tab.');
                       }
                     }}
                   >

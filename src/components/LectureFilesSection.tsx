@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast';
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../lib/api';
@@ -36,7 +37,7 @@ export function LectureFilesSection({ lectureId }: LectureFilesSectionProps) {
       setIsUploading(false);
       const axiosErr = err as { response?: { data?: { message?: string; error?: string } }; message?: string };
       const msg = axiosErr.response?.data?.message || axiosErr.response?.data?.error || axiosErr.message || 'Unknown error';
-      alert(`Upload failed: ${msg}`);
+      toast.error(`Upload failed: ${msg}`);
       console.error('Upload Error:', axiosErr.response?.data || err);
     }
   });

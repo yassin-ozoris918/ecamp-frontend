@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast';
 import React, { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../lib/api';
@@ -49,7 +50,7 @@ export function AddQuestionModal({ isOpen, onClose, targetId, type }: AddQuestio
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!text.trim() || options.some(opt => !opt.trim())) {
-      alert('Please fill out the question text and all answer rows.');
+      toast.error('Please fill out the question text and all answer rows.');
       return;
     }
 

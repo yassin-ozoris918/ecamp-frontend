@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast';
 import React, { useState, useEffect } from 'react';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { api } from '../lib/api';
@@ -91,13 +92,13 @@ export function QuizBuilderModal({ isOpen, onClose, targetId, type }: QuizBuilde
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['courseBuilder'] });
       queryClient.invalidateQueries({ queryKey: ['questions', type, targetId] });
-      alert(`${type === 'QUIZ' ? 'Quiz' : 'Exam'} updated and synchronized successfully!`);
+      toast.success(`${type === 'QUIZ' ? 'Quiz' : 'Exam'} updated and synchronized successfully!`);
       onClose();
     },
     onError: (err: unknown) => {
       const axiosErr = err as { response?: { data?: { message?: string } }; message?: string };
       console.error(err);
-      alert('Failed to save: ' + (axiosErr.response?.data?.message || axiosErr.message));
+      toast.error('Failed to save: ' + (axiosErr.response?.data?.message || axiosErr.message));
     }
   });
 
@@ -156,11 +157,11 @@ export function QuizBuilderModal({ isOpen, onClose, targetId, type }: QuizBuilde
     // Validate
     for (const q of questions) {
       if (!q.text.trim()) {
-        alert('All questions must have text.');
+        toast.error('All questions must have text.');
         return;
       }
       if (q.options.some(opt => !opt.trim())) {
-        alert('All answer options must be filled out.');
+        toast.error('All answer options must be filled out.');
         return;
       }
     }

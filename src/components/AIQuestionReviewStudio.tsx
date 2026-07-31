@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast';
 import { useState } from 'react';
 import { api } from '../lib/api';
 import { Loader2, Save, Trash2, Sparkles } from 'lucide-react';
@@ -40,7 +41,7 @@ export function AIQuestionReviewStudio({ examId, initialQuestions, onSaved, onCa
       onSaved();
     } catch (error) {
       console.error('Failed to save questions', error);
-      alert('Failed to save questions.');
+      toast.error('Failed to save questions.');
     } finally {
       setIsSaving(false);
     }

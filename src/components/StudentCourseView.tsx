@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast';
 import { useCallback, useEffect, useState } from 'react';
 import {
   BookOpen,
@@ -97,7 +98,7 @@ export function StudentCourseView({ courseId }: { courseId: string }) {
         await api.post(`/lectures/${lecture.id}/start-access`);
         navigate(`/lecture/${lecture.id}`);
       } catch (err: unknown) {
-        alert((err as any)?.response?.data?.message || 'Failed to start lecture.');
+        toast.error((err as any)?.response?.data?.message || 'Failed to start lecture.');
       }
     }
   }

@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast';
 import React, { useState, useEffect, useMemo } from 'react';
 import { Users, User, ShieldAlert, BookOpen, Search, X, Smartphone } from 'lucide-react';
 import { client } from '../lib/api';
@@ -62,7 +63,7 @@ export function Student360Workspace() {
     if (!ok) return;
     try {
       await client.post(`/admin/users/${selectedStudentId}/reset-device`);
-      alert('Device reset successfully');
+      toast.success('Device reset successfully');
       // Refresh profile data
       const [userDetail, progressData] = await Promise.all([
         client.get<any>(`/admin/users/${selectedStudentId}`),
@@ -71,7 +72,7 @@ export function Student360Workspace() {
       setProfileData({ ...userDetail, ...progressData });
     } catch (e) {
       console.error(e);
-      alert('Failed to reset device');
+      toast.error('Failed to reset device');
     }
   };
 

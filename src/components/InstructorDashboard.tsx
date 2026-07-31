@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast';
 import { useEffect, useState, useCallback } from 'react';
 import {
   BookOpen,
@@ -151,7 +152,7 @@ export function InstructorDashboard() {
                         try {
                           await api.delete(`/courses/${c.id}`);
                           setCourses(prev => prev.filter(course => course.id !== c.id));
-                        } catch(err) { console.error(err); alert('Failed to delete course'); }
+                        } catch(err) { console.error(err); toast.error('Failed to delete course'); }
                       }
                     }} className="p-1 rounded-md opacity-0 group-hover:opacity-100 hover:bg-error-500/10 text-theme-muted hover:text-error-400 transition-all">
                       <Trash2 className="w-4 h-4" />
@@ -332,7 +333,7 @@ export function InstructorCourses() {
                   try {
                     await api.delete(`/courses/${c.id}`);
                     setCourses(prev => prev.filter(course => course.id !== c.id));
-                  } catch(err) { console.error(err); alert('Failed to delete course'); }
+                  } catch(err) { console.error(err); toast.error('Failed to delete course'); }
                 }
               }} className="p-2 opacity-0 group-hover:opacity-100 hover:text-error-400 text-theme-muted transition-all">
                 <Trash2 className="w-4 h-4" />

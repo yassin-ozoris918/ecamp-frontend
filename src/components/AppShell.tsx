@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from 'react';
+import { Toaster } from 'react-hot-toast';
 import {
   GraduationCap,
   LayoutGrid,
@@ -81,6 +82,23 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-screen lg:flex">
+      <Toaster 
+        position="top-center"
+        toastOptions={{
+          style: {
+            background: '#1a1a1a',
+            color: '#fff',
+            border: '1px solid rgba(255,255,255,0.1)',
+            borderRadius: '12px',
+          },
+          success: {
+            iconTheme: { primary: '#10b981', secondary: '#1a1a1a' },
+          },
+          error: {
+            iconTheme: { primary: '#ef4444', secondary: '#1a1a1a' },
+          },
+        }}
+      />
       <AboutPlatformModal isOpen={aboutOpen} onClose={() => setAboutOpen(false)} />
       
       {/* Desktop sidebar */}

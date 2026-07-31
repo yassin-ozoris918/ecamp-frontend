@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast';
 import { useCallback, useEffect, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
@@ -780,7 +781,7 @@ export function AdminCodes() {
       loadCodes();
     } catch (e) {
       console.error(e);
-      alert('Failed to deactivate code.');
+      toast.error('Failed to deactivate code.');
     }
   };
 

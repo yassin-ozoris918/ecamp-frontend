@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast';
 import { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { useQueryClient, useMutation, useQuery } from '@tanstack/react-query';
 import {
@@ -253,7 +254,7 @@ export function CourseBuilder({ courseId }: { courseId: string }) {
       setAiStudioQuestions(data.questions);
       setAiStudioExamId(activeAiExamId);
     } catch (err: unknown) {
-      alert((err as any)?.response?.data?.message || 'Extraction failed. Ensure you uploaded a valid PDF or Word document.');
+      toast.error((err as any)?.response?.data?.message || 'Extraction failed. Ensure you uploaded a valid PDF or Word document.');
     } finally {
       setIsAiExtracting(false);
       setActiveAiExamId(null);
@@ -301,7 +302,7 @@ export function CourseBuilder({ courseId }: { courseId: string }) {
                           await api.put(`/courses/${course.id}`, { title: editTitle, description: editDesc, audienceType: course.audienceType });
                           setCourse({ ...course, title: editTitle, description: editDesc });
                           setIsEditingTitle(false);
-                        } catch(e) { console.error(e); alert('Failed to update course'); }
+                        } catch(e) { console.error(e); toast.error('Failed to update course'); }
                       }} className="btn-primary py-1 px-3 text-xs">Save Changes</button>
                       <button onClick={() => setIsEditingTitle(false)} className="btn-ghost py-1 px-3 text-xs">Cancel</button>
                     </div>
@@ -328,7 +329,7 @@ export function CourseBuilder({ courseId }: { courseId: string }) {
                       try {
                         await api.patch(`/courses/${course.id}/unpublish`);
                         setCourse({ ...course, status: 'DRAFT' });
-                        alert('Course is now unpublished and returned to Draft status.');
+                        toast.success('Course is now unpublished and returned to Draft status.');
                       } catch(e) {
                         console.error(e);
                       }
@@ -343,7 +344,7 @@ export function CourseBuilder({ courseId }: { courseId: string }) {
                       try {
                         await api.patch(`/courses/${course.id}/publish`);
                         setCourse({ ...course, status: 'PUBLISHED' });
-                        alert('Course is active and published!');
+                        toast.success('Course is active and published!');
                       } catch(e) {
                         console.error(e);
                       }
@@ -370,7 +371,7 @@ export function CourseBuilder({ courseId }: { courseId: string }) {
                   <button onClick={async () => {
                     const val = (document.getElementById('introVideoUrl') as HTMLInputElement).value;
                     await api.post(`/courses/${course.id}/intro`, { url: val });
-                    alert('Saved');
+                    toast.success('Saved');
                   }} className="btn-secondary whitespace-nowrap">Save URL</button>
                 </div>
               </div>
@@ -394,14 +395,14 @@ export function CourseBuilder({ courseId }: { courseId: string }) {
                   <input type="file" accept="image/*" id="thumbnailFile" className="input text-sm p-1.5" />
                   <button onClick={async () => {
                     const input = document.getElementById('thumbnailFile') as HTMLInputElement;
-                    if (!input.files?.[0]) return alert('Please select an image file first');
+                    if (!input.files?.[0]) return toast.error('Please select an image file first');
                     const formData = new FormData();
                     formData.append('file', input.files[0]);
                     try {
                       const res = await api.post(`/courses/${course.id}/thumbnail`, formData);
                       setCourse({ ...course, thumbnailUrl: res.data.url });
-                      alert('Thumbnail uploaded successfully');
-                    } catch(e) { console.error(e); alert('Failed to upload thumbnail'); }
+                      toast.success('Thumbnail uploaded successfully');
+                    } catch(e) { console.error(e); toast.error('Failed to upload thumbnail'); }
                   }} className="btn-secondary whitespace-nowrap">Upload</button>
                 </div>
                 {course.thumbnailUrl && <a href={course.thumbnailUrl} target="_blank" rel="noreferrer" className="text-xs text-accent-400 hover:underline mt-2 inline-block">View Current Thumbnail</a>}
@@ -1158,7 +1159,7 @@ function CreateExamModal({
             <button
               type="button"
               onClick={async () => {
-                if (!title.trim()) { alert('Please enter an Exam title first.'); return; }
+                if (!title.trim()) { toast.error('Please enter an Exam title first.'); return; }
                 setBusy(true);
                 try {
                   const res = await api.post('/exams', {
@@ -1173,7 +1174,7 @@ function CreateExamModal({
                   onCreated();
                   onAIGenerate(res.data.id);
                 } catch (e: any) {
-                  alert('Failed to create exam: ' + (e?.response?.data?.message || e.message));
+                  toast.error('Failed to create exam: ' + (e?.response?.data?.message || e.message));
                 } finally {
                   setBusy(false);
                 }

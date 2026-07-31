@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast';
 import React, { useState, useEffect } from 'react';
 import { FileText, RefreshCw, Download, Database } from 'lucide-react';
 import { api } from '../lib/api';
@@ -39,7 +40,7 @@ export function SystemAuditViewer() {
       document.body.removeChild(link);
     } catch (e) {
       console.error('Export failed', e);
-      alert('Export failed. Please try again.');
+      toast.error('Export failed. Please try again.');
     }
   };
 
