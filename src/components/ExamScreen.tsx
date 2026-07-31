@@ -35,7 +35,7 @@ export function ExamScreen({ examId }: { examId: string }) {
       const { data } = await api.get(`/exams/${examId}`);
       setExam(data);
     } catch (e: unknown) {
-      setError((e as any)?.response?.data?.message || 'Failed to load exam.');
+      setError((e as any)?.response?.data?.message || t('common.error'));
     }
     setLoading(false);
   }, [examId]);
@@ -66,7 +66,7 @@ export function ExamScreen({ examId }: { examId: string }) {
         setTimeLeftMs(exam.timeLimit * 60 * 1000);
       }
     } catch (e: unknown) {
-      setError((e as any)?.response?.data?.message || 'Failed to start exam.');
+      setError((e as any)?.response?.data?.message || t('exam.failedStart'));
     }
     setLoading(false);
   }
@@ -88,7 +88,7 @@ export function ExamScreen({ examId }: { examId: string }) {
       await new Promise(r => setTimeout(r, 1500));
       setResult(data);
     } catch (e: unknown) {
-      setError((e as any)?.response?.data?.message || 'Failed to submit exam.');
+      setError((e as any)?.response?.data?.message || t('exam.failedSubmit'));
     }
     setSubmitting(false);
   }
@@ -100,9 +100,9 @@ export function ExamScreen({ examId }: { examId: string }) {
           <div className="absolute inset-0 bg-emerald-500/20 blur-xl rounded-full" />
           <Loader2 className="w-16 h-16 animate-spin text-emerald-400 relative z-10" />
         </div>
-        <h2 className="text-3xl font-bold text-theme-text font-display text-center">Submitting Exam...</h2>
+        <h2 className="text-3xl font-bold text-theme-text font-display text-center">{t('exam.submitting')}</h2>
         <p className="text-theme-muted text-lg text-center max-w-md">
-          AI is reviewing your submission, parsing linguistic properties...
+          {t('exam.aiReviewing')}
         </p>
       </div>
     );
@@ -124,7 +124,7 @@ export function ExamScreen({ examId }: { examId: string }) {
         </div>
         <p className="text-xl font-display font-bold text-theme-text mb-2">{error}</p>
         <button onClick={() => window.history.back()} className="btn-secondary mt-6">
-          <ArrowLeft className="w-4 h-4" /> Go Back
+          <ArrowLeft className="w-4 h-4 rtl:rotate-180" /> {t('common.back')}
         </button>
       </div>
     );
@@ -142,7 +142,7 @@ export function ExamScreen({ examId }: { examId: string }) {
           <Badge variant="accent" className="mb-4">{t('exam.title')}</Badge>
           <h1 className="text-3xl sm:text-4xl font-display font-bold text-theme-text mb-4">{exam.title}</h1>
           <p className="text-theme-muted text-lg mb-8 leading-relaxed">
-            {exam.description || 'No description provided.'}
+            {exam.description || t('exam.noDesc')}
           </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10">
@@ -158,24 +158,24 @@ export function ExamScreen({ examId }: { examId: string }) {
             </div>
             <div className="rounded-2xl bg-theme-card border border-theme-border p-5 text-center">
               <Trophy className="w-6 h-6 mx-auto text-gold-700 dark:text-gold-300 mb-2" />
-              <p className="text-sm text-theme-muted">{t('exam.passingScorePct')}</p>
+              <p className="text-sm text-theme-muted">{t('quiz.passGrade')}</p>
               <p className="text-xl font-bold text-theme-text">{exam.passingScore}%</p>
             </div>
           </div>
 
           <div className="bg-warning-500/10 border border-warning-500/20 rounded-2xl p-5 mb-8 text-warning-200 text-sm">
             <h4 className="font-semibold flex items-center gap-2 mb-2">
-              <AlertCircle className="w-4 h-4" /> Important Rules
+              <AlertCircle className="w-4 h-4" /> {t('exam.importantRules')}
             </h4>
             <ul className="list-disc list-inside space-y-1 ml-1 opacity-90">
-              <li>Once you start, the timer cannot be paused.</li>
-              <li>You must submit before the time runs out.</li>
-              <li>Do not refresh the page during the exam.</li>
+              <li>{t('exam.rule1')}</li>
+              <li>{t('exam.rule2')}</li>
+              <li>{t('exam.rule3')}</li>
             </ul>
           </div>
 
           <button onClick={handleStart} className="btn-primary w-full py-4 text-lg">
-            Start Exam Now
+            {t('exam.startExamNow')}
           </button>
         </div>
       </div>
@@ -220,7 +220,7 @@ export function ExamScreen({ examId }: { examId: string }) {
           )}
           {reviewMode && result && (
              <div className={`flex items-center gap-2 px-4 py-2 rounded-xl font-mono font-bold shrink-0 ${result.status === 'PASSED' ? 'bg-success-500/10 text-success-300' : result.status === 'FAILED' ? 'bg-error-500/10 text-error-300' : 'bg-warning-500/10 text-warning-700 dark:text-warning-300'}`}>
-              {result.status === 'PENDING' ? 'Grading Pending' : `Score: ${result.score}%`}
+              {result.status === 'PENDING' ? t('exam.pending') : `${t('exam.score')}: ${result.score}%`}
              </div>
           )}
         </div>
@@ -230,7 +230,7 @@ export function ExamScreen({ examId }: { examId: string }) {
         {/* Sidebar for Navigation */}
         <div className="w-full lg:w-64 shrink-0 lg:sticky lg:top-24 flex flex-col gap-4">
           <div className="glass p-4 rounded-2xl border-white/[0.05]">
-            <h3 className="font-bold text-theme-text mb-3">Questions</h3>
+            <h3 className="font-bold text-theme-text mb-3">{t('exam.questions')}</h3>
             <div className="grid grid-cols-5 sm:grid-cols-8 lg:grid-cols-4 gap-2">
               {questions.map((q, idx) => {
                 const isAnswered = answers[q.id]?.selectedOptionIndex !== undefined || (answers[q.id]?.textResponse && answers[q.id]?.textResponse?.trim() !== '');
@@ -274,14 +274,14 @@ export function ExamScreen({ examId }: { examId: string }) {
             <div className="mt-4 pt-4 border-t border-white/[0.05] flex flex-col gap-2 text-xs text-theme-muted">
               {reviewMode ? (
                 <>
-                  <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-success-500/50" /> Correct</div>
-                  <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-error-500/50" /> Incorrect</div>
-                  <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-warning-500/50" /> Pending Review</div>
+                  <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-success-500/50" /> {t('quiz.correct')}</div>
+                  <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-error-500/50" /> {t('quiz.incorrect')}</div>
+                  <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-warning-500/50" /> {t('exam.pendingReview')}</div>
                 </>
               ) : (
                 <>
-                  <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-accent-500/50" /> Answered</div>
-                  <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-theme-card" /> Unanswered</div>
+                  <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-accent-500/50" /> {t('quiz.answered')}</div>
+                  <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-theme-card" /> {t('quiz.unanswered')}</div>
                 </>
               )}
             </div>
@@ -311,7 +311,7 @@ export function ExamScreen({ examId }: { examId: string }) {
                 {/* Read-Only Text Block */}
                 {type === 'READ_ONLY_TEXT' && (
                   <div className="bg-sky-500/10 border border-sky-500/20 text-sky-300 p-4 rounded-xl text-sm italic mb-2">
-                    Please read the passage above. No response is required for this block.
+                    {t('exam.readOnly')}
                   </div>
                 )}
 
@@ -371,13 +371,13 @@ export function ExamScreen({ examId }: { examId: string }) {
                   <div>
                     <input
                       type="text"
-                      placeholder="Type your answer here..."
+                      placeholder={t('exam.typeAnswer')}
                       className={`input w-full text-lg p-4 ${reviewMode ? 'opacity-70 pointer-events-none' : ''}`}
                       value={currentAnswer.textResponse || ''}
                       disabled={reviewMode || submitting || result !== null}
                       onChange={(e) => setAnswers(prev => ({ ...prev, [q.id]: { ...prev[q.id], textResponse: e.target.value } }))}
                     />
-                    {reviewMode && <p className="text-warning-400 text-sm mt-2 flex items-center gap-1"><Clock className="w-4 h-4"/> Pending Manual Grading</p>}
+                    {reviewMode && <p className="text-warning-400 text-sm mt-2 flex items-center gap-1"><Clock className="w-4 h-4"/> {t('exam.pendingReview')}</p>}
                   </div>
                 )}
 
@@ -385,13 +385,13 @@ export function ExamScreen({ examId }: { examId: string }) {
                 {type === 'ESSAY' && (
                   <div>
                     <textarea
-                      placeholder="Write your essay here..."
+                      placeholder={t('exam.writeEssay')}
                       className={`input w-full min-h-[200px] resize-y p-4 text-base ${reviewMode ? 'opacity-70 pointer-events-none' : ''}`}
                       value={currentAnswer.textResponse || ''}
                       disabled={reviewMode || submitting || result !== null}
                       onChange={(e) => setAnswers(prev => ({ ...prev, [q.id]: { ...prev[q.id], textResponse: e.target.value } }))}
                     />
-                    {reviewMode && <p className="text-warning-400 text-sm mt-2 flex items-center gap-1"><Clock className="w-4 h-4"/> Pending Manual Grading</p>}
+                    {reviewMode && <p className="text-warning-400 text-sm mt-2 flex items-center gap-1"><Clock className="w-4 h-4"/> {t('exam.pendingReview')}</p>}
                   </div>
                 )}
               </div>
@@ -405,14 +405,14 @@ export function ExamScreen({ examId }: { examId: string }) {
                 disabled={submitting || result !== null}
                 className="btn-primary py-4 px-10 text-lg shadow-[0_0_30px_rgba(var(--accent-500),0.3)] hover:shadow-[0_0_40px_rgba(var(--accent-500),0.4)]"
               >
-                {submitting ? 'Submitting...' : 'Submit Exam'}
+                {submitting ? t('exam.submitting') : t('exam.submitExam')}
               </button>
             </div>
           )}
         </div>
       </div>
 
-      <Modal open={result !== null && !reviewMode} onClose={() => {}} title="Exam Results">
+      <Modal open={result !== null && !reviewMode} onClose={() => {}} title={t('exam.resultsTitle')}>
         {result && (
           <div className="text-center py-6">
             <div className="w-20 h-20 mx-auto rounded-full bg-secondary-500/15 flex items-center justify-center mb-6">
@@ -424,10 +424,10 @@ export function ExamScreen({ examId }: { examId: string }) {
             {result.status !== 'PENDING' ? (
               <>
                 <p className="text-lg text-theme-muted">
-                  Your exam has been automatically graded. Score: {result.score}%
+                  {t('exam.autoGradedScore', { score: result.score })}
                 </p>
                 <p className="text-xl font-medium text-accent-700 dark:text-accent-300 mb-2 mt-2 flex items-center justify-center gap-1.5">
-                  <span>Correct</span>
+                  <span>{t('quiz.correct')}</span>
                   <span dir="ltr" className="font-mono font-bold">
                     {Object.keys(result.correctAnswers || {}).filter(qId => result.correctAnswers?.[qId] === result.studentAnswers?.[qId]?.selectedOptionIndex).length} / {questions.filter(q => q.type === 'MULTIPLE_CHOICE').length}
                   </span>
@@ -435,15 +435,15 @@ export function ExamScreen({ examId }: { examId: string }) {
               </>
             ) : (
               <p className="text-lg text-theme-muted">
-                Your essay questions are currently being graded by our AI assistant or your instructor. You will be notified when your final score is ready.
+                {t('exam.pendingDesc')}
               </p>
             )}
             <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
               <button onClick={() => setReviewMode(true)} className="btn-secondary">
-                Review Answers
+                {t('quiz.reviewPast')}
               </button>
               <Link to="/dashboard" className="btn-primary">
-                Return to Dashboard <ArrowRight className="w-4 h-4 ml-2" />
+                {t('exam.returnDashboard')} <ArrowRight className="w-4 h-4 ml-2 rtl:rotate-180" />
               </Link>
             </div>
           </div>

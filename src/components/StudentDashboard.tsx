@@ -170,7 +170,7 @@ export function StudentDashboard() {
                         <div className="absolute top-2 end-3">
                           <Badge variant="success" className="bg-theme-bg/40 text-secondary-200 border-theme-border">
                             <CheckCircle2 className="w-3 h-3" />
-                            Complete
+                            {t('dashboard.complete')}
                           </Badge>
                         </div>
                       )}
@@ -224,7 +224,7 @@ export function StudentDashboard() {
                     onClick={(e) => {
                       if (isOwned) {
                         e.preventDefault();
-                        toast.error('You have already purchased and enrolled in this course! Check your "Your Courses" tab.');
+                        toast.error(t('dashboard.alreadyEnrolledError'));
                       }
                     }}
                   >

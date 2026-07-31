@@ -83,7 +83,7 @@ export function CourseCatalog() {
               <Spinner className="w-8 h-8 text-accent-400" />
             </div>
           ) : error ? (
-            <ErrorMessage message={error?.message || 'Failed to load course catalog'} />
+            <ErrorMessage message={error?.message || t('common.error')} />
           ) : courses.length === 0 ? (
             <EmptyState icon={<BookOpen className="w-12 h-12" />} title={t('catalog.noCourses')} description={t('catalog.checkBackSoon')} />
           ) : (

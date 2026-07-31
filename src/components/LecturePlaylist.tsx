@@ -63,7 +63,7 @@ export function LecturePlaylist({ lectureId }: { lectureId: string }) {
       const { data } = await api.get(`/progress/playlist/${lectureId}`);
       
       if (!data || typeof data !== 'object' || 'statusCode' in data) {
-        setError(data?.message || 'Failed to load lecture playlist.');
+        setError(data?.message || t('common.error'));
         setLoading(false);
         return;
       }
@@ -108,7 +108,7 @@ export function LecturePlaylist({ lectureId }: { lectureId: string }) {
   useEffect(() => {
     if (timeLeftMs === null || isTimerPaused) return;
     if (timeLeftMs <= 0) {
-      setError('This lecture has expired. Please contact your instructor.');
+      setError(t('playlist.expired'));
       return;
     }
     const t = setInterval(() => {
@@ -245,9 +245,9 @@ export function LecturePlaylist({ lectureId }: { lectureId: string }) {
               <div className="w-20 h-20 mx-auto rounded-full bg-warning-500/10 flex items-center justify-center text-warning-700 dark:text-warning-300 mb-6">
                 <Lock className="w-10 h-10" />
               </div>
-              <h2 className="text-2xl font-display font-bold text-theme-text mb-2">Lecture Locked</h2>
+              <h2 className="text-2xl font-display font-bold text-theme-text mb-2">{t('playlist.lockedTitle')}</h2>
               <p className="text-theme-muted mb-8 max-w-md mx-auto">
-                You don't have access to this lecture yet. Enter an activation code to unlock the content.
+                {t('playlist.lockedDesc')}
               </p>
               
               <form onSubmit={handleRedeem} className="max-w-sm mx-auto">
@@ -256,12 +256,12 @@ export function LecturePlaylist({ lectureId }: { lectureId: string }) {
                     type="text"
                     value={code}
                     onChange={e => setCode(e.target.value)}
-                    placeholder="Enter Activation Code"
-                    className="input text-center text-lg tracking-wider"
+                    placeholder={t('courseView.codePlaceholder')}
+                    className="input text-center text-lg tracking-wider font-mono"
                     required
                   />
                   <button type="submit" disabled={codeBusy || !code.trim()} className="btn-primary w-full justify-center">
-                    {codeBusy ? 'Verifying…' : 'Unlock Now'}
+                    {codeBusy ? t('courseView.redeeming') : t('playlist.unlockBtn')}
                   </button>
                 </div>
               </form>
@@ -444,7 +444,7 @@ function CountdownPill({ ms, warningHours, warningMinutes }: { ms: number, warni
     }`}>
       <Clock className="w-4 h-4" />
       <span className="font-mono text-sm font-semibold">
-        {expired ? 'Expired' : `${days}d ${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`}
+        {expired ? t('playlist.expired') : `${days}d ${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`}
       </span>
     </div>
   );
@@ -569,7 +569,7 @@ function VideoPlayer({
         <p className="text-theme-muted">Video not available yet for this session.</p>
         {!completedRef.current && (
           <button onClick={handleMarkComplete} className="btn-secondary mt-4">
-            Mark as complete
+            {t('playlist.markComplete')}
           </button>
         )}
       </div>
@@ -629,11 +629,9 @@ function VideoPlayer({
 
       {/* Complete badge animation */}
       {showComplete && (
-        <div className="absolute top-4 end-4 animate-checkmark z-50">
-          <div className="bg-secondary-500/90 backdrop-blur-md text-theme-text px-3 py-2 rounded-xl flex items-center gap-2 shadow-lg">
-            <CheckCircle2 className="w-4 h-4" />
-            <span className="text-sm font-semibold">Completed! +15 XP</span>
-          </div>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 flex items-center gap-2 bg-success-500/90 text-white px-4 py-2 rounded-xl shadow-2xl shadow-success-500/20 animate-scale-in">
+          <CheckCircle2 className="w-5 h-5" />
+          <span className="text-sm font-semibold">{t('playlist.completedToast')}</span>
         </div>
       )}
       <div className="p-4 flex items-center justify-between gap-3">
@@ -641,14 +639,14 @@ function VideoPlayer({
           <PlayCircle className="w-5 h-5 text-accent-400" />
           <p className="font-semibold text-theme-text">{item.title}</p>
           {isCompleted && (
-            <Badge variant="success">
-              <CheckCircle2 className="w-3 h-3" /> Completed
-            </Badge>
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-success-500/10 text-success-600 dark:text-success-400 text-sm font-semibold">
+              <CheckCircle2 className="w-3 h-3" /> {t('playlist.completed')}
+            </div>
           )}
         </div>
         {!isCompleted && (
           <button onClick={handleMarkComplete} className="btn-secondary text-sm py-1.5 px-3">
-            Mark as Complete
+            {t('playlist.markComplete')}
           </button>
         )}
       </div>

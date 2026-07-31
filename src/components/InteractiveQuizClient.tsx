@@ -120,7 +120,7 @@ export function InteractiveQuizClient({
         setIsStarted(true);
         if (onPauseTimer) onPauseTimer();
       } else {
-        setStartError(err.response?.data?.message || 'Failed to start quiz.');
+        setStartError(err.response?.data?.message || t('quiz.failedStart'));
       }
     } finally {
       setStartLoading(false);
@@ -197,8 +197,8 @@ export function InteractiveQuizClient({
 
   const handleSurrender = async () => {
     const confirmed = await confirm(
-      'Surrender Quiz',
-      "This action will record the final score without any possibility of modification; afterwards, you can click 'Review Answers' to view the answers. Are you sure?"
+      t('quiz.surrenderTitle'),
+      t('quiz.surrenderDesc')
     );
     if (!confirmed) return;
     
@@ -210,7 +210,7 @@ export function InteractiveQuizClient({
       if (onResumeTimer) onResumeTimer();
     } catch (err: any) {
       console.error(err);
-      toast.error('Failed to surrender quiz.');
+      toast.error(t('quiz.failedSubmit'));
     } finally {
       setSubmitting(false);
     }
@@ -219,7 +219,7 @@ export function InteractiveQuizClient({
   if (quiz.isLocked) {
     return (
       <div className="p-8 text-center glass rounded-2xl">
-        <p className="text-theme-muted">This quiz is locked. Complete previous items first.</p>
+        <p className="text-theme-muted">{t('quiz.locked')}</p>
       </div>
     );
   }
@@ -228,15 +228,15 @@ export function InteractiveQuizClient({
     return (
       <div className="p-8 text-center glass rounded-2xl bg-secondary-500/10 border-secondary-500/20 animate-scale-in">
         <CheckCircle2 className="w-12 h-12 text-secondary-400 mx-auto mb-3" />
-        <h3 className="text-xl font-bold text-secondary-200">Quiz Completed</h3>
-        <p className="text-secondary-200/80 mt-2 mb-6">You have already passed this quiz.</p>
+        <h3 className="text-xl font-bold text-secondary-200">{t('quiz.completedTitle')}</h3>
+        <p className="text-secondary-200/80 mt-2 mb-6">{t('quiz.completedDesc')}</p>
         
         {pastResult && (
           <button 
             onClick={handleReviewPast} 
             className="btn-secondary py-2 px-6 shadow-lg shadow-black/20"
           >
-            Review Past Answers
+            {t('quiz.reviewPast')}
           </button>
         )}
       </div>
@@ -277,7 +277,7 @@ export function InteractiveQuizClient({
           <div className="flex flex-col items-center gap-4 w-full">
             <div className="p-4 rounded-xl bg-error-500/10 border border-error-500/20 text-error-300 text-sm max-w-sm w-full">
               <XCircle className="w-5 h-5 mx-auto mb-2 opacity-80" />
-              You have exhausted all attempts for this quiz.
+              {t('quiz.exhaustedDesc')}
             </div>
             
             <div className="flex flex-wrap justify-center gap-4 w-full">
@@ -286,14 +286,14 @@ export function InteractiveQuizClient({
                   onClick={handleReviewPast} 
                   className="btn-secondary py-3 px-8 text-lg w-full sm:w-auto"
                 >
-                  Review Past Answers
+                  {t('quiz.reviewPast')}
                 </button>
               )}
               <button 
                 onClick={onComplete} 
                 className="btn-primary py-3 px-8 text-lg shadow-lg shadow-accent-500/20 w-full sm:w-auto"
               >
-                Continue to Next Item
+                {t('quiz.continueNext')}
               </button>
             </div>
           </div>
@@ -311,7 +311,7 @@ export function InteractiveQuizClient({
                 onClick={onComplete} 
                 className="btn-primary py-3 px-8 text-lg shadow-lg shadow-accent-500/20 w-full sm:w-auto"
               >
-                Continue to Next Item
+                {t('quiz.continueNext')}
               </button>
             ) : (
               <button 
@@ -319,7 +319,7 @@ export function InteractiveQuizClient({
                 disabled={startLoading}
                 className="btn-primary py-3 px-8 text-lg shadow-lg shadow-accent-500/20 w-full sm:w-auto"
               >
-                {startLoading ? 'Preparing Quiz...' : (startError ? 'Try Again' : 'Start Quiz')}
+                {startLoading ? t('quiz.preparing') : (startError ? t('quiz.tryAgain') : t('quiz.startQuiz'))}
               </button>
             )}
           </div>
@@ -335,7 +335,7 @@ export function InteractiveQuizClient({
       {/* Sidebar for Navigation */}
       <div className="w-full lg:w-64 shrink-0 lg:sticky lg:top-6 flex flex-col gap-4">
         <div className="glass p-4 rounded-2xl border-white/[0.05]">
-          <h3 className="font-bold text-theme-text mb-3">Questions</h3>
+          <h3 className="font-bold text-theme-text mb-3">{t('quiz.questions')}</h3>
           <div className="grid grid-cols-5 sm:grid-cols-8 lg:grid-cols-4 gap-2">
             {questions.map((q, idx) => {
               const isAnswered = answers[q.id] !== undefined;
@@ -367,13 +367,13 @@ export function InteractiveQuizClient({
           <div className="mt-4 pt-4 border-t border-white/[0.05] flex flex-col gap-2 text-xs text-theme-muted">
             {reviewMode ? (
               <>
-                <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-secondary-500/50" /> Correct</div>
-                <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-error-500/50" /> Incorrect</div>
+                <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-secondary-500/50" /> {t('quiz.correct')}</div>
+                <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-error-500/50" /> {t('quiz.incorrect')}</div>
               </>
             ) : (
               <>
-                <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-accent-500/50" /> Answered</div>
-                <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-theme-card" /> Unanswered</div>
+                <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-accent-500/50" /> {t('quiz.answered')}</div>
+                <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-theme-card" /> {t('quiz.unanswered')}</div>
               </>
             )}
           </div>
@@ -386,7 +386,7 @@ export function InteractiveQuizClient({
         <div className="flex flex-col sm:flex-row sm:items-center justify-between glass p-4 rounded-2xl border-white/[0.05] gap-4">
           <div>
             <h2 className="text-xl font-bold text-theme-text">{quiz.title}</h2>
-            {quiz.passGrade ? <p className="text-sm text-theme-muted mt-1">Passing Grade: {quiz.passGrade}%</p> : null}
+            {quiz.passGrade ? <p className="text-sm text-theme-muted mt-1">{t('quiz.passGrade')}: {quiz.passGrade}%</p> : null}
           </div>
           {timeLeft !== null && !reviewMode && (
             <div className="flex items-center gap-2 px-4 py-2 bg-accent-500/10 text-accent-700 dark:text-accent-300 rounded-xl font-mono font-bold shrink-0">
@@ -396,7 +396,7 @@ export function InteractiveQuizClient({
           )}
           {reviewMode && result && (
             <div className={`flex items-center gap-2 px-4 py-2 rounded-xl font-mono font-bold shrink-0 ${result.status === 'PASSED' ? 'bg-secondary-500/10 text-secondary-700 dark:text-secondary-300' : 'bg-error-500/10 text-error-300'}`}>
-              Score: {correctCount}/{questions.length}
+              {t('quiz.score')}: {correctCount}/{questions.length}
             </div>
           )}
         </div>
@@ -458,7 +458,7 @@ export function InteractiveQuizClient({
               disabled={submitting || result !== null}
               className="btn-primary py-3 px-8 text-lg shadow-lg shadow-accent-500/20 w-full sm:w-auto"
             >
-              {submitting ? 'Submitting...' : 'Submit Quiz'}
+              {submitting ? t('quiz.submitting') : t('quiz.submitQuiz')}
             </button>
           </div>
         ) : (
@@ -467,7 +467,7 @@ export function InteractiveQuizClient({
               onClick={() => onComplete()}
               className="btn-primary py-3 px-8 text-lg shadow-lg shadow-accent-500/20 w-full sm:w-auto"
             >
-              Continue to Next Item
+              {t('quiz.continueNext')}
             </button>
           </div>
         )}

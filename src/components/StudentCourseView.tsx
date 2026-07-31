@@ -16,10 +16,12 @@ import type { Course, Chapter, Lecture, CourseExamItem } from '../lib/types';
 import { Badge, Spinner } from './ui';
 import { Modal } from './Modal';
 import { useConfirm, ConfirmDialog } from '../hooks/useConfirm';
+import { useTranslation } from 'react-i18next';
 
 export function StudentCourseView({ courseId }: { courseId: string }) {
   const { profile } = useAuth();
   const { navigate } = useRouter();
+  const { t } = useTranslation();
 
   const [course, setCourse] = useState<Course | null>(null);
   const [chapters, setChapters] = useState<(Chapter & { lectures: Lecture[] })[]>([]);
@@ -51,7 +53,7 @@ export function StudentCourseView({ courseId }: { courseId: string }) {
       setStandaloneLectures(Array.isArray(data?.standaloneLectures) ? data.standaloneLectures : []);
       setExams(Array.isArray(data?.exams) ? data.exams : []);
     } catch (e: unknown) {
-      setError((e as any)?.response?.data?.message || 'Failed to load course syllabus.');
+      setError((e as any)?.response?.data?.message || t('courseView.failedLoadSyllabus'));
     } finally {
       setLoading(false);
     }
@@ -82,7 +84,7 @@ export function StudentCourseView({ courseId }: { courseId: string }) {
       // Reload the syllabus to unlock the content!
       await loadData();
     } catch (err: unknown) {
-      setRedeemError((err as any)?.response?.data?.message || 'Failed to redeem code.');
+      setRedeemError((err as any)?.response?.data?.message || t('courseView.failedRedeem'));
     } finally {
       setRedeemBusy(false);
     }
@@ -94,18 +96,18 @@ export function StudentCourseView({ courseId }: { courseId: string }) {
       lecture.durationDays ? `${lecture.durationDays}d` : '',
       lecture.durationHours ? `${lecture.durationHours}h` : '',
       lecture.durationMinutes ? `${lecture.durationMinutes}m` : ''
-    ].filter(Boolean).join(' ') || 'Lifetime';
+    ].filter(Boolean).join(' ') || t('courseView.lifetime');
     
     const ok = await confirm(
-      'Start Lecture',
-      `Starting this lecture will begin your ${durationStr} access timer. Are you sure you want to start now?`
+      t('courseView.startLecture'),
+      t('courseView.startLectureDesc', { duration: durationStr })
     );
     if (ok) {
       try {
         await api.post(`/lectures/${lecture.id}/start-access`);
         navigate(`/lecture/${lecture.id}`);
       } catch (err: unknown) {
-        toast.error((err as any)?.response?.data?.message || 'Failed to start lecture.');
+        toast.error((err as any)?.response?.data?.message || t('courseView.failedStart'));
       }
     }
   }
@@ -121,8 +123,8 @@ export function StudentCourseView({ courseId }: { courseId: string }) {
   if (error || !course) {
     return (
       <div className="flex flex-col items-center justify-center h-64 text-center">
-        <p className="text-error-400 mb-4">{error || 'Course not found'}</p>
-        <Link to="/dashboard" className="btn-secondary">Back to Dashboard</Link>
+        <p className="text-error-400 mb-4">{error || t('courseView.courseNotFound')}</p>
+        <Link to="/dashboard" className="btn-secondary">{t('courseView.backToDashboard')}</Link>
       </div>
     );
   }
@@ -145,12 +147,12 @@ export function StudentCourseView({ courseId }: { courseId: string }) {
           </div>
           
           <div className="flex-1">
-            <Badge variant="accent" className="mb-4">Course Syllabus</Badge>
+            <Badge variant="accent" className="mb-4">{t('courseView.courseSyllabus')}</Badge>
             <h1 className="text-3xl md:text-4xl font-display font-bold text-theme-text tracking-tight mb-3">
               {course.title}
             </h1>
             <p className="text-theme-muted text-lg leading-relaxed max-w-3xl mb-6">
-              {course.description || 'No description provided.'}
+              {course.description || t('courseView.noDesc')}
             </p>
             <div className="flex flex-col sm:flex-row gap-3 items-center">
               <button 
@@ -158,7 +160,7 @@ export function StudentCourseView({ courseId }: { courseId: string }) {
                 className="btn-primary w-full sm:w-auto"
               >
                 <KeyRound className="w-4 h-4" />
-                Unlock Full Course
+                {t('courseView.unlockFullCourse')}
               </button>
             </div>
           </div>
@@ -167,11 +169,11 @@ export function StudentCourseView({ courseId }: { courseId: string }) {
 
       {/* Curriculum */}
       <div>
-        <h2 className="text-2xl font-display font-bold text-theme-text mb-6">Course Content</h2>
+        <h2 className="text-2xl font-display font-bold text-theme-text mb-6">{t('courseView.courseContent')}</h2>
         
         {(chapters.length === 0 && standaloneLectures.length === 0) ? (
           <div className="glass rounded-2xl p-8 text-center">
-            <p className="text-theme-muted">No lectures have been published yet.</p>
+            <p className="text-theme-muted">{t('courseView.noLectures')}</p>
           </div>
         ) : (
           <div className="space-y-6">
@@ -194,13 +196,13 @@ export function StudentCourseView({ courseId }: { courseId: string }) {
                         <div className="flex items-center gap-3 mb-1">
                           <span className="text-base font-bold text-theme-text truncate">{lecture.title}</span>
                           {lecture.isUnlocked && !lecture.isExpired && (
-                            <Badge variant="success">Active</Badge>
+                            <Badge variant="success">{t('courseView.active')}</Badge>
                           )}
                           {lecture.isExpired && (
-                            <Badge variant="error">Expired</Badge>
+                            <Badge variant="error">{t('courseView.expired')}</Badge>
                           )}
                           {!lecture.isUnlocked && !lecture.isExpired && (
-                            <Badge variant="default">Unowned</Badge>
+                            <Badge variant="default">{t('courseView.unowned')}</Badge>
                           )}
                         </div>
                         {lecture.description && (
@@ -212,18 +214,18 @@ export function StudentCourseView({ courseId }: { courseId: string }) {
                           lecture.isStarted ? (
                             <Link to={`/lecture/${lecture.id}`} className="btn-secondary text-sm">
                               <PlayCircle className="w-4 h-4" />
-                              Open Lecture
+                              {t('courseView.openLecture')}
                             </Link>
                           ) : (
                             <button onClick={() => startLecture(lecture)} className="btn-primary text-sm">
                               <PlayCircle className="w-4 h-4" />
-                              Start Lecture
+                              {t('courseView.startLecture')}
                             </button>
                           )
                         ) : (
                           <button onClick={() => setRedeemModal({ type: 'LECTURE', targetId: lecture.id })} className="btn-ghost text-theme-muted hover:text-white hover:bg-white/5 text-sm">
                             <Lock className="w-4 h-4" />
-                            {lecture.isExpired ? 'Renew Access' : 'Unlock Lecture'}
+                            {lecture.isExpired ? t('courseView.renewAccess') : t('courseView.unlockLecture')}
                           </button>
                         )}
                       </div>
@@ -281,7 +283,7 @@ export function StudentCourseView({ courseId }: { courseId: string }) {
         {/* Exams Section */}
         {exams && exams.length > 0 && (
           <div className="mt-12">
-            <h2 className="text-2xl font-display font-bold text-theme-text mb-6">Final Exams</h2>
+            <h2 className="text-2xl font-display font-bold text-theme-text mb-6">{t('courseView.finalExams')}</h2>
             <div className="space-y-4">
               {exams.map((exam: CourseExamItem & { isPassed?: boolean; attemptsCount?: number; passGrade?: number }) => (
                 <div key={exam.id} className="glass rounded-2xl p-5 hover:border-white/[0.12] transition-colors">
@@ -292,26 +294,26 @@ export function StudentCourseView({ courseId }: { courseId: string }) {
                        </div>
                        <div>
                          <h3 className="font-bold text-theme-text text-lg">{exam.title}</h3>
-                         <p className="text-sm text-theme-muted mt-1">{exam.description || 'Comprehensive assessment.'}</p>
+                         <p className="text-sm text-theme-muted mt-1">{exam.description || t('courseView.comprehensive')}</p>
                        </div>
                     </div>
                     <div className="flex flex-col items-end shrink-0 gap-2">
                     {exam.isPassed ? (
-                          <Badge variant="success">Passed</Badge>
+                          <Badge variant="success">{t('courseView.passed')}</Badge>
                        ) : (exam.attemptsCount ?? 0) >= exam.maxAttempts ? (
-                          <Badge variant="error">Attempts Exhausted</Badge>
+                          <Badge variant="error">{t('courseView.failed')}</Badge>
                        ) : (
-                          <Badge variant="default">Attempts: {exam.attemptsCount ?? 0} / {exam.maxAttempts}</Badge>
+                          <Badge variant="default">{t('courseView.attemptsLeft', { count: exam.maxAttempts - (exam.attemptsCount ?? 0) })}</Badge>
                        )}
                        
                        {(!exam.isPassed && (exam.attemptsCount ?? 0) < exam.maxAttempts) && (
                           <Link to={`/exam/${exam.id}`} className="btn-primary mt-2">
-                             Start Exam
+                             {t('courseView.openExam')}
                           </Link>
                        )}
                        {exam.isPassed && (
                           <Link to={`/exam/${exam.id}`} className="btn-secondary mt-2">
-                             View Results
+                             {t('courseView.openExam')}
                           </Link>
                        )}
                     </div>
@@ -329,38 +331,35 @@ export function StudentCourseView({ courseId }: { courseId: string }) {
       </div>
 
       {/* Redeem Modal */}
-      <Modal open={!!redeemModal} onClose={() => { setRedeemModal(null); setRedeemSuccess(false); setRedeemError(null); }} title="Redeem Activation Code">
+      <Modal open={!!redeemModal} onClose={() => { setRedeemModal(null); setRedeemSuccess(false); setRedeemError(null); }} title={t('courseView.redeemModalTitle')}>
         {redeemSuccess ? (
           <div className="py-8 flex flex-col items-center text-center animate-fade-up">
             <div className="w-16 h-16 rounded-full bg-success-500/20 flex items-center justify-center mb-4">
               <CheckCircle2 className="w-8 h-8 text-success-400" />
             </div>
-            <h3 className="text-xl font-bold text-theme-text mb-2">Code Redeemed!</h3>
-            <p className="text-theme-muted mb-6 max-w-sm">
-              Your code has been successfully verified. The {redeemModal?.type === 'COURSE' ? 'course' : 'lecture'} is now unlocked and ready to watch.
-            </p>
+            <h3 className="text-xl font-bold text-theme-text mb-2">{t('courseView.redeemSuccess')}</h3>
             <button onClick={() => { setRedeemModal(null); setRedeemSuccess(false); }} className="btn-primary w-full justify-center">
-              Start Learning
+              {t('common.close')}
             </button>
           </div>
         ) : (
           <form onSubmit={handleRedeem} className="space-y-4">
             <div>
-              <label className="label">Activation Code</label>
+              <label className="label">{t('courseView.redeemModalTitle')}</label>
               <div className="relative">
                 <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-theme-muted" />
                 <input
                   type="text"
                   required
                   className="input pl-10 font-mono tracking-wider uppercase text-lg"
-                  placeholder="XXXX-XXXX-XXXX"
+                  placeholder={t('courseView.codePlaceholder')}
                   value={redeemCode}
                   onChange={e => setRedeemCode(e.target.value)}
                   disabled={redeemBusy}
                 />
               </div>
               <p className="text-xs text-theme-muted mt-2">
-                Paste the 12-character activation code provided by your instructor.
+                {t('courseView.redeemModalDesc', { type: redeemModal?.type === 'COURSE' ? 'course' : 'lecture' })}
               </p>
             </div>
 
@@ -373,10 +372,10 @@ export function StudentCourseView({ courseId }: { courseId: string }) {
 
             <div className="flex justify-end gap-2 pt-2">
               <button type="button" onClick={() => setRedeemModal(null)} className="btn-ghost" disabled={redeemBusy}>
-                Cancel
+                {t('common.cancel')}
               </button>
               <button type="submit" className="btn-primary" disabled={redeemBusy || !redeemCode.trim()}>
-                {redeemBusy ? 'Verifying...' : 'Redeem Code'}
+                {redeemBusy ? t('courseView.redeeming') : t('courseView.redeem')}
               </button>
             </div>
           </form>
