@@ -5,6 +5,7 @@ import { Clock, CheckCircle2, XCircle, ArrowRight } from 'lucide-react';
 import { QuizQuestion, PlaylistItem } from '../lib/types';
 import { Modal } from './Modal';
 import { useTranslation } from 'react-i18next';
+import { useConfirm, ConfirmDialog } from '../hooks/useConfirm';
 
 type QuizResult = {
   score: number;
@@ -48,6 +49,8 @@ export function InteractiveQuizClient({
   // Result & Review State
   const [result, setResult] = useState<QuizResult | null>(null);
   const [reviewMode, setReviewMode] = useState(false);
+  
+  const { confirm, state: confirmState, handleConfirm, handleCancel } = useConfirm();
   const [pastResult, setPastResult] = useState<QuizResult | null>(null);
 
   useEffect(() => {
@@ -193,7 +196,8 @@ export function InteractiveQuizClient({
   };
 
   const handleSurrender = async () => {
-    const confirmed = window.confirm(
+    const confirmed = await confirm(
+      'Surrender Quiz',
       "This action will record the final score without any possibility of modification; afterwards, you can click 'Review Answers' to view the answers. Are you sure?"
     );
     if (!confirmed) return;

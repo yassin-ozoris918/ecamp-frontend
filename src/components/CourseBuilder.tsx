@@ -23,6 +23,7 @@ import type { Course, BuilderChapter, BuilderLecture, BuilderItem, CourseInstruc
 import { Badge, EmptyState, Skeleton } from './ui';
 import { Modal } from './Modal';
 import { AIQuizModal } from './InstructorDashboard';
+import { useConfirm, ConfirmDialog } from '../hooks/useConfirm';
 import { QuizBuilderModal } from './QuizBuilderModal';
 import { AttachmentsModal } from './AttachmentsModal';
 import { LectureSequenceBuilder } from './LectureSequenceBuilder';
@@ -162,6 +163,7 @@ export function CourseBuilder({ courseId }: { courseId: string }) {
   const [expandedLecs, setExpandedLecs] = useState<Set<string>>(new Set());
   const [createChapOpen, setCreateChapOpen] = useState(false);
   const [createLecOpen, setCreateLecOpen] = useState(false);
+  const { confirm, state: confirmState, handleConfirm, handleCancel } = useConfirm();
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [editTitle, setEditTitle] = useState('');
   const [editDesc, setEditDesc] = useState('');
@@ -457,11 +459,11 @@ export function CourseBuilder({ courseId }: { courseId: string }) {
                         <p className="font-bold text-theme-text truncate">{chapter.title}</p>
                         <p className="text-xs text-theme-muted">{chapter.lectures.length} lectures</p>
                       </div>
-                      <span
-                        role="button"
+                      <button
                         onClick={async (e) => {
                           e.stopPropagation();
-                          if (!confirm('Delete this chapter and all its content?')) return;
+                          const ok = await confirm('Delete Chapter', 'Delete this chapter and all its content?');
+                          if (!ok) return;
                           try {
                             await api.delete(`/chapters/${chapter.id}`);
                             queryClient.invalidateQueries({ queryKey: ['courseBuilder', courseId] });
@@ -473,7 +475,7 @@ export function CourseBuilder({ courseId }: { courseId: string }) {
                         className="p-2 rounded-lg text-theme-muted hover:text-rose-700 dark:text-rose-300 hover:bg-rose-500/10 transition-colors"
                       >
                         <Trash2 className="w-4 h-4" />
-                      </span>
+                      </button>
                     </button>
 
                     {expandedChap && (
@@ -504,7 +506,8 @@ export function CourseBuilder({ courseId }: { courseId: string }) {
                                     <div className="flex items-center gap-2">
                                        <button 
                                          onClick={async () => {
-                                           if (!confirm('Are you sure you want to delete this exam?')) return;
+                                           const ok = await confirm('Delete Exam', 'Are you sure you want to delete this exam?');
+                                           if (!ok) return;
                                            await api.delete(`/exams/${exam.id}`);
                                            load();
                                          }}
@@ -616,7 +619,8 @@ export function CourseBuilder({ courseId }: { courseId: string }) {
                     <div className="flex items-center gap-2">
                        <button 
                          onClick={async () => {
-                           if (!confirm('Are you sure you want to delete this exam?')) return;
+                           const ok = await confirm('Delete Exam', 'Are you sure you want to delete this exam?');
+                           if (!ok) return;
                            await api.delete(`/exams/${exam.id}`);
                            load();
                          }}
@@ -777,30 +781,50 @@ export function CourseBuilder({ courseId }: { courseId: string }) {
           }}
         />
       )}
+      <ConfirmDialog
+        open={confirmState.open}
+        title={confirmState.title}
+        message={confirmState.message}
+        onConfirm={handleConfirm}
+        onCancel={handleCancel}
+      />
     </div>
   );
 }
 
 function LectureActions({ lecture, onUpdated }: { lecture: BuilderLecture; onUpdated: () => void }) {
+  const { confirm, state: confirmState, handleConfirm, handleCancel } = useConfirm();
+
   return (
-    <div className="flex items-center gap-2">
-      <button
-        onClick={async (e) => {
-          e.stopPropagation();
-          if (!confirm('Delete this lecture and all its content?')) return;
-          try {
-            await api.delete(`/lectures/${lecture.id}`);
-            onUpdated();
-          } catch (err) {
-            console.error(err);
-          }
-        }}
-        className="p-2 rounded-lg text-theme-muted hover:text-rose-700 dark:text-rose-300 hover:bg-rose-500/10 transition-colors"
-        aria-label="Delete lecture"
-      >
-        <Trash2 className="w-4 h-4" />
-      </button>
-    </div>
+    <>
+      <div className="flex items-center gap-2">
+        <button
+          onClick={async (e) => {
+            e.stopPropagation();
+            const ok = await confirm('Delete Lecture', 'Delete this lecture and all its content?');
+            if (!ok) return;
+            try {
+              await api.delete(`/lectures/${lecture.id}`);
+              onUpdated();
+            } catch (err) {
+              console.error(err);
+            }
+          }}
+          className="p-2 rounded-lg text-theme-muted hover:text-rose-700 dark:text-rose-300 hover:bg-rose-500/10 transition-colors"
+          aria-label="Delete lecture"
+        >
+          <Trash2 className="w-4 h-4" />
+        </button>
+      </div>
+
+      <ConfirmDialog
+        open={confirmState.open}
+        title={confirmState.title}
+        message={confirmState.message}
+        onConfirm={handleConfirm}
+        onCancel={handleCancel}
+      />
+    </>
   );
 }
 

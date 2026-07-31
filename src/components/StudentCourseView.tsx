@@ -15,6 +15,7 @@ import { Link, useRouter } from '../lib/router';
 import type { Course, Chapter, Lecture, CourseExamItem } from '../lib/types';
 import { Badge, Spinner } from './ui';
 import { Modal } from './Modal';
+import { useConfirm, ConfirmDialog } from '../hooks/useConfirm';
 
 export function StudentCourseView({ courseId }: { courseId: string }) {
   const { profile } = useAuth();
@@ -26,6 +27,8 @@ export function StudentCourseView({ courseId }: { courseId: string }) {
   const [exams, setExams] = useState<(CourseExamItem & { isPassed?: boolean; attemptsCount?: number; passGrade?: number })[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  const { confirm, state: confirmState, handleConfirm, handleCancel } = useConfirm();
 
   // Redeem state
   const [redeemModal, setRedeemModal] = useState<{ type: 'LECTURE' | 'COURSE', targetId: string } | null>(null);
@@ -93,7 +96,11 @@ export function StudentCourseView({ courseId }: { courseId: string }) {
       lecture.durationMinutes ? `${lecture.durationMinutes}m` : ''
     ].filter(Boolean).join(' ') || 'Lifetime';
     
-    if (confirm(`Starting this lecture will begin your ${durationStr} access timer. Are you sure you want to start now?`)) {
+    const ok = await confirm(
+      'Start Lecture',
+      `Starting this lecture will begin your ${durationStr} access timer. Are you sure you want to start now?`
+    );
+    if (ok) {
       try {
         await api.post(`/lectures/${lecture.id}/start-access`);
         navigate(`/lecture/${lecture.id}`);
@@ -375,6 +382,14 @@ export function StudentCourseView({ courseId }: { courseId: string }) {
           </form>
         )}
       </Modal>
+
+      <ConfirmDialog
+        open={confirmState.open}
+        title={confirmState.title}
+        message={confirmState.message}
+        onConfirm={handleConfirm}
+        onCancel={handleCancel}
+      />
     </div>
   );
 }

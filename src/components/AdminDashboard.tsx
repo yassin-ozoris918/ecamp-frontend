@@ -32,6 +32,7 @@ import { SearchBox, CreateCourseModal } from './InstructorDashboard';
 import { useAuth } from '../lib/authContext';
 import { Link, useRouter } from '../lib/router';
 import { useTranslation } from 'react-i18next';
+import { useConfirm, ConfirmDialog } from '../hooks/useConfirm';
 
 export function AdminDashboard() {
   const [stats, setStats] = useState<{ students: number; instructors: number; courses: number; codesRedeemed: number; codesGenerated: number } | null>(null);
@@ -754,6 +755,8 @@ export function AdminCodes() {
   const [typeFilter, setTypeFilter] = useState('All');
   const [audienceFilter, setAudienceFilter] = useState('All');
 
+  const { confirm, state: confirmState, handleConfirm, handleCancel } = useConfirm();
+
   const loadCodes = useCallback(async () => {
     try {
       let query = `/activation-codes?`;
@@ -775,7 +778,8 @@ export function AdminCodes() {
   }, [loadCodes]);
 
   const handleDeactivate = async (id: string) => {
-    if (!confirm('Are you sure you want to instantly deactivate this code?')) return;
+    const ok = await confirm('Deactivate Code', 'Are you sure you want to instantly deactivate this code?');
+    if (!ok) return;
     try {
       await api.post(`/activation-codes/${id}/deactivate`);
       loadCodes();
@@ -929,6 +933,13 @@ export function AdminCodes() {
           setGenModalOpen(false);
           loadCodes();
         }}
+      />
+      <ConfirmDialog
+        open={confirmState.open}
+        title={confirmState.title}
+        message={confirmState.message}
+        onConfirm={handleConfirm}
+        onCancel={handleCancel}
       />
     </div>
   );
@@ -1084,6 +1095,7 @@ export function AdminCourses() {
   const [busy, setBusy] = useState(false);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
+  const { confirm, state: confirmState, handleConfirm, handleCancel } = useConfirm();
 
   const loadCourses = useCallback(async () => {
     try {
@@ -1108,7 +1120,8 @@ export function AdminCourses() {
   const filtered = Array.isArray(courses) ? courses : []; // Filtering is now handled securely by the backend
 
   async function handleDelete(courseId: string) {
-    if (!confirm('Are you absolutely sure you want to permanently delete this course and all of its content? This cannot be undone.')) return;
+    const ok = await confirm('Delete Course', 'Are you absolutely sure you want to permanently delete this course and all of its content? This cannot be undone.');
+    if (!ok) return;
     setBusy(true);
     try {
       await api.delete(`/courses/${courseId}`);
@@ -1218,6 +1231,13 @@ export function AdminCourses() {
           setCreateCourseOpen(false);
           navigate(`/instructor/course/${newCourseId}`);
         }}
+      />
+      <ConfirmDialog
+        open={confirmState.open}
+        title={confirmState.title}
+        message={confirmState.message}
+        onConfirm={handleConfirm}
+        onCancel={handleCancel}
       />
     </div>
   );

@@ -3,6 +3,7 @@ import { useMutation } from '@tanstack/react-query';
 import { api } from '../lib/api';
 import { ArrowUp, ArrowDown, GripVertical, FileQuestion, PlayCircle, Paperclip, Trash2, Edit3 } from 'lucide-react';
 import { Badge, Spinner } from './ui';
+import { useConfirm, ConfirmDialog } from '../hooks/useConfirm';
 
 function ItemIcon({ type, className }: { type: string; className?: string }) {
   if (type === 'QUIZ') return <FileQuestion className={className} />;
@@ -12,24 +13,37 @@ function ItemIcon({ type, className }: { type: string; className?: string }) {
 }
 
 function DeleteItemButton({ itemId, type, onDeleted }: { itemId: string; type: 'SESSION' | 'QUIZ' | 'ATTACHMENT'; onDeleted: () => void }) {
+  const { confirm, state: confirmState, handleConfirm, handleCancel } = useConfirm();
+
   return (
-    <button
-      onClick={async (e) => {
-        e.stopPropagation();
-        if (!confirm('Delete this item?')) return;
-        try {
-          const endpoint = type === 'SESSION' ? 'sessions' : type === 'QUIZ' ? 'quizzes' : 'attachments';
-          await api.delete(`/${endpoint}/${itemId}`);
-          onDeleted();
-        } catch(err) {
-          console.error(err);
-        }
-      }}
-      className="p-1.5 rounded-lg text-theme-muted hover:text-rose-700 dark:text-rose-300 hover:bg-rose-500/10 transition-colors"
-      title="Delete Item"
-    >
-      <Trash2 className="w-3.5 h-3.5" />
-    </button>
+    <>
+      <button
+        onClick={async (e) => {
+          e.stopPropagation();
+          const ok = await confirm('Delete Item', 'Are you sure you want to delete this item?');
+          if (!ok) return;
+          try {
+            const endpoint = type === 'SESSION' ? 'sessions' : type === 'QUIZ' ? 'quizzes' : 'attachments';
+            await api.delete(`/${endpoint}/${itemId}`);
+            onDeleted();
+          } catch(err) {
+            console.error(err);
+          }
+        }}
+        className="p-1.5 rounded-lg text-theme-muted hover:text-rose-700 dark:text-rose-300 hover:bg-rose-500/10 transition-colors"
+        title="Delete Item"
+      >
+        <Trash2 className="w-3.5 h-3.5" />
+      </button>
+
+      <ConfirmDialog
+        open={confirmState.open}
+        title={confirmState.title}
+        message={confirmState.message}
+        onConfirm={handleConfirm}
+        onCancel={handleCancel}
+      />
+    </>
   );
 }
 

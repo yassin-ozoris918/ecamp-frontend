@@ -25,6 +25,7 @@ import type {  Course } from '../lib/types';
 import { Badge, EmptyState, Skeleton } from './ui';
 import { Modal } from './Modal';
 import { useTranslation } from 'react-i18next';
+import { useConfirm, ConfirmDialog } from '../hooks/useConfirm';
 
 export function InstructorDashboard() {
   const { profile } = useAuth();
@@ -35,6 +36,7 @@ export function InstructorDashboard() {
   const [codesGenerated, setCodesGenerated] = useState(0);
   const [loading, setLoading] = useState(true);
   const [createCourseOpen, setCreateCourseOpen] = useState(false);
+  const { confirm, state: confirmState, handleConfirm, handleCancel } = useConfirm();
 
   const { t } = useTranslation();
 
@@ -148,7 +150,8 @@ export function InstructorDashboard() {
                     <button onClick={async (e) => {
                       e.preventDefault();
                       e.stopPropagation();
-                      if (confirm('Are you sure you want to delete this course? This action cannot be undone.')) {
+                      const ok = await confirm('Delete Course', 'Are you sure you want to delete this course? This action cannot be undone.');
+                      if (ok) {
                         try {
                           await api.delete(`/courses/${c.id}`);
                           setCourses(prev => prev.filter(course => course.id !== c.id));
@@ -174,6 +177,13 @@ export function InstructorDashboard() {
         open={createCourseOpen}
         onClose={() => setCreateCourseOpen(false)}
         onCreated={(id) => navigate(`/instructor/course/${id}`)}
+      />
+      <ConfirmDialog
+        open={confirmState.open}
+        title={confirmState.title}
+        message={confirmState.message}
+        onConfirm={handleConfirm}
+        onCancel={handleCancel}
       />
     </div>
   );
@@ -284,6 +294,7 @@ export function InstructorCourses() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [createOpen, setCreateOpen] = useState(false);
+  const { confirm, state: confirmState, handleConfirm, handleCancel } = useConfirm();
 
   const load = useCallback(async () => {
     if (!profile) return;
@@ -329,7 +340,8 @@ export function InstructorCourses() {
               <button onClick={async (e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                if (confirm('Are you sure you want to delete this course? This action cannot be undone.')) {
+                const ok = await confirm('Delete Course', 'Are you sure you want to delete this course? This action cannot be undone.');
+                if (ok) {
                   try {
                     await api.delete(`/courses/${c.id}`);
                     setCourses(prev => prev.filter(course => course.id !== c.id));
@@ -344,6 +356,13 @@ export function InstructorCourses() {
         </div>
       )}
       <CreateCourseModal open={createOpen} onClose={() => setCreateOpen(false)} onCreated={(id) => navigate(`/instructor/course/${id}`)} />
+      <ConfirmDialog
+        open={confirmState.open}
+        title={confirmState.title}
+        message={confirmState.message}
+        onConfirm={handleConfirm}
+        onCancel={handleCancel}
+      />
     </div>
   );
 }
