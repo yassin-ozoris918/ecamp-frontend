@@ -84,6 +84,24 @@ export function StudentCourseView({ courseId }: { courseId: string }) {
     }
   }
 
+  async function startLecture(lecture: Lecture) {
+    if (!profile) return;
+    const durationStr = [
+      lecture.durationDays ? `${lecture.durationDays}d` : '',
+      lecture.durationHours ? `${lecture.durationHours}h` : '',
+      lecture.durationMinutes ? `${lecture.durationMinutes}m` : ''
+    ].filter(Boolean).join(' ') || 'Lifetime';
+    
+    if (confirm(`Starting this lecture will begin your ${durationStr} access timer. Are you sure you want to start now?`)) {
+      try {
+        await api.post(`/lectures/${lecture.id}/start-access`);
+        navigate(`/lecture/${lecture.id}`);
+      } catch (err: unknown) {
+        alert((err as any)?.response?.data?.message || 'Failed to start lecture.');
+      }
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -183,10 +201,17 @@ export function StudentCourseView({ courseId }: { courseId: string }) {
                       </div>
                       <div className="flex items-center gap-3 shrink-0">
                         {lecture.isUnlocked && !lecture.isExpired ? (
-                          <Link to={`/lecture/${lecture.id}`} className="btn-secondary text-sm">
-                            <PlayCircle className="w-4 h-4" />
-                            Open Lecture
-                          </Link>
+                          lecture.isStarted ? (
+                            <Link to={`/lecture/${lecture.id}`} className="btn-secondary text-sm">
+                              <PlayCircle className="w-4 h-4" />
+                              Open Lecture
+                            </Link>
+                          ) : (
+                            <button onClick={() => startLecture(lecture)} className="btn-primary text-sm">
+                              <PlayCircle className="w-4 h-4" />
+                              Start Lecture
+                            </button>
+                          )
                         ) : (
                           <button onClick={() => setRedeemModal({ type: 'LECTURE', targetId: lecture.id })} className="btn-ghost text-theme-muted hover:text-white hover:bg-white/5 text-sm">
                             <Lock className="w-4 h-4" />

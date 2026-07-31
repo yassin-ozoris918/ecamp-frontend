@@ -46,6 +46,7 @@ export function LecturePlaylist({ lectureId }: { lectureId: string }) {
   const [activeItemId, setActiveItemId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isFullyLocked, setIsFullyLocked] = useState(false);
+  const [isStarted, setIsStarted] = useState(true);
   const [code, setCode] = useState('');
   const [codeBusy, setCodeBusy] = useState(false);
 
@@ -72,7 +73,8 @@ export function LecturePlaylist({ lectureId }: { lectureId: string }) {
       setAllLectures(Array.isArray(data.allLectures) ? data.allLectures : []);
       const playlistData = Array.isArray(data.playlist) ? data.playlist : [];
       setItems(playlistData);
-      setIsFullyLocked(data.isFullyLocked ?? false);
+      setIsFullyLocked(data.isLocked ?? false);
+      setIsStarted(data.isStarted ?? true);
       
       const compIds = new Set<string>();
       for (const p of playlistData) {
@@ -179,6 +181,16 @@ export function LecturePlaylist({ lectureId }: { lectureId: string }) {
     setCodeBusy(false);
   }
 
+  async function handleStartLecture() {
+    if (!profile || !lecture) return;
+    try {
+      await api.post(`/lectures/${lecture.id}/start-access`);
+      await loadData();
+    } catch (e: unknown) {
+      setError((e as any)?.response?.data?.message || 'Failed to start lecture.');
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-24">
@@ -248,11 +260,26 @@ export function LecturePlaylist({ lectureId }: { lectureId: string }) {
                     className="input text-center text-lg tracking-wider"
                     required
                   />
-                  <button type="submit" disabled={codeBusy || !code.trim()} className="btn-primary w-full">
-                    {codeBusy ? 'Verifying...' : 'Unlock Lecture'}
+                  <button type="submit" disabled={codeBusy || !code.trim()} className="btn-primary w-full justify-center">
+                    {codeBusy ? 'Verifying…' : 'Unlock Now'}
                   </button>
                 </div>
               </form>
+            </div>
+          ) : !isStarted ? (
+            <div className="glass rounded-2xl p-8 sm:p-12 text-center animate-scale-in border-accent-500/20">
+              <div className="w-20 h-20 mx-auto rounded-full bg-accent-500/10 flex items-center justify-center text-accent-400 mb-6">
+                <PlayCircle className="w-10 h-10" />
+              </div>
+              <h2 className="text-2xl font-display font-bold text-theme-text mb-2">Lecture Ready</h2>
+              <p className="text-theme-muted mb-8 max-w-md mx-auto">
+                You have access to this lecture. Click the button below to start your access timer and begin watching.
+              </p>
+              
+              <button onClick={handleStartLecture} className="btn-primary mx-auto">
+                <PlayCircle className="w-5 h-5 mr-2" />
+                Start Lecture Now
+              </button>
             </div>
           ) : activeItem ? (
             activeItem.type === 'SESSION' ? (
