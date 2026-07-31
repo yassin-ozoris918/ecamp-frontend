@@ -782,10 +782,37 @@ export function AdminCodes() {
     if (!ok) return;
     try {
       await api.post(`/activation-codes/${id}/deactivate`);
+      toast.success('Code deactivated successfully.');
       loadCodes();
     } catch (e) {
       console.error(e);
       toast.error('Failed to deactivate code.');
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    const ok = await confirm('Delete Code', 'Are you sure you want to permanently delete this code? This action cannot be undone.');
+    if (!ok) return;
+    try {
+      await api.delete(`/activation-codes/${id}`);
+      toast.success('Code deleted successfully.');
+      loadCodes();
+    } catch (e) {
+      console.error(e);
+      toast.error('Failed to delete code.');
+    }
+  };
+
+  const handleClearAll = async () => {
+    const ok = await confirm('Clear All Codes', 'Are you absolutely sure you want to delete ALL activation codes in the platform? This is irreversible!');
+    if (!ok) return;
+    try {
+      await api.delete(`/activation-codes/all`);
+      toast.success('All codes cleared successfully.');
+      loadCodes();
+    } catch (e) {
+      console.error(e);
+      toast.error('Failed to clear codes.');
     }
   };
 
@@ -862,8 +889,11 @@ export function AdminCodes() {
           >
             Export CSV
           </button>
+          <button onClick={handleClearAll} className="btn-secondary text-error-400 hover:text-error-300 border-error-500/20 hover:bg-error-500/10">
+            <Trash2 className="w-4 h-4 mr-2" /> Clear All
+          </button>
           <button onClick={() => setGenModalOpen(true)} className="btn-primary">
-            <KeyRound className="w-4 h-4" /> Generate Codes
+            <KeyRound className="w-4 h-4 mr-2" /> Generate Codes
           </button>
         </div>
       </div>
@@ -913,11 +943,16 @@ export function AdminCodes() {
                   <td className="p-4 text-theme-muted">{c.redeemerName ?? '—'}</td>
                   <td className="p-4 text-theme-muted">{new Date(c.createdAt).toLocaleDateString()}</td>
                   <td className="p-4 text-end">
-                    {c.status === 'UNUSED' && (
-                      <button onClick={() => handleDeactivate(c.id)} className="btn-secondary text-red-400 hover:text-red-300 py-1 px-3 text-xs">
-                        Deactivate
+                    <div className="flex items-center justify-end gap-2">
+                      {c.status === 'UNUSED' && (
+                        <button onClick={() => handleDeactivate(c.id)} className="btn-secondary text-warning-400 hover:text-warning-300 py-1 px-3 text-xs">
+                          Deactivate
+                        </button>
+                      )}
+                      <button onClick={() => handleDelete(c.id)} className="btn-secondary text-error-400 hover:text-error-300 py-1 px-2 text-xs" title="Delete Code">
+                        <Trash2 className="w-4 h-4" />
                       </button>
-                    )}
+                    </div>
                   </td>
                 </tr>
               ))}
