@@ -266,6 +266,7 @@ export interface UserListItem {
   lastLoginAt: string | null;
   phoneNumber: string | null;
   deviceId?: string | null;
+  profilePictureUrl?: string | null;
 }
 
 export interface AdminUserDetail extends UserListItem {

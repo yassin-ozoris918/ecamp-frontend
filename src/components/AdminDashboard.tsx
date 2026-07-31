@@ -25,7 +25,7 @@ import {
   Plus,
 } from 'lucide-react';
 import { api } from '../lib/api';
-import type { Profile, AdminStats, UserListItem, ActivationCode, Course, BuilderLecture, CourseInstructor } from '../lib/types';
+import type { Profile, UserListItem, ActivationCode, Course, CourseInstructor } from '../lib/types';
 import { Badge, EmptyState, Skeleton } from './ui';
 import { Modal } from './Modal';
 import { SearchBox, CreateCourseModal } from './InstructorDashboard';
