@@ -1440,7 +1440,7 @@ export function AdminPendingUsers() {
     queryKey: ['adminPendingUsers'],
     queryFn: async () => {
       const { data } = await api.get('/admin/users?isActive=false');
-      return data;
+      return data.items || [];
     }
   });
 
