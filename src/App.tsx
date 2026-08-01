@@ -25,6 +25,7 @@ const AdminDashboard = lazy(() => import('./components/AdminDashboard').then(m =
 const AdminUsers = lazy(() => import('./components/AdminDashboard').then(m => ({ default: m.AdminUsers })));
 const AdminCodes = lazy(() => import('./components/AdminDashboard').then(m => ({ default: m.AdminCodes })));
 const AdminCourses = lazy(() => import('./components/AdminDashboard').then(m => ({ default: m.AdminCourses })));
+const AdminProfileRequests = lazy(() => import('./components/AdminDashboard').then(m => ({ default: m.AdminProfileRequests })));
 const AcademicRiskDashboard = lazy(() => import('./components/AcademicRiskDashboard').then(m => ({ default: m.AcademicRiskDashboard })));
 const NotificationLogViewer = lazy(() => import('./components/NotificationLogViewer').then(m => ({ default: m.NotificationLogViewer })));
 const Student360Workspace = lazy(() => import('./components/Student360Workspace').then(m => ({ default: m.Student360Workspace })));
@@ -215,6 +216,7 @@ function RoleRoutes({ role }: { role: string }) {
         { pattern: '/admin/notifications', element: () => <NotificationLogViewer /> },
         { pattern: '/admin/student-360', element: () => <Student360Workspace /> },
         { pattern: '/admin/audit-logs', element: () => <SystemAuditViewer /> },
+        { pattern: '/admin/profile-requests', element: () => <AdminProfileRequests /> },
         { pattern: '/instructor', element: () => <InstructorDashboard /> },
         { pattern: '/instructor/courses', element: () => <InstructorCourses /> },
         { pattern: '/instructor/grading', element: () => <GradingQueue /> },

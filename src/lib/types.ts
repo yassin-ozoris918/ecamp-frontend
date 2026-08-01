@@ -9,6 +9,7 @@ export type SettingType = 'STRING' | 'BOOLEAN' | 'INTEGER' | 'JSON';
 export type EntityType = 'chapter' | 'lecture' | 'session' | 'quiz' | 'quiz-question';
 export type ExportEntity = 'users' | 'courses' | 'lectures' | 'quiz-attempts' | 'exam-attempts' | 'activation-codes' | 'audit-logs' | 'progress';
 export type ExportFormat = 'xlsx' | 'csv' | 'json' | 'pdf';
+export type RequestStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
 
 export interface Profile {
   id: string;
@@ -251,6 +252,26 @@ export interface AdminStats {
   totalLectureAccess: number;
   totalCertificates: number;
   dailyActiveUsers: number;
+}
+
+export interface ProfileUpdateRequest {
+  id: string;
+  studentId: string;
+  requestedFullName: string | null;
+  requestedPhoneNumber: string | null;
+  requestedParentPhone: string | null;
+  status: RequestStatus;
+  createdAt: string;
+  updatedAt: string;
+  reviewedBy: string | null;
+  reviewedAt: string | null;
+  rejectionReason: string | null;
+  student?: {
+    fullName: string;
+    email: string;
+    phoneNumber: string | null;
+    parentPhoneNumber: string | null;
+  };
 }
 
 export interface UserListItem {

@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { useAuth } from '../lib/authContext';
 import { api } from '../lib/api';
-import { User, Lock, Camera } from 'lucide-react';
+import { User, Lock, Camera, ShieldAlert, Edit2 } from 'lucide-react';
 import { Spinner, Badge } from './ui';
+import { Modal } from './Modal';
+import { useQuery } from '@tanstack/react-query';
 
 export function ProfileScreen() {
   const { profile, refetchProfile } = useAuth();
@@ -22,6 +24,22 @@ export function ProfileScreen() {
   const [infoLoading, setInfoLoading] = useState(false);
   const [infoError, setInfoError] = useState<string | null>(null);
   const [infoSuccess, setInfoSuccess] = useState(false);
+
+  // Request Update Modal State
+  const [updateModalOpen, setUpdateModalOpen] = useState(false);
+  const [reqFullName, setReqFullName] = useState('');
+  const [reqPhoneNumber, setReqPhoneNumber] = useState('');
+  const [reqParentPhone, setReqParentPhone] = useState('');
+  const [reqLoading, setReqLoading] = useState(false);
+  const [reqError, setReqError] = useState<string | null>(null);
+
+  const { data: pendingRequest, refetch: refetchRequest } = useQuery({
+    queryKey: ['profileUpdateRequest'],
+    queryFn: async () => {
+      const { data } = await api.get('/profile-update-requests/me');
+      return data;
+    }
+  });
 
   // Avatar State
   const [avatarLoading, setAvatarLoading] = useState(false);
@@ -74,25 +92,39 @@ export function ProfileScreen() {
     setAvatarLoading(false);
   }
 
-  async function handleInfoSubmit(e: React.FormEvent) {
+  async function handleRequestSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setInfoLoading(true);
-    setInfoError(null);
-    setInfoSuccess(false);
+    if (!reqFullName.trim() && !reqPhoneNumber.trim() && !reqParentPhone.trim()) {
+      setReqError('Must provide at least one field to update');
+      return;
+    }
+
+    setReqLoading(true);
+    setReqError(null);
 
     try {
-      const { data } = await api.post('/users/profile', {
-        fullName: fullName.trim() || undefined,
-        phoneNumber: phoneNumber.trim() || undefined,
-        parentPhoneNumber: parentPhoneNumber.trim() || undefined,
+      await api.post('/profile-update-requests/me', {
+        requestedFullName: reqFullName.trim() || undefined,
+        requestedPhoneNumber: reqPhoneNumber.trim() || undefined,
+        requestedParentPhone: reqParentPhone.trim() || undefined,
       });
-      localStorage.setItem('user', JSON.stringify(data));
-      await refetchProfile();
-      setInfoSuccess(true);
+      await refetchRequest();
+      setUpdateModalOpen(false);
+      setReqFullName('');
+      setReqPhoneNumber('');
+      setReqParentPhone('');
     } catch (err: any) {
-      setInfoError(err.response?.data?.message || 'Failed to update profile info');
+      setReqError(err.response?.data?.message || 'Failed to submit profile update request');
     }
-    setInfoLoading(false);
+    setReqLoading(false);
+  }
+
+  function openRequestModal() {
+    setReqFullName(fullName);
+    setReqPhoneNumber(phoneNumber);
+    setReqParentPhone(parentPhoneNumber);
+    setReqError(null);
+    setUpdateModalOpen(true);
   }
 
   if (!profile) return null;
@@ -154,64 +186,65 @@ export function ProfileScreen() {
               <h2 className="text-xl font-display font-bold text-theme-text">Profile Information</h2>
             </div>
 
-            <form onSubmit={handleInfoSubmit} className="space-y-5">
-              {infoError && (
-                <div className="p-4 rounded-xl bg-error-500/10 border border-error-500/20 text-error-400 text-sm">
-                  {infoError}
-                </div>
-              )}
-              {infoSuccess && (
-                <div className="p-4 rounded-xl bg-success-500/10 border border-success-500/20 text-success-400 text-sm">
-                  Profile updated successfully.
+            <div className="space-y-5">
+              {pendingRequest && (
+                <div className="p-4 rounded-xl bg-warning-500/10 border border-warning-500/20 text-warning-400 text-sm flex items-center gap-2">
+                  <ShieldAlert className="w-5 h-5 shrink-0" />
+                  Your profile update request is pending approval. You will be notified once an administrator reviews it.
                 </div>
               )}
 
               <div>
-                <label className="block text-sm font-medium text-theme-muted mb-1.5">Full Name</label>
+                <label className="block text-sm font-medium text-theme-muted mb-1.5 flex items-center gap-2">
+                  Full Name
+                  <Lock className="w-3 h-3 text-theme-muted" />
+                </label>
                 <input
                   type="text"
-                  required
                   value={fullName}
-                  onChange={e => setFullName(e.target.value)}
-                  className="input w-full"
-                  placeholder="Your full name"
+                  disabled
+                  className="input w-full opacity-60 cursor-not-allowed"
                 />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
-                  <label className="block text-sm font-medium text-theme-muted mb-1.5">Phone Number</label>
+                  <label className="block text-sm font-medium text-theme-muted mb-1.5 flex items-center gap-2">
+                    Phone Number
+                    <Lock className="w-3 h-3 text-theme-muted" />
+                  </label>
                   <input
                     type="text"
                     value={phoneNumber}
-                    onChange={e => setPhoneNumber(e.target.value)}
-                    className="input w-full"
-                    placeholder="Your phone number"
+                    disabled
+                    className="input w-full opacity-60 cursor-not-allowed"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-theme-muted mb-1.5">Parent Phone Number</label>
+                  <label className="block text-sm font-medium text-theme-muted mb-1.5 flex items-center gap-2">
+                    Parent Phone Number
+                    <Lock className="w-3 h-3 text-theme-muted" />
+                  </label>
                   <input
                     type="text"
                     value={parentPhoneNumber}
-                    onChange={e => setParentPhoneNumber(e.target.value)}
-                    className="input w-full"
-                    placeholder="Parent's phone number"
+                    disabled
+                    className="input w-full opacity-60 cursor-not-allowed"
                   />
                 </div>
               </div>
 
               <div className="pt-4 flex justify-end">
                 <button 
-                  type="submit" 
-                  disabled={infoLoading}
+                  onClick={openRequestModal} 
+                  disabled={!!pendingRequest}
                   className="btn-secondary"
                 >
-                  {infoLoading ? <Spinner className="w-4 h-4 mr-2" /> : null}
-                  Update Information
+                  <Edit2 className="w-4 h-4 mr-2" />
+                  {pendingRequest ? 'Change Requested' : 'Request Change'}
                 </button>
               </div>
-            </form>
+            </div>
           </div>
 
           {/* Change Password Form */}
@@ -288,6 +321,66 @@ export function ProfileScreen() {
         </div>
 
       </div>
+
+      {/* Request Update Modal */}
+      <Modal isOpen={updateModalOpen} onClose={() => setUpdateModalOpen(false)} title="Request Profile Update">
+        <form onSubmit={handleRequestSubmit} className="space-y-4">
+          <p className="text-sm text-theme-muted mb-4">
+            Changes to your profile information require administrator approval. 
+            Submit your correct details below and an admin will review your request.
+          </p>
+
+          {reqError && (
+            <div className="p-4 rounded-xl bg-error-500/10 border border-error-500/20 text-error-400 text-sm">
+              {reqError}
+            </div>
+          )}
+
+          <div>
+            <label className="block text-sm font-medium text-theme-muted mb-1.5">Requested Full Name</label>
+            <input
+              type="text"
+              value={reqFullName}
+              onChange={e => setReqFullName(e.target.value)}
+              className="input w-full"
+              placeholder="Your correct full name"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-theme-muted mb-1.5">Requested Phone Number</label>
+            <input
+              type="text"
+              value={reqPhoneNumber}
+              onChange={e => setReqPhoneNumber(e.target.value)}
+              className="input w-full"
+              placeholder="Your correct phone number"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-theme-muted mb-1.5">Requested Parent Phone Number</label>
+            <input
+              type="text"
+              value={reqParentPhone}
+              onChange={e => setReqParentPhone(e.target.value)}
+              className="input w-full"
+              placeholder="Correct parent's phone number"
+            />
+          </div>
+
+          <div className="flex justify-end gap-3 mt-6">
+            <button type="button" onClick={() => setUpdateModalOpen(false)} className="btn-secondary">
+              Cancel
+            </button>
+            <button type="submit" disabled={reqLoading} className="btn-primary">
+              {reqLoading ? <Spinner className="w-4 h-4 mr-2" /> : null}
+              Submit Request
+            </button>
+          </div>
+        </form>
+      </Modal>
+
     </div>
   );
 }

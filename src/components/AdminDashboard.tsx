@@ -26,7 +26,7 @@ import {
 } from 'lucide-react';
 import { api } from '../lib/api';
 import type { Profile, UserListItem, ActivationCode, Course, CourseInstructor } from '../lib/types';
-import { Badge, EmptyState, Skeleton } from './ui';
+import { Badge, EmptyState, Skeleton, Spinner } from './ui';
 import { Modal } from './Modal';
 import { SearchBox, CreateCourseModal } from './InstructorDashboard';
 import { useAuth } from '../lib/authContext';
@@ -109,6 +109,15 @@ export function AdminDashboard() {
           to="#/admin/notifications"
           color="text-secondary-700 dark:text-secondary-300"
           bg="bg-secondary-500/10"
+        />
+
+        <QuickActionCard
+          icon={<User className="w-5 h-5" />}
+          title="Profile Change Requests"
+          description="Review and approve student requests to change their name or phone number."
+          to="#/admin/profile-requests"
+          color="text-accent-700 dark:text-accent-300"
+          bg="bg-accent-500/10"
         />
 
         <QuickActionCard
@@ -1274,6 +1283,111 @@ export function AdminCourses() {
         onConfirm={handleConfirm}
         onCancel={handleCancel}
       />
+    </div>
+  );
+}
+
+// --- Admin Profile Requests Page ---
+export function AdminProfileRequests() {
+  const { data: requests, isLoading, refetch } = useQuery({
+    queryKey: ['adminProfileRequests'],
+    queryFn: async () => {
+      const { data } = await api.get('/profile-update-requests');
+      return data;
+    }
+  });
+
+  const handleApprove = async (id: string) => {
+    try {
+      await api.post(`/profile-update-requests/${id}/approve`);
+      toast.success('Profile update approved');
+      refetch();
+    } catch (e: any) {
+      toast.error(e.response?.data?.message || 'Failed to approve request');
+    }
+  };
+
+  const handleReject = async (id: string) => {
+    const reason = prompt('Optional rejection reason:');
+    if (reason === null) return; // Cancelled
+    try {
+      await api.post(`/profile-update-requests/${id}/reject`, { reason });
+      toast.success('Profile update rejected');
+      refetch();
+    } catch (e: any) {
+      toast.error(e.response?.data?.message || 'Failed to reject request');
+    }
+  };
+
+  return (
+    <div className="space-y-6 animate-fade-up">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+        <div>
+          <Link to="#/admin" className="inline-flex items-center text-sm text-theme-muted hover:text-theme-text mb-4 transition-colors">
+            <RotateCcw className="w-4 h-4 mr-2" />
+            Back to Dashboard
+          </Link>
+          <h1 className="text-3xl font-display font-bold text-theme-text">Profile Requests</h1>
+          <p className="text-theme-muted mt-1">Review student requests to update restricted profile fields.</p>
+        </div>
+      </div>
+
+      <div className="glass rounded-3xl overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm">
+            <thead className="bg-white/[0.02]">
+              <tr className="text-xs uppercase tracking-wider text-theme-muted border-b border-theme-border">
+                <th className="p-4">Student</th>
+                <th className="p-4">Current Info</th>
+                <th className="p-4">Requested Updates</th>
+                <th className="p-4">Status</th>
+                <th className="p-4">Date</th>
+                <th className="p-4 text-end">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-white/[0.04]">
+              {isLoading ? (
+                <tr>
+                  <td colSpan={6} className="p-8 text-center"><Spinner className="w-6 h-6 mx-auto text-theme-muted" /></td>
+                </tr>
+              ) : !requests || requests.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="p-8 text-center text-theme-muted">No profile update requests found.</td>
+                </tr>
+              ) : (
+                requests.map((r: any) => (
+                  <tr key={r.id} className="hover:bg-white/[0.02]">
+                    <td className="p-4 font-medium text-theme-text">{r.student?.fullName}<br/><span className="text-xs text-theme-muted">{r.student?.email}</span></td>
+                    <td className="p-4 text-theme-muted text-xs">
+                      {r.student?.phoneNumber && <div>Phone: {r.student?.phoneNumber}</div>}
+                      {r.student?.parentPhoneNumber && <div>Parent: {r.student?.parentPhoneNumber}</div>}
+                    </td>
+                    <td className="p-4">
+                      {r.requestedFullName && <div className="text-accent-400 text-xs">Name ➔ {r.requestedFullName}</div>}
+                      {r.requestedPhoneNumber && <div className="text-accent-400 text-xs">Phone ➔ {r.requestedPhoneNumber}</div>}
+                      {r.requestedParentPhone && <div className="text-accent-400 text-xs">Parent ➔ {r.requestedParentPhone}</div>}
+                    </td>
+                    <td className="p-4">
+                      <Badge variant={r.status === 'PENDING' ? 'warning' : r.status === 'APPROVED' ? 'success' : 'error'}>
+                        {r.status}
+                      </Badge>
+                    </td>
+                    <td className="p-4 text-theme-muted">{new Date(r.createdAt).toLocaleDateString()}</td>
+                    <td className="p-4 text-end">
+                      {r.status === 'PENDING' && (
+                        <div className="flex justify-end gap-2">
+                          <button onClick={() => handleApprove(r.id)} className="btn-primary py-1 px-3 text-xs">Approve</button>
+                          <button onClick={() => handleReject(r.id)} className="btn-secondary text-error-400 hover:text-error-300 py-1 px-3 text-xs">Reject</button>
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 }
