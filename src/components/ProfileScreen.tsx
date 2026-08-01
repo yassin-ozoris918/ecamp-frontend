@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '../lib/authContext';
 import { api } from '../lib/api';
-import { User, Lock, Camera, ShieldAlert, Edit2 } from 'lucide-react';
+import { User, Lock, Camera, ShieldAlert, Edit2, Phone } from 'lucide-react';
 import { Spinner, Badge } from './ui';
 import { Modal } from './Modal';
 import { useQuery } from '@tanstack/react-query';
@@ -170,7 +170,25 @@ export function ProfileScreen() {
 
             <h2 className="text-xl font-bold text-theme-text truncate">{(profile as any).fullName || profile.full_name}</h2>
             <p className="text-sm text-theme-muted mb-4 truncate">{profile.email}</p>
-            <Badge variant="accent" className="uppercase">{profile.role}</Badge>
+            
+            <div className="flex justify-center mb-6">
+              <Badge variant="accent" className="uppercase">{profile.role}</Badge>
+            </div>
+
+            <div className="space-y-2 text-sm text-theme-muted text-left bg-white/[0.02] p-4 rounded-xl">
+              {((profile as any).phoneNumber || profile.phone_number) && (
+                <div className="flex items-center gap-2">
+                  <Phone className="w-4 h-4 shrink-0 opacity-70" />
+                  <span className="truncate">{(profile as any).phoneNumber || profile.phone_number}</span>
+                </div>
+              )}
+              {((profile as any).parentPhoneNumber || profile.parent_phone_number) && (
+                <div className="flex items-center gap-2">
+                  <User className="w-4 h-4 shrink-0 opacity-70" />
+                  <span className="truncate">{(profile as any).parentPhoneNumber || profile.parent_phone_number}</span>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
