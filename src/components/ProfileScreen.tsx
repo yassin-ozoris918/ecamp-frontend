@@ -5,9 +5,11 @@ import { User, Lock, Camera, ShieldAlert, Edit2 } from 'lucide-react';
 import { Spinner, Badge } from './ui';
 import { Modal } from './Modal';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 
 export function ProfileScreen() {
   const { profile, refetchProfile } = useAuth();
+  const { t } = useTranslation();
   
   // Password State
   const [currentPassword, setCurrentPassword] = useState('');
@@ -52,11 +54,11 @@ export function ProfileScreen() {
   async function handlePasswordSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (newPassword !== confirmPassword) {
-      setPasswordError('New passwords do not match');
+      setPasswordError(t('profile.newPasswordsNoMatch'));
       return;
     }
     if (newPassword.length < 6) {
-      setPasswordError('New password must be at least 6 characters');
+      setPasswordError(t('profile.newPasswordLength'));
       return;
     }
     
@@ -71,7 +73,7 @@ export function ProfileScreen() {
       setNewPassword('');
       setConfirmPassword('');
     } catch (err: any) {
-      setPasswordError(err.response?.data?.message || 'Failed to update password');
+      setPasswordError(err.response?.data?.message || t('profile.passwordUpdateFailed'));
     }
     setPasswordLoading(false);
   }
@@ -91,7 +93,7 @@ export function ProfileScreen() {
       });
       await refetchProfile();
     } catch (err: any) {
-      setAvatarError(err.response?.data?.message || 'Failed to upload avatar');
+      setAvatarError(err.response?.data?.message || t('profile.avatarUploadFailed'));
     }
     setAvatarLoading(false);
   }
@@ -99,7 +101,7 @@ export function ProfileScreen() {
   async function handleRequestSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!reqFullName.trim() && !reqPhoneNumber.trim() && !reqParentPhone.trim()) {
-      setReqError('Must provide at least one field to update');
+      setReqError(t('profile.reqProvideOneField'));
       return;
     }
 
@@ -118,7 +120,7 @@ export function ProfileScreen() {
       setReqPhoneNumber('');
       setReqParentPhone('');
     } catch (err: any) {
-      setReqError(err.response?.data?.message || 'Failed to submit profile update request');
+      setReqError(err.response?.data?.message || t('profile.reqSubmitFailed'));
     }
     setReqLoading(false);
   }
@@ -135,7 +137,7 @@ export function ProfileScreen() {
 
   return (
     <div className="max-w-4xl mx-auto py-8 animate-fade-up">
-      <h1 className="text-3xl font-display font-bold text-theme-text mb-8">My Profile</h1>
+      <h1 className="text-3xl font-display font-bold text-theme-text mb-8">{t('profile.title')}</h1>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         
@@ -187,26 +189,26 @@ export function ProfileScreen() {
               <div className="w-10 h-10 rounded-xl bg-secondary-500/10 flex items-center justify-center text-secondary-400">
                 <User className="w-5 h-5" />
               </div>
-              <h2 className="text-xl font-display font-bold text-theme-text">Profile Information</h2>
+              <h2 className="text-xl font-display font-bold text-theme-text">{t('profile.infoTitle')}</h2>
             </div>
 
             <div className="space-y-5">
               {pendingRequest && (
                 <div className="p-4 rounded-xl bg-warning-500/10 border border-warning-500/20 text-warning-400 text-sm flex items-center gap-2">
                   <ShieldAlert className="w-5 h-5 shrink-0" />
-                  Your profile update request is pending approval. You will be notified once an administrator reviews it.
+                  {t('profile.reqPendingApproval')}
                 </div>
               )}
 
               <div>
                 <label className="block text-sm font-medium text-theme-muted mb-1.5 flex items-center gap-2">
-                  Full Name
+                  {t('profile.fullName')}
                   <Lock className="w-3 h-3 text-theme-muted" />
                 </label>
                 <input
                   type="text"
                   value={fullName}
-                  placeholder="Not provided"
+                  placeholder={t('profile.notProvided')}
                   disabled
                   className="input w-full opacity-60 cursor-not-allowed"
                 />
@@ -215,26 +217,26 @@ export function ProfileScreen() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
                   <label className="block text-sm font-medium text-theme-muted mb-1.5 flex items-center gap-2">
-                    Phone Number
+                    {t('profile.phoneNumber')}
                     <Lock className="w-3 h-3 text-theme-muted" />
                   </label>
                   <input
                     type="text"
                     value={phoneNumber}
-                    placeholder="Not provided"
+                    placeholder={t('profile.notProvided')}
                     disabled
                     className="input w-full opacity-60 cursor-not-allowed"
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-theme-muted mb-1.5 flex items-center gap-2">
-                    Parent Phone Number
+                    {t('profile.parentPhoneNumber')}
                     <Lock className="w-3 h-3 text-theme-muted" />
                   </label>
                   <input
                     type="text"
                     value={parentPhoneNumber}
-                    placeholder="Not provided"
+                    placeholder={t('profile.notProvided')}
                     disabled
                     className="input w-full opacity-60 cursor-not-allowed"
                   />
@@ -248,7 +250,7 @@ export function ProfileScreen() {
                   className="btn-secondary"
                 >
                   <Edit2 className="w-4 h-4 mr-2" />
-                  {pendingRequest ? 'Change Requested' : 'Request Change'}
+                  {pendingRequest ? t('profile.changeRequested') : t('profile.requestChange')}
                 </button>
               </div>
             </div>
@@ -260,7 +262,7 @@ export function ProfileScreen() {
               <div className="w-10 h-10 rounded-xl bg-accent-500/10 flex items-center justify-center text-accent-400">
                 <Lock className="w-5 h-5" />
               </div>
-              <h2 className="text-xl font-display font-bold text-theme-text">Change Password</h2>
+              <h2 className="text-xl font-display font-bold text-theme-text">{t('profile.changePasswordTitle')}</h2>
             </div>
 
             <form onSubmit={handlePasswordSubmit} className="space-y-5">
@@ -271,44 +273,44 @@ export function ProfileScreen() {
               )}
               {passwordSuccess && (
                 <div className="p-4 rounded-xl bg-success-500/10 border border-success-500/20 text-success-400 text-sm">
-                  Password updated successfully.
+                  {t('profile.passwordUpdatedSuccess')}
                 </div>
               )}
 
               <div>
-                <label className="block text-sm font-medium text-theme-muted mb-1.5">Current Password</label>
+                <label className="block text-sm font-medium text-theme-muted mb-1.5">{t('profile.currentPassword')}</label>
                 <input
                   type="password"
                   required
                   value={currentPassword}
                   onChange={e => setCurrentPassword(e.target.value)}
                   className="input w-full"
-                  placeholder="Enter current password"
+                  placeholder={t('profile.enterCurrentPassword')}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-theme-muted mb-1.5">New Password</label>
+                <label className="block text-sm font-medium text-theme-muted mb-1.5">{t('profile.newPassword')}</label>
                 <input
                   type="password"
                   required
                   value={newPassword}
                   onChange={e => setNewPassword(e.target.value)}
                   className="input w-full"
-                  placeholder="Minimum 6 characters"
+                  placeholder={t('profile.min6Chars')}
                   minLength={6}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-theme-muted mb-1.5">Confirm New Password</label>
+                <label className="block text-sm font-medium text-theme-muted mb-1.5">{t('profile.confirmNewPassword')}</label>
                 <input
                   type="password"
                   required
                   value={confirmPassword}
                   onChange={e => setConfirmPassword(e.target.value)}
                   className="input w-full"
-                  placeholder="Confirm new password"
+                  placeholder={t('profile.confirmNewPassword')}
                   minLength={6}
                 />
               </div>
@@ -320,7 +322,7 @@ export function ProfileScreen() {
                   className="btn-primary"
                 >
                   {passwordLoading ? <Spinner className="w-4 h-4 mr-2" /> : null}
-                  Update Password
+                  {t('profile.updatePasswordBtn')}
                 </button>
               </div>
             </form>
@@ -330,11 +332,10 @@ export function ProfileScreen() {
       </div>
 
       {/* Request Update Modal */}
-      <Modal open={updateModalOpen} onClose={() => setUpdateModalOpen(false)} title="Request Profile Update">
+      <Modal open={updateModalOpen} onClose={() => setUpdateModalOpen(false)} title={t('profile.reqModalTitle')}>
         <form onSubmit={handleRequestSubmit} className="space-y-4">
           <p className="text-sm text-theme-muted mb-4">
-            Changes to your profile information require administrator approval. 
-            Submit your correct details below and an admin will review your request.
+            {t('profile.reqModalDesc')}
           </p>
 
           {reqError && (
@@ -344,45 +345,45 @@ export function ProfileScreen() {
           )}
 
           <div>
-            <label className="block text-sm font-medium text-theme-muted mb-1.5">Requested Full Name</label>
+            <label className="block text-sm font-medium text-theme-muted mb-1.5">{t('profile.reqFullName')}</label>
             <input
               type="text"
               value={reqFullName}
               onChange={e => setReqFullName(e.target.value)}
               className="input w-full"
-              placeholder="Your correct full name"
+              placeholder={t('profile.reqFullNamePlaceholder')}
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-theme-muted mb-1.5">Requested Phone Number</label>
+            <label className="block text-sm font-medium text-theme-muted mb-1.5">{t('profile.reqPhoneNumber')}</label>
             <input
               type="text"
               value={reqPhoneNumber}
               onChange={e => setReqPhoneNumber(e.target.value)}
               className="input w-full"
-              placeholder="Your correct phone number"
+              placeholder={t('profile.reqPhoneNumberPlaceholder')}
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-theme-muted mb-1.5">Requested Parent Phone Number</label>
+            <label className="block text-sm font-medium text-theme-muted mb-1.5">{t('profile.reqParentPhone')}</label>
             <input
               type="text"
               value={reqParentPhone}
               onChange={e => setReqParentPhone(e.target.value)}
               className="input w-full"
-              placeholder="Correct parent's phone number"
+              placeholder={t('profile.reqParentPhonePlaceholder')}
             />
           </div>
 
           <div className="flex justify-end gap-3 mt-6">
             <button type="button" onClick={() => setUpdateModalOpen(false)} className="btn-secondary">
-              Cancel
+              {t('profile.cancelBtn')}
             </button>
             <button type="submit" disabled={reqLoading} className="btn-primary">
               {reqLoading ? <Spinner className="w-4 h-4 mr-2" /> : null}
-              Submit Request
+              {t('profile.reqSubmitBtn')}
             </button>
           </div>
         </form>
