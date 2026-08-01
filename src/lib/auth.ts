@@ -39,6 +39,12 @@ export function useAuth() {
       if (token && userStr) {
         setSession({ accessToken: token });
         setProfile(JSON.parse(userStr));
+        
+        // Freshen profile silently
+        api.get('/users/me').then(({ data }) => {
+          localStorage.setItem('user', JSON.stringify(data));
+          setProfile(data);
+        }).catch(() => {});
       }
       setLoading(false);
     };
@@ -113,10 +119,16 @@ export function useAuth() {
   }, []);
 
   const refetchProfile = useCallback(async () => {
-    // Re-read profile from localStorage (updated by avatar/password endpoints)
-    const userStr = localStorage.getItem('user');
-    if (userStr) {
-      setProfile(JSON.parse(userStr));
+    try {
+      const { data } = await api.get('/users/me');
+      localStorage.setItem('user', JSON.stringify(data));
+      setProfile(data);
+    } catch (e) {
+      // Fallback
+      const userStr = localStorage.getItem('user');
+      if (userStr) {
+        setProfile(JSON.parse(userStr));
+      }
     }
   }, []);
 

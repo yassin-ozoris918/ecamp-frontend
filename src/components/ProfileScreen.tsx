@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../lib/authContext';
 import { api } from '../lib/api';
 import { User, Lock, Camera, ShieldAlert, Edit2 } from 'lucide-react';
@@ -23,6 +23,14 @@ export function ProfileScreen() {
   const [parentPhoneNumber, setParentPhoneNumber] = useState((profile as any).parentPhoneNumber || profile?.parent_phone_number || '');
   const [infoLoading, setInfoLoading] = useState(false);
   const [infoError, setInfoError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (profile) {
+      setFullName((profile as any).fullName || profile.full_name || '');
+      setPhoneNumber((profile as any).phoneNumber || profile.phone_number || '');
+      setParentPhoneNumber((profile as any).parentPhoneNumber || profile.parent_phone_number || '');
+    }
+  }, [profile]);
   const [infoSuccess, setInfoSuccess] = useState(false);
 
   // Request Update Modal State
