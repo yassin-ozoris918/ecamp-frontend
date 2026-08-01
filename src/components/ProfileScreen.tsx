@@ -202,6 +202,7 @@ export function ProfileScreen() {
                 <input
                   type="text"
                   value={fullName}
+                  placeholder="Not provided"
                   disabled
                   className="input w-full opacity-60 cursor-not-allowed"
                 />
@@ -216,6 +217,7 @@ export function ProfileScreen() {
                   <input
                     type="text"
                     value={phoneNumber}
+                    placeholder="Not provided"
                     disabled
                     className="input w-full opacity-60 cursor-not-allowed"
                   />
@@ -228,6 +230,7 @@ export function ProfileScreen() {
                   <input
                     type="text"
                     value={parentPhoneNumber}
+                    placeholder="Not provided"
                     disabled
                     className="input w-full opacity-60 cursor-not-allowed"
                   />
