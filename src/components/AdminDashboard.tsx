@@ -23,6 +23,7 @@ import {
   Search,
   Key,
   Plus,
+  Download,
 } from 'lucide-react';
 import { api } from '../lib/api';
 import type { Profile, UserListItem, ActivationCode, Course, CourseInstructor } from '../lib/types';
@@ -1319,6 +1320,33 @@ export function AdminProfileRequests() {
     }
   };
 
+  const handleExportCsv = () => {
+    if (!requests || requests.length === 0) {
+      toast.error('No requests to export');
+      return;
+    }
+    const headers = ['Student Name', 'Email', 'Current Phone', 'Current Parent Phone', 'Requested Name', 'Requested Phone', 'Requested Parent Phone', 'Status', 'Date'];
+    const rows = requests.map((r: any) => [
+      r.student?.fullName || '',
+      r.student?.email || '',
+      r.student?.phoneNumber || '',
+      r.student?.parentPhoneNumber || '',
+      r.requestedFullName || '',
+      r.requestedPhoneNumber || '',
+      r.requestedParentPhone || '',
+      r.status,
+      new Date(r.createdAt).toLocaleDateString()
+    ].map(v => `"${v}"`).join(','));
+    const csvContent = [headers.map(v => `"${v}"`).join(','), ...rows].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'profile_requests.csv';
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="space-y-6 animate-fade-up">
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
@@ -1329,6 +1357,12 @@ export function AdminProfileRequests() {
           </Link>
           <h1 className="text-3xl font-display font-bold text-theme-text">Profile Requests</h1>
           <p className="text-theme-muted mt-1">Review student requests to update restricted profile fields.</p>
+        </div>
+        <div className="flex gap-2">
+          <button onClick={handleExportCsv} className="btn-secondary whitespace-nowrap">
+            <Download className="w-4 h-4 mr-2" />
+            Export CSV
+          </button>
         </div>
       </div>
 

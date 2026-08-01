@@ -326,7 +326,7 @@ export function ProfileScreen() {
       </div>
 
       {/* Request Update Modal */}
-      <Modal isOpen={updateModalOpen} onClose={() => setUpdateModalOpen(false)} title="Request Profile Update">
+      <Modal open={updateModalOpen} onClose={() => setUpdateModalOpen(false)} title="Request Profile Update">
         <form onSubmit={handleRequestSubmit} className="space-y-4">
           <p className="text-sm text-theme-muted mb-4">
             Changes to your profile information require administrator approval. 
