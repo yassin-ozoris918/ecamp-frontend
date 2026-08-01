@@ -23,6 +23,7 @@ const GradingQueue = lazy(() => import('./components/InstructorDashboard').then(
 const CourseBuilder = lazy(() => import('./components/CourseBuilder').then(m => ({ default: m.CourseBuilder })));
 const AdminDashboard = lazy(() => import('./components/AdminDashboard').then(m => ({ default: m.AdminDashboard })));
 const AdminUsers = lazy(() => import('./components/AdminDashboard').then(m => ({ default: m.AdminUsers })));
+const AdminPendingUsers = lazy(() => import('./components/AdminDashboard').then(m => ({ default: m.AdminPendingUsers })));
 const AdminCodes = lazy(() => import('./components/AdminDashboard').then(m => ({ default: m.AdminCodes })));
 const AdminCourses = lazy(() => import('./components/AdminDashboard').then(m => ({ default: m.AdminCourses })));
 const AdminProfileRequests = lazy(() => import('./components/AdminDashboard').then(m => ({ default: m.AdminProfileRequests })));
@@ -217,6 +218,7 @@ function RoleRoutes({ role }: { role: string }) {
         { pattern: '/admin/student-360', element: () => <Student360Workspace /> },
         { pattern: '/admin/audit-logs', element: () => <SystemAuditViewer /> },
         { pattern: '/admin/profile-requests', element: () => <AdminProfileRequests /> },
+        { pattern: '/admin/pending-users', element: () => <AdminPendingUsers /> },
         { pattern: '/instructor', element: () => <InstructorDashboard /> },
         { pattern: '/instructor/courses', element: () => <InstructorCourses /> },
         { pattern: '/instructor/grading', element: () => <GradingQueue /> },

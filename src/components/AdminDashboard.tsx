@@ -111,6 +111,14 @@ export function AdminDashboard() {
           color="text-secondary-700 dark:text-secondary-300"
           bg="bg-secondary-500/10"
         />
+        <QuickActionCard
+          icon={<User className="w-5 h-5" />}
+          title="Pending Registrations"
+          description="Review and approve new student registrations."
+          to="#/admin/pending-users"
+          color="text-accent-700 dark:text-accent-300"
+          bg="bg-accent-500/10"
+        />
 
         <QuickActionCard
           icon={<User className="w-5 h-5" />}
@@ -1414,6 +1422,171 @@ export function AdminProfileRequests() {
                           <button onClick={() => handleReject(r.id)} className="btn-secondary text-error-400 hover:text-error-300 py-1 px-3 text-xs">Reject</button>
                         </div>
                       )}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// --- Admin Pending Registrations Page ---
+export function AdminPendingUsers() {
+  const { data: pendingUsers, isLoading, refetch } = useQuery({
+    queryKey: ['adminPendingUsers'],
+    queryFn: async () => {
+      const { data } = await api.get('/admin/users?isActive=false');
+      return data;
+    }
+  });
+
+  const handleApprove = async (id: string) => {
+    try {
+      await api.put(`/admin/users/${id}`, { isActive: true });
+      toast.success('User approved and activated successfully');
+      refetch();
+    } catch (e: any) {
+      toast.error(e.response?.data?.message || 'Failed to approve user');
+    }
+  };
+
+  const handleReject = async (id: string) => {
+    if (!confirm('Are you sure you want to completely delete this pending registration?')) return;
+    try {
+      await api.delete(`/admin/users/${id}`);
+      toast.success('Pending registration deleted');
+      refetch();
+    } catch (e: any) {
+      toast.error(e.response?.data?.message || 'Failed to delete registration');
+    }
+  };
+
+  const handleExportCsv = () => {
+    if (!pendingUsers || pendingUsers.length === 0) {
+      toast.error('No pending registrations to export');
+      return;
+    }
+    const headers = ['Name', 'Email', 'Role', 'Education Level', 'Phone', 'Parent Phone', 'Date Joined'];
+    const rows = pendingUsers.map((u: any) => [
+      u.fullName || '',
+      u.email || '',
+      u.role || '',
+      u.educationLevel || '',
+      u.phoneNumber || '',
+      u.parentPhoneNumber || '',
+      new Date(u.createdAt).toLocaleDateString()
+    ].map(v => `"${v}"`).join(','));
+    const csvContent = [headers.map(v => `"${v}"`).join(','), ...rows].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'pending_registrations.csv';
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
+
+  return (
+    <div className="space-y-6 animate-fade-up">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+        <div>
+          <Link to="#/admin" className="inline-flex items-center text-sm text-theme-muted hover:text-theme-text mb-4 transition-colors">
+            <RotateCcw className="w-4 h-4 mr-2" />
+            Back to Dashboard
+          </Link>
+          <h1 className="text-3xl font-display font-bold text-theme-text">Pending Registrations</h1>
+          <p className="text-theme-muted mt-1">Review, approve, or reject new student registrations.</p>
+        </div>
+        <div className="flex gap-2">
+          <button onClick={handleExportCsv} className="btn-secondary whitespace-nowrap">
+            <Download className="w-4 h-4 mr-2" />
+            Export CSV
+          </button>
+        </div>
+      </div>
+
+      <div className="glass rounded-3xl overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="border-b border-theme-border/50 bg-theme-secondary/30">
+                <th className="px-6 py-4 text-xs font-semibold text-theme-muted uppercase tracking-wider">Student</th>
+                <th className="px-6 py-4 text-xs font-semibold text-theme-muted uppercase tracking-wider">Education</th>
+                <th className="px-6 py-4 text-xs font-semibold text-theme-muted uppercase tracking-wider">Contact</th>
+                <th className="px-6 py-4 text-xs font-semibold text-theme-muted uppercase tracking-wider">Date</th>
+                <th className="px-6 py-4 text-xs font-semibold text-theme-muted uppercase tracking-wider text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-theme-border/30">
+              {isLoading ? (
+                <tr>
+                  <td colSpan={5} className="px-6 py-8">
+                    <div className="space-y-4">
+                      <Skeleton className="h-12 w-full rounded-xl" />
+                      <Skeleton className="h-12 w-full rounded-xl" />
+                      <Skeleton className="h-12 w-full rounded-xl" />
+                    </div>
+                  </td>
+                </tr>
+              ) : pendingUsers?.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="px-6 py-12">
+                    <EmptyState 
+                      icon={<User className="w-8 h-8" />} 
+                      title="No pending registrations" 
+                      description="All registrations have been reviewed." 
+                    />
+                  </td>
+                </tr>
+              ) : (
+                pendingUsers?.map((user: any) => (
+                  <tr key={user.id} className="hover:bg-theme-secondary/20 transition-colors">
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        {user.profilePictureUrl ? (
+                          <img src={user.profilePictureUrl} alt="" className="w-10 h-10 rounded-full object-cover ring-2 ring-theme-border" />
+                        ) : (
+                          <div className="w-10 h-10 rounded-full bg-theme-secondary flex items-center justify-center text-theme-muted">
+                            <User className="w-5 h-5" />
+                          </div>
+                        )}
+                        <div>
+                          <div className="font-semibold text-theme-text text-sm">{user.fullName}</div>
+                          <div className="text-xs text-theme-muted mt-0.5">{user.email}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <Badge variant="neutral" size="sm">
+                        {user.educationLevel === 'HIGH_SCHOOL' ? 'High School' : 'University'}
+                      </Badge>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-xs text-theme-text">Phone: <span className="font-mono text-theme-muted">{user.phoneNumber || 'N/A'}</span></div>
+                      <div className="text-xs text-theme-text mt-1">Parent: <span className="font-mono text-theme-muted">{user.parentPhoneNumber || 'N/A'}</span></div>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-theme-muted whitespace-nowrap">
+                      {new Date(user.createdAt).toLocaleDateString()}
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => handleApprove(user.id)}
+                          className="px-3 py-1.5 text-xs font-semibold text-white bg-accent-500 hover:bg-accent-600 rounded-lg transition-colors"
+                        >
+                          Approve
+                        </button>
+                        <button
+                          onClick={() => handleReject(user.id)}
+                          className="px-3 py-1.5 text-xs font-semibold text-red-400 hover:bg-red-500/10 hover:text-red-300 rounded-lg transition-colors border border-transparent hover:border-red-500/20"
+                        >
+                          Reject
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
