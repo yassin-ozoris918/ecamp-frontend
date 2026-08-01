@@ -52,20 +52,23 @@ export function useAuth() {
   }, []);
 
   const signUp = useCallback(
-    async (input: RegisterInput): Promise<{ error: AuthError | null }> => {
+    async (input: RegisterInput): Promise<{ error: AuthError | null; status?: string }> => {
       setError(null);
       try {
-        const { data } = await api.post('/auth/register', input);
-        
-        localStorage.setItem('access_token', data.accessToken);
-        localStorage.setItem('refresh_token', data.refreshToken);
-        
-        const userProfile: Profile = data.user as Profile;
-        
-        localStorage.setItem('user', JSON.stringify(userProfile));
-        setSession({ accessToken: data.accessToken });
-        setProfile(userProfile);
-        
+        const res = await api.post('/auth/register', input);
+        const data = res.data;
+
+        if (data.status === 'PENDING_APPROVAL') {
+          return { error: null, status: 'PENDING_APPROVAL' };
+        }
+
+        if (data.accessToken && data.user) {
+          localStorage.setItem('access_token', data.accessToken);
+          localStorage.setItem('refresh_token', data.refreshToken);
+          localStorage.setItem('user', JSON.stringify(data.user));
+          setSession({ accessToken: data.accessToken });
+          setProfile(data.user);
+        }
         return { error: null };
       } catch (err: any) {
         return { error: { message: Array.isArray(err.response?.data?.message) ? err.response.data.message.join(', ') : (err.response?.data?.message || 'Registration failed') } };

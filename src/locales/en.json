@@ -36,7 +36,11 @@
     "deviceBinding": "On first login, your device is bound to your account as an anti-piracy measure. You will only be able to sign in from this device afterward.",
     "avatar": "Profile Avatar",
     "unrecognizedDevice": "Unrecognized Device",
-    "unrecognizedDeviceDesc": "Unrecognized Device. You can only log in from your registered device. Please contact technical support to request a device reset."
+    "unrecognizedDeviceDesc": "Unrecognized Device. You can only log in from your registered device. Please contact technical support to request a device reset.",
+    "duplicatePhoneError": "Student and Guardian phone numbers cannot be the same.",
+    "registrationPendingTitle": "Registration Successful!",
+    "registrationPendingMessage": "Your account is currently under review by our administration team. You will be granted access once your details have been verified.",
+    "backToLogin": "Back to Login"
   },
   "dashboard": {
     "welcomeBack": "Welcome back,",

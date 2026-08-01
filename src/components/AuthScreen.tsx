@@ -14,6 +14,7 @@ export function AuthScreen() {
   const [busy, setBusy] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [registrationPending, setRegistrationPending] = useState(false);
 
   // login fields
   const [email, setEmail] = useState('');
@@ -95,8 +96,13 @@ export function AuthScreen() {
           return;
         }
 
+        if (phoneNumber.trim() && parentPhoneNumber.trim() && phoneNumber.trim() === parentPhoneNumber.trim()) {
+          setLocalError(t('auth.duplicatePhoneError', 'Student and Guardian phone numbers cannot be the same.'));
+          return;
+        }
+
         const deviceId = generateDeviceFingerprint();
-        const { error } = await signUp({
+        const { error, status } = await signUp({
           fullName: fullName.trim(),
           email: email.trim(),
           password,
@@ -106,7 +112,11 @@ export function AuthScreen() {
           profilePictureUrl: profilePictureUrl || undefined,
           deviceId,
         });
-        if (error) setLocalError(error.message);
+        if (error) {
+          setLocalError(error.message);
+        } else if (status === 'PENDING_APPROVAL') {
+          setRegistrationPending(true);
+        }
       }
     } finally {
       setBusy(false);
@@ -162,8 +172,28 @@ export function AuthScreen() {
       {/* Right form panel */}
       <div className="lg:w-1/2 flex items-center justify-center p-6 lg:p-12">
         <div className="w-full max-w-md animate-fade-up">
-          <div className="mb-8">
-            <div className="flex gap-1 p-1 rounded-xl bg-theme-card border border-theme-border">
+          {registrationPending ? (
+            <div className="text-center">
+              <div className="w-24 h-24 bg-accent-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                <GraduationCap className="w-12 h-12 text-accent-500" />
+              </div>
+              <h3 className="text-2xl font-display font-bold text-theme-text mb-4">
+                {t('auth.registrationPendingTitle', 'Registration Successful!')}
+              </h3>
+              <p className="text-theme-muted mb-8 leading-relaxed">
+                {t('auth.registrationPendingMessage', 'Your account is currently under review by our administration team. You will be granted access once your details have been verified.')}
+              </p>
+              <button
+                onClick={() => { setRegistrationPending(false); setMode('login'); }}
+                className="btn-primary w-full"
+              >
+                {t('auth.backToLogin', 'Back to Login')}
+              </button>
+            </div>
+          ) : (
+            <>
+              <div className="mb-8">
+                <div className="flex gap-1 p-1 rounded-xl bg-theme-card border border-theme-border">
               <button
                 type="button"
                 onClick={() => { setMode('login'); setLocalError(null); }}
@@ -350,6 +380,8 @@ export function AuthScreen() {
             <p className="mt-5 text-xs text-theme-muted leading-relaxed text-center">
               {t('auth.deviceBinding')}
             </p>
+          )}
+          </>
           )}
 
           <div className="mt-8 pt-4 border-t border-theme-border/40 text-center">
