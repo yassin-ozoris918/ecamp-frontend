@@ -111,10 +111,10 @@ export function LecturePlaylist({ lectureId }: { lectureId: string }) {
       setError(t('playlist.expired'));
       return;
     }
-    const t = setInterval(() => {
+    const timer = setInterval(() => {
       setTimeLeftMs((prev) => (prev === null ? null : Math.max(0, prev - 1000)));
     }, 1000);
-    return () => clearInterval(t);
+    return () => clearInterval(timer);
   }, [timeLeftMs, isTimerPaused]);
 
   const playlist = items; // From backend
@@ -427,6 +427,7 @@ function formatDuration(seconds: number): string {
 }
 
 function CountdownPill({ ms, warningHours, warningMinutes }: { ms: number, warningHours: number, warningMinutes: number }) {
+  const { t } = useTranslation();
   const days = Math.floor(ms / 86400000);
   const hours = Math.floor((ms % 86400000) / 3600000);
   const mins = Math.floor((ms % 3600000) / 60000);
@@ -497,6 +498,7 @@ function VideoPlayer({
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const { t } = useTranslation();
   const [streamUrl, setStreamUrl] = useState<string | null>(null);
   const [loadingToken, setLoadingToken] = useState(true);
   const completedRef = useRef(isCompleted);
