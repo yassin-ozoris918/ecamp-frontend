@@ -35,6 +35,60 @@ import { Link, useRouter } from '../lib/router';
 import { useTranslation } from 'react-i18next';
 import { useConfirm, ConfirmDialog } from '../hooks/useConfirm';
 
+// --- Shared CSV Utility ---
+const CSV_BOM = '\uFEFF'; // UTF-8 BOM so Excel reads Arabic correctly
+
+function csvEscapeValue(value: any): string {
+  if (value === null || value === undefined) return '';
+  const str = String(value);
+  // If the string looks like a phone number (digits only, 8+ chars), wrap as ="..." to prevent scientific notation
+  if (/^\d{8,}$/.test(str)) return `="${str}"`;
+  // If value contains comma, quote, or newline, wrap in quotes and escape inner quotes
+  if (str.includes(',') || str.includes('"') || str.includes('\n') || str.includes('\r')) {
+    return '"' + str.replace(/"/g, '""') + '"';
+  }
+  return str;
+}
+
+function formatEducationLevel(level: string): string {
+  const map: Record<string, string> = {
+    HIGH_SCHOOL: 'High School',
+    UNIVERSITY: 'University',
+  };
+  return map[level] || level || '';
+}
+
+function formatRole(role: string): string {
+  const map: Record<string, string> = {
+    STUDENT: 'Student',
+    INSTRUCTOR: 'Instructor',
+    ADMIN: 'Admin',
+  };
+  return map[role] || role || '';
+}
+
+function formatCodeStatus(status: string): string {
+  const map: Record<string, string> = {
+    AVAILABLE: 'Available',
+    REDEEMED: 'Redeemed',
+    REVOKED: 'Revoked',
+  };
+  return map[status] || status || '';
+}
+
+function downloadCsv(headers: string[], rows: any[][], filename: string) {
+  const headerLine = headers.map(h => csvEscapeValue(h)).join(',');
+  const dataLines = rows.map(row => row.map(v => csvEscapeValue(v)).join(','));
+  const csvContent = CSV_BOM + [headerLine, ...dataLines].join('\r\n');
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8' });
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  window.URL.revokeObjectURL(url);
+}
+
 export function AdminDashboard() {
   const [stats, setStats] = useState<{ students: number; instructors: number; courses: number; codesRedeemed: number; codesGenerated: number } | null>(null);
   const [loading, setLoading] = useState(true);
@@ -309,26 +363,19 @@ export function AdminUsers() {
           </div>
           <button 
             onClick={() => {
-              const rows = [
-                ["User ID", "Name", "Email", "Role", "Active", "Device Bound", "XP", "Joined"],
-                ...filtered.map((u: UserWithRemap) => [
-                  u.id, 
-                  `"${u.full_name}"`, 
-                  u.email, 
-                  u.role, 
-                  u.isActive ? 'Yes' : 'No', 
-                  u.deviceId ? 'Yes' : 'No', 
-                  u.xp, 
-                  new Date(u.created_at).toLocaleDateString()
-                ])
-              ];
-              const csvContent = "data:text/csv;charset=utf-8," + rows.map(e => e.join(",")).join("\n");
-              const link = document.createElement("a");
-              link.setAttribute("href", encodeURI(csvContent));
-              link.setAttribute("download", "platform_users.csv");
-              document.body.appendChild(link);
-              link.click();
-              document.body.removeChild(link);
+              const headers = ['User ID', 'Name', 'Email', 'Role', 'Education Level', 'Active', 'Device Bound', 'XP', 'Date Joined'];
+              const rows = filtered.map((u: UserWithRemap) => [
+                u.id,
+                u.full_name || '',
+                u.email || '',
+                formatRole(u.role),
+                formatEducationLevel(u.educationLevel),
+                u.isActive ? 'Yes' : 'No',
+                u.deviceId ? 'Yes' : 'No',
+                u.xp,
+                new Date(u.created_at).toLocaleDateString()
+              ]);
+              downloadCsv(headers, rows, 'platform_users.csv');
             }} 
             className="btn-secondary whitespace-nowrap"
           >
@@ -882,26 +929,18 @@ export function AdminCodes() {
           </div>
           <button 
             onClick={() => {
-              const rows = [
-                ["Code", "Type", "Audience", "Status", "Redeemed Course", "Redeemed Lecture", "Redeemed By", "Created At"],
-                ...codes.map(c => [
-                  c.code,
-                  c.targetType,
-                  c.educationLevel,
-                  c.status,
-                  `"${c.courseTitle || ''}"`,
-                  `"${c.lectureTitle || ''}"`,
-                  `"${c.redeemerName || ''}"`,
-                  new Date(c.createdAt).toLocaleDateString()
-                ])
-              ];
-              const csvContent = "data:text/csv;charset=utf-8," + rows.map(e => e.join(",")).join("\n");
-              const link = document.createElement("a");
-              link.setAttribute("href", encodeURI(csvContent));
-              link.setAttribute("download", "activation_codes.csv");
-              document.body.appendChild(link);
-              link.click();
-              document.body.removeChild(link);
+              const headers = ['Code', 'Type', 'Education Level', 'Status', 'Redeemed Course', 'Redeemed Lecture', 'Redeemed By', 'Created At'];
+              const rows = codes.map(c => [
+                c.code || '',
+                c.targetType || '',
+                formatEducationLevel(c.educationLevel),
+                formatCodeStatus(c.status),
+                c.courseTitle || '',
+                c.lectureTitle || '',
+                c.redeemerName || '',
+                new Date(c.createdAt).toLocaleDateString()
+              ]);
+              downloadCsv(headers, rows, 'activation_codes.csv');
             }} 
             className="btn-secondary"
           >
@@ -1342,17 +1381,10 @@ export function AdminProfileRequests() {
       r.requestedFullName || '',
       r.requestedPhoneNumber || '',
       r.requestedParentPhone || '',
-      r.status,
+      r.status || '',
       new Date(r.createdAt).toLocaleDateString()
-    ].map(v => `"${v}"`).join(','));
-    const csvContent = [headers.map(v => `"${v}"`).join(','), ...rows].join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'profile_requests.csv';
-    a.click();
-    window.URL.revokeObjectURL(url);
+    ]);
+    downloadCsv(headers, rows, 'profile_requests.csv');
   };
 
   return (
@@ -1470,24 +1502,17 @@ export function AdminPendingUsers() {
       toast.error('No pending registrations to export');
       return;
     }
-    const headers = ['Name', 'Email', 'Role', 'Education Level', 'Phone', 'Parent Phone', 'Date Joined'];
+    const headers = ['Full Name', 'Email', 'Role', 'Education Level', 'Phone Number', 'Parent Phone Number', 'Date Joined'];
     const rows = pendingUsers.map((u: any) => [
       u.fullName || '',
       u.email || '',
-      u.role || '',
-      u.educationLevel || '',
+      formatRole(u.role),
+      formatEducationLevel(u.educationLevel),
       u.phoneNumber || '',
       u.parentPhoneNumber || '',
       new Date(u.createdAt).toLocaleDateString()
-    ].map(v => `"${v}"`).join(','));
-    const csvContent = [headers.map(v => `"${v}"`).join(','), ...rows].join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'pending_registrations.csv';
-    a.click();
-    window.URL.revokeObjectURL(url);
+    ]);
+    downloadCsv(headers, rows, 'pending_registrations.csv');
   };
 
   return (
