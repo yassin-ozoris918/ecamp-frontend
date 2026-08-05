@@ -932,7 +932,9 @@ function AddItemModal({
         setUploading(true);
         const formData = new FormData();
         formData.append('video', videoFile);
-        await api.post(`/sessions/${data.id}/upload-video`, formData);
+        await api.post(`/sessions/${data.id}/upload-video`, formData, {
+          timeout: 0, // no client timeout – videos can be several GB
+        });
       }
 
       setTitle('');
