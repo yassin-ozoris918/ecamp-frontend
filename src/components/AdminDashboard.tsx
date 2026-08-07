@@ -369,7 +369,7 @@ export function AdminUsers() {
                 u.full_name || '',
                 u.email || '',
                 formatRole(u.role),
-                formatEducationLevel(u.educationLevel),
+                formatEducationLevel(u.educationLevel || ''),
                 u.isActive ? 'Yes' : 'No',
                 u.deviceId ? 'Yes' : 'No',
                 u.xp,
@@ -1601,7 +1601,7 @@ export function AdminPendingUsers() {
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <Badge variant="neutral" size="sm">
+                      <Badge variant="default">
                         {user.educationLevel === 'HIGH_SCHOOL' ? 'High School' : 'University'}
                       </Badge>
                     </td>
