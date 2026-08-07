@@ -108,7 +108,7 @@ export function AuthScreen() {
           password,
           educationLevel,
           phoneNumber: phoneNumber.trim(),
-          parentPhoneNumber: parentPhoneNumber.trim() || undefined,
+          parentPhoneNumber: educationLevel === 'HIGH_SCHOOL' ? (parentPhoneNumber.trim() || undefined) : undefined,
           profilePictureUrl: profilePictureUrl || undefined,
           deviceId,
         });
