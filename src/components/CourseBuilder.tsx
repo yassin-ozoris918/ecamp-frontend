@@ -898,10 +898,7 @@ function AddItemModal({
     const allowedTypes = ['video/mp4', 'video/webm', 'video/quicktime', 'video/x-matroska'];
     if (!allowedTypes.includes(file.type)) {
       setError('Invalid file type. Only MP4, MOV, MKV, and WebM are allowed.');
-      return;
-    }
-    if (file.size > 500 * 1024 * 1024) {
-      setError('File too large. Max 500MB.');
+      setVideoFile(null);
       return;
     }
     setError(null);
@@ -973,7 +970,7 @@ function AddItemModal({
                 <span className="text-sm text-neutral-400">
                   Click to select video
                 </span>
-                <span className="text-xs text-neutral-500">MP4, MOV, MKV, WebM (max 500MB)</span>
+                <span className="text-xs text-neutral-500">MP4, MOV, MKV, WebM</span>
                 <input type="file" accept="video/mp4,video/webm,video/quicktime,video/x-matroska" className="hidden" onChange={handleUpload} />
               </label>
             )}
@@ -1003,7 +1000,7 @@ function AddItemModal({
             </button>
           )}
           <button type="button" onClick={onClose} className="btn-ghost">Cancel</button>
-          <button type="submit" disabled={busy || uploading} className="btn-primary">
+          <button type="submit" disabled={busy || uploading || !title.trim() || (type === 'SESSION' && !videoFile)} className="btn-primary">
             {busy ? 'Saving…' : 'Add'}
           </button>
         </div>
