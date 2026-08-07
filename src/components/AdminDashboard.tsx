@@ -1468,10 +1468,16 @@ export function AdminProfileRequests() {
 
 // --- Admin Pending Registrations Page ---
 export function AdminPendingUsers() {
+  const [educationLevelFilter, setEducationLevelFilter] = useState<string>('ALL');
+
   const { data: pendingUsers, isLoading, refetch } = useQuery({
-    queryKey: ['adminPendingUsers'],
+    queryKey: ['adminPendingUsers', educationLevelFilter],
     queryFn: async () => {
-      const { data } = await api.get('/admin/users?isActive=false');
+      let url = '/admin/users?isActive=false';
+      if (educationLevelFilter !== 'ALL') {
+        url += `&educationLevel=${educationLevelFilter}`;
+      }
+      const { data } = await api.get(url);
       return data.items || [];
     }
   });
@@ -1526,7 +1532,16 @@ export function AdminPendingUsers() {
           <h1 className="text-3xl font-display font-bold text-theme-text">Pending Registrations</h1>
           <p className="text-theme-muted mt-1">Review, approve, or reject new student registrations.</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
+          <select 
+            value={educationLevelFilter}
+            onChange={(e) => setEducationLevelFilter(e.target.value)}
+            className="input max-w-xs"
+          >
+            <option value="ALL">All Students</option>
+            <option value="HIGH_SCHOOL">High School</option>
+            <option value="UNIVERSITY">University</option>
+          </select>
           <button onClick={handleExportCsv} className="btn-secondary whitespace-nowrap">
             <Download className="w-4 h-4 mr-2" />
             Export CSV
