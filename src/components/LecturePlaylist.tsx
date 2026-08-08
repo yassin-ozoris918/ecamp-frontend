@@ -15,6 +15,7 @@ import {
   Paperclip,
   Maximize,
   Minimize,
+  Gauge,
 } from 'lucide-react';
 import { api } from '../lib/api';
 import { useAuth } from '../lib/authContext';
@@ -504,6 +505,19 @@ function VideoPlayer({
   const completedRef = useRef(isCompleted);
   const [showComplete, setShowComplete] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [playbackSpeed, setPlaybackSpeed] = useState(1);
+  const speeds = [0.5, 0.75, 1, 1.25, 1.5, 2];
+
+  const cycleSpeed = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const currentIndex = speeds.indexOf(playbackSpeed);
+    const nextIndex = (currentIndex + 1) % speeds.length;
+    const nextSpeed = speeds[nextIndex];
+    setPlaybackSpeed(nextSpeed);
+    if (videoRef.current) {
+      videoRef.current.playbackRate = nextSpeed;
+    }
+  };
 
   useEffect(() => {
     const handleFullscreenChange = () => {
@@ -597,10 +611,16 @@ function VideoPlayer({
           streamUrl.includes('r2.dev') || 
           streamUrl.includes('s3') ? (
             <video
+              ref={videoRef}
               src={streamUrl}
               className="w-full h-full object-contain"
               controls
               controlsList="nofullscreen nodownload"
+              onLoadedMetadata={() => {
+                if (videoRef.current) {
+                  videoRef.current.playbackRate = playbackSpeed;
+                }
+              }}
             />
           ) : (
             <iframe
@@ -618,14 +638,24 @@ function VideoPlayer({
         )}
 
         {streamUrl && (
-          <button 
-            onClick={toggleFullscreen}
-            className="absolute top-4 right-4 p-2.5 bg-black/60 hover:bg-black/90 text-white rounded-xl shadow-lg opacity-80 group-hover:opacity-100 transition-all z-[10000] flex items-center gap-2 text-xs font-semibold"
-            title="Toggle Fullscreen (Watermarked)"
-          >
-            {isFullscreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
-            <span>{isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}</span>
-          </button>
+          <div className="absolute top-4 right-4 flex items-center gap-2 opacity-80 group-hover:opacity-100 transition-all z-[10000]">
+            <button
+              onClick={cycleSpeed}
+              className="p-2.5 bg-black/60 hover:bg-black/90 text-white rounded-xl shadow-lg flex items-center gap-2 text-xs font-semibold"
+              title="Playback Speed"
+            >
+              <Gauge className="w-4 h-4" />
+              <span>{playbackSpeed}x</span>
+            </button>
+            <button 
+              onClick={(e) => { e.stopPropagation(); toggleFullscreen(); }}
+              className="p-2.5 bg-black/60 hover:bg-black/90 text-white rounded-xl shadow-lg flex items-center gap-2 text-xs font-semibold"
+              title="Toggle Fullscreen (Watermarked)"
+            >
+              {isFullscreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
+              <span>{isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}</span>
+            </button>
+          </div>
         )}
       </div>
 
