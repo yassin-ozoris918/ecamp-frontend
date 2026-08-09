@@ -359,7 +359,7 @@ export function AdminUsers() {
             <option value="Suspended">Suspended</option>
           </select>
           <div className="w-full sm:w-64">
-            <SearchBox value={search} onChange={setSearch} placeholder="Search by name or email…" />
+            <SearchBox value={search} onChange={setSearch} placeholder="Search by name, email or phone..." />
           </div>
           <button 
             onClick={() => {
