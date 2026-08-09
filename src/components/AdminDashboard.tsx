@@ -328,7 +328,7 @@ export function AdminUsers() {
     toggleInstructorMutation.mutate(user);
   }
 
-  type UserWithRemap = UserListItem & { full_name: string; device_id: string | null; is_active: boolean; created_at: string; phoneNumber?: string; parentPhoneNumber?: string; };
+  type UserWithRemap = UserListItem & { full_name: string; device_id: string | null; is_active: boolean; created_at: string; phoneNumber?: string | null; parentPhoneNumber?: string | null; };
   const filtered = users; // Filtering is now handled securely by the backend
 
   return (
