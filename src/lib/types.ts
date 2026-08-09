@@ -156,6 +156,7 @@ export interface ActivationCode {
   lectureTitle?: string;
   redeemerName?: string | null;
   isRedeemed?: boolean;
+  isCopied: boolean;
 }
 
 export interface LeaderboardEntry {

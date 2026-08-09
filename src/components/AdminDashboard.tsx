@@ -979,8 +979,18 @@ export function AdminCodes() {
                 <tr key={c.id} className="hover:bg-white/[0.02]">
                   <td className="p-4">
                     <div className="flex items-center gap-2">
-                      <code className="font-mono text-accent-200 font-bold tracking-wider">{c.code}</code>
-                      <CopyButton text={c.code} />
+                      <code className={`font-mono font-bold tracking-wider ${c.isCopied ? 'text-theme-muted opacity-50' : 'text-accent-200'}`}>
+                        {c.code}
+                      </code>
+                      <CopyButton 
+                        text={c.code} 
+                        onCopy={() => {
+                          api.post(`/activation-codes/${c.id}/mark-copied`).then(() => {
+                            setCodes(prev => prev.map(p => p.id === c.id ? { ...p, isCopied: true } : p));
+                          }).catch(console.error);
+                        }}
+                      />
+                      {c.isCopied && <Badge variant="default" className="text-[10px] py-0 px-1">Copied</Badge>}
                     </div>
                   </td>
                   <td className="p-4 text-theme-muted">{c.targetType}</td>
@@ -1037,7 +1047,7 @@ export function AdminCodes() {
   );
 }
 
-function CopyButton({ text }: { text: string }) {
+function CopyButton({ text, onCopy }: { text: string; onCopy?: () => void }) {
   const [copied, setCopied] = useState(false);
   return (
     <button
@@ -1045,6 +1055,7 @@ function CopyButton({ text }: { text: string }) {
         try {
           await navigator.clipboard.writeText(text);
           setCopied(true);
+          onCopy?.();
           setTimeout(() => setCopied(false), 1500);
         } catch { /* ignore */ }
       }}
