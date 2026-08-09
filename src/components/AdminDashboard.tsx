@@ -328,7 +328,7 @@ export function AdminUsers() {
     toggleInstructorMutation.mutate(user);
   }
 
-  type UserWithRemap = UserListItem & { full_name: string; device_id: string | null; is_active: boolean; created_at: string };
+  type UserWithRemap = UserListItem & { full_name: string; device_id: string | null; is_active: boolean; created_at: string; phoneNumber?: string; parentPhoneNumber?: string; };
   const filtered = users; // Filtering is now handled securely by the backend
 
   return (
@@ -419,7 +419,13 @@ export function AdminUsers() {
                       )}
                       <div>
                         <p className="font-semibold text-theme-text">{u.full_name}</p>
-                        <p className="text-xs text-theme-muted">{u.email}</p>
+                        <p className="text-xs text-theme-muted mb-0.5">{u.email}</p>
+                        {(u.phoneNumber || u.parentPhoneNumber) && (
+                          <div className="flex flex-col gap-0.5 mt-1">
+                            {u.phoneNumber && <span className="text-[11px] text-theme-text/60 font-mono">📞 {u.phoneNumber}</span>}
+                            {u.parentPhoneNumber && <span className="text-[11px] text-theme-text/60 font-mono">👨‍👩‍👧 {u.parentPhoneNumber} (Parent)</span>}
+                          </div>
+                        )}
                       </div>
                     </div>
                   </td>
