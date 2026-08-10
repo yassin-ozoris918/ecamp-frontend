@@ -23,6 +23,7 @@ const GradingQueue = lazy(() => import('./components/InstructorDashboard').then(
 const CourseBuilder = lazy(() => import('./components/CourseBuilder').then(m => ({ default: m.CourseBuilder })));
 const AdminDashboard = lazy(() => import('./components/AdminDashboard').then(m => ({ default: m.AdminDashboard })));
 const AdminUsers = lazy(() => import('./components/AdminDashboard').then(m => ({ default: m.AdminUsers })));
+const AdminLectureViewers = lazy(() => import('./components/AdminDashboard').then(m => ({ default: m.AdminLectureViewers })));
 const AdminPendingUsers = lazy(() => import('./components/AdminDashboard').then(m => ({ default: m.AdminPendingUsers })));
 const AdminCodes = lazy(() => import('./components/AdminDashboard').then(m => ({ default: m.AdminCodes })));
 const AdminCourses = lazy(() => import('./components/AdminDashboard').then(m => ({ default: m.AdminCourses })));
@@ -211,6 +212,7 @@ function RoleRoutes({ role }: { role: string }) {
       routes={[
         { pattern: '/admin', element: () => <AdminDashboard /> },
         { pattern: '/admin/users', element: () => <AdminUsers /> },
+        { pattern: '/admin/lecture-viewers', element: () => <AdminLectureViewers /> },
         { pattern: '/admin/courses', element: () => <AdminCourses /> },
         { pattern: '/admin/codes', element: () => <AdminCodes /> },
         { pattern: '/admin/risk', element: () => <AcademicRiskDashboard /> },

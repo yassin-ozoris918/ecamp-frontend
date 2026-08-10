@@ -166,6 +166,14 @@ export function AdminDashboard() {
           bg="bg-secondary-500/10"
         />
         <QuickActionCard
+          icon={<Search className="w-5 h-5" />}
+          title="Lecture Viewers"
+          description="See exactly which students have opened specific lectures."
+          to="#/admin/lecture-viewers"
+          color="text-accent-700 dark:text-accent-300"
+          bg="bg-accent-500/10"
+        />
+        <QuickActionCard
           icon={<User className="w-5 h-5" />}
           title="Pending Registrations"
           description="Review and approve new student registrations."
@@ -1652,6 +1660,138 @@ export function AdminPendingUsers() {
           </table>
         </div>
       </div>
+    </div>
+  );
+}
+
+export function AdminLectureViewers() {
+  const [selectedCourseId, setSelectedCourseId] = useState<string>('');
+  const [selectedLectureId, setSelectedLectureId] = useState<string>('');
+
+  const { data: courses = [], isLoading: loadingCourses } = useQuery({
+    queryKey: ['admin-courses-list'],
+    queryFn: async () => {
+      const { data } = await api.get('/courses?take=1000');
+      return data.items || [];
+    }
+  });
+
+  const { data: builderData, isLoading: loadingLectures } = useQuery({
+    queryKey: ['admin-course-builder', selectedCourseId],
+    queryFn: async () => {
+      if (!selectedCourseId) return null;
+      const { data } = await api.get(`/courses/${selectedCourseId}/builder`);
+      return data;
+    },
+    enabled: !!selectedCourseId
+  });
+
+  // Extract all lectures from chapters
+  const lectures = builderData?.chapters?.flatMap((ch: any) => ch.lectures) || [];
+
+  const { data: viewers = [], isLoading: loadingViewers } = useQuery({
+    queryKey: ['lecture-viewers', selectedLectureId],
+    queryFn: async () => {
+      if (!selectedLectureId) return [];
+      const { data } = await api.get(`/admin/lectures/${selectedLectureId}/viewers`);
+      return data;
+    },
+    enabled: !!selectedLectureId
+  });
+
+  return (
+    <div className="space-y-6 animate-fade-up">
+      <div>
+        <h1 className="text-2xl font-display font-bold text-theme-text flex items-center gap-2">
+          <Search className="w-6 h-6 text-accent-500" />
+          Lecture Viewers
+        </h1>
+        <p className="text-theme-muted mt-1">See exactly which students have opened specific lectures.</p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-theme-text mb-2">Select Course</label>
+          <select
+            className="input"
+            value={selectedCourseId}
+            onChange={(e) => {
+              setSelectedCourseId(e.target.value);
+              setSelectedLectureId('');
+            }}
+            disabled={loadingCourses}
+          >
+            <option value="">{loadingCourses ? 'Loading courses...' : '-- Choose a Course --'}</option>
+            {courses.map((c: any) => (
+              <option key={c.id} value={c.id}>{c.title}</option>
+            ))}
+          </select>
+        </div>
+        
+        <div>
+          <label className="block text-sm font-medium text-theme-text mb-2">Select Lecture</label>
+          <select
+            className="input"
+            value={selectedLectureId}
+            onChange={(e) => setSelectedLectureId(e.target.value)}
+            disabled={!selectedCourseId || loadingLectures}
+          >
+            <option value="">{loadingLectures ? 'Loading lectures...' : '-- Choose a Lecture --'}</option>
+            {lectures.map((l: any) => (
+              <option key={l.id} value={l.id}>{l.title}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {selectedLectureId && (
+        <div className="bg-theme-bg/50 border border-theme-border rounded-2xl overflow-hidden mt-6">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-theme-secondary/30 border-b border-theme-border">
+                  <th className="px-6 py-4 text-xs font-semibold text-theme-muted uppercase tracking-wider">Student Name</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-theme-muted uppercase tracking-wider">Email</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-theme-muted uppercase tracking-wider">Phone</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-theme-muted uppercase tracking-wider">Parent Phone</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-theme-muted uppercase tracking-wider">Date Opened</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-theme-border/50">
+                {loadingViewers ? (
+                  <tr>
+                    <td colSpan={5} className="px-6 py-12 text-center">
+                      <Spinner className="mx-auto" />
+                    </td>
+                  </tr>
+                ) : viewers.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="px-6 py-12">
+                      <EmptyState 
+                        icon={<Search className="w-8 h-8" />} 
+                        title="No viewers found" 
+                        description="No students have opened this lecture yet." 
+                      />
+                    </td>
+                  </tr>
+                ) : (
+                  viewers.map((v: any) => (
+                    <tr key={v.studentId} className="hover:bg-theme-secondary/20 transition-colors">
+                      <td className="px-6 py-4 font-semibold text-theme-text text-sm">{v.fullName}</td>
+                      <td className="px-6 py-4 text-sm text-theme-muted">{v.email}</td>
+                      <td className="px-6 py-4 text-sm font-mono text-theme-muted">{v.phoneNumber || 'N/A'}</td>
+                      <td className="px-6 py-4 text-sm font-mono text-theme-muted">{v.parentPhoneNumber || 'N/A'}</td>
+                      <td className="px-6 py-4 text-sm text-theme-muted whitespace-nowrap">
+                        {new Date(v.activatedAt).toLocaleString()}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
