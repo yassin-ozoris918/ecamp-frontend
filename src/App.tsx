@@ -15,23 +15,43 @@ import { MyStats } from './components/MyStats';
 import { ContactScreen } from './components/ContactScreen';
 import { InstructorsScreen } from './components/InstructorsScreen';
 
-const LecturePlaylist = lazy(() => import('./components/LecturePlaylist').then(m => ({ default: m.LecturePlaylist })));
-const ExamScreen = lazy(() => import('./components/ExamScreen').then(m => ({ default: m.ExamScreen })));
-const InstructorDashboard = lazy(() => import('./components/InstructorDashboard').then(m => ({ default: m.InstructorDashboard })));
-const InstructorCourses = lazy(() => import('./components/InstructorDashboard').then(m => ({ default: m.InstructorCourses })));
-const GradingQueue = lazy(() => import('./components/InstructorDashboard').then(m => ({ default: m.GradingQueue })));
-const CourseBuilder = lazy(() => import('./components/CourseBuilder').then(m => ({ default: m.CourseBuilder })));
-const AdminDashboard = lazy(() => import('./components/AdminDashboard').then(m => ({ default: m.AdminDashboard })));
-const AdminUsers = lazy(() => import('./components/AdminDashboard').then(m => ({ default: m.AdminUsers })));
-const AdminLectureViewers = lazy(() => import('./components/AdminDashboard').then(m => ({ default: m.AdminLectureViewers })));
-const AdminPendingUsers = lazy(() => import('./components/AdminDashboard').then(m => ({ default: m.AdminPendingUsers })));
-const AdminCodes = lazy(() => import('./components/AdminDashboard').then(m => ({ default: m.AdminCodes })));
-const AdminCourses = lazy(() => import('./components/AdminDashboard').then(m => ({ default: m.AdminCourses })));
-const AdminProfileRequests = lazy(() => import('./components/AdminDashboard').then(m => ({ default: m.AdminProfileRequests })));
-const AcademicRiskDashboard = lazy(() => import('./components/AcademicRiskDashboard').then(m => ({ default: m.AcademicRiskDashboard })));
-const NotificationLogViewer = lazy(() => import('./components/NotificationLogViewer').then(m => ({ default: m.NotificationLogViewer })));
-const Student360Workspace = lazy(() => import('./components/Student360Workspace').then(m => ({ default: m.Student360Workspace })));
-const SystemAuditViewer = lazy(() => import('./components/SystemAuditViewer').then(m => ({ default: m.SystemAuditViewer })));
+// Helper to auto-refresh on chunk load failures (e.g. after a new deployment)
+const lazyImport = (factory: () => Promise<any>) => {
+  return lazy(async () => {
+    try {
+      const component = await factory();
+      sessionStorage.removeItem('retry_lazy_import');
+      return component;
+    } catch (error) {
+      if (error instanceof TypeError && error.message.includes('Failed to fetch dynamically imported module')) {
+        if (!sessionStorage.getItem('retry_lazy_import')) {
+          sessionStorage.setItem('retry_lazy_import', 'true');
+          window.location.reload();
+          return new Promise(() => {}); // Keep in pending state during reload
+        }
+      }
+      throw error;
+    }
+  });
+};
+
+const LecturePlaylist = lazyImport(() => import('./components/LecturePlaylist').then(m => ({ default: m.LecturePlaylist })));
+const ExamScreen = lazyImport(() => import('./components/ExamScreen').then(m => ({ default: m.ExamScreen })));
+const InstructorDashboard = lazyImport(() => import('./components/InstructorDashboard').then(m => ({ default: m.InstructorDashboard })));
+const InstructorCourses = lazyImport(() => import('./components/InstructorDashboard').then(m => ({ default: m.InstructorCourses })));
+const GradingQueue = lazyImport(() => import('./components/InstructorDashboard').then(m => ({ default: m.GradingQueue })));
+const CourseBuilder = lazyImport(() => import('./components/CourseBuilder').then(m => ({ default: m.CourseBuilder })));
+const AdminDashboard = lazyImport(() => import('./components/AdminDashboard').then(m => ({ default: m.AdminDashboard })));
+const AdminUsers = lazyImport(() => import('./components/AdminDashboard').then(m => ({ default: m.AdminUsers })));
+const AdminLectureViewers = lazyImport(() => import('./components/AdminDashboard').then(m => ({ default: m.AdminLectureViewers })));
+const AdminPendingUsers = lazyImport(() => import('./components/AdminDashboard').then(m => ({ default: m.AdminPendingUsers })));
+const AdminCodes = lazyImport(() => import('./components/AdminDashboard').then(m => ({ default: m.AdminCodes })));
+const AdminCourses = lazyImport(() => import('./components/AdminDashboard').then(m => ({ default: m.AdminCourses })));
+const AdminProfileRequests = lazyImport(() => import('./components/AdminDashboard').then(m => ({ default: m.AdminProfileRequests })));
+const AcademicRiskDashboard = lazyImport(() => import('./components/AcademicRiskDashboard').then(m => ({ default: m.AcademicRiskDashboard })));
+const NotificationLogViewer = lazyImport(() => import('./components/NotificationLogViewer').then(m => ({ default: m.NotificationLogViewer })));
+const Student360Workspace = lazyImport(() => import('./components/Student360Workspace').then(m => ({ default: m.Student360Workspace })));
+const SystemAuditViewer = lazyImport(() => import('./components/SystemAuditViewer').then(m => ({ default: m.SystemAuditViewer })));
 
 
 import { ThemeProvider } from './lib/ThemeProvider';
