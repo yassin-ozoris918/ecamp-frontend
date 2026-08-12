@@ -79,8 +79,12 @@ export interface Lecture {
   sortOrder: number;
   thumbnailUrl?: string | null;
   validityDays?: number | null;
+  durationDays?: number | null;
+  durationHours?: number | null;
+  durationMinutes?: number | null;
   isUnlocked?: boolean;
   isExpired?: boolean;
+  isStarted?: boolean;
   isPublished?: boolean;
   warningHours?: number;
   warningMinutes?: number;
