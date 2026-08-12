@@ -23,7 +23,13 @@ function getStorageId(): string {
   return id;
 }
 
+let cachedFingerprint: string | null = null;
+
 export function generateDeviceFingerprint(): string {
+  if (cachedFingerprint) {
+    return cachedFingerprint;
+  }
+
   const signals: string[] = [];
 
   const nav = navigator as Navigator & {
@@ -37,11 +43,20 @@ export function generateDeviceFingerprint(): string {
   signals.push(String(navigator.hardwareConcurrency ?? 0));
   signals.push(String(nav.deviceMemory ?? 0));
   signals.push(String(nav.userAgentData?.platform ?? ''));
-  signals.push(String(screen.width) + 'x' + String(screen.height));
+  
+  // Make dimensions orientation-agnostic
+  const screenW = Math.max(screen.width, screen.height);
+  const screenH = Math.min(screen.width, screen.height);
+  signals.push(`${screenW}x${screenH}`);
+  
   signals.push(String(screen.colorDepth));
-  signals.push(String(screen.availWidth) + 'x' + String(screen.availHeight));
+  
+  // We omit availWidth and availHeight as they are highly volatile 
+  // (e.g. mobile address bar hiding, taskbar resizing)
+  
   signals.push(Intl.DateTimeFormat().resolvedOptions().timeZone);
   signals.push(getStorageId());
 
-  return djb2(signals.join('||'));
+  cachedFingerprint = djb2(signals.join('||'));
+  return cachedFingerprint;
 }
