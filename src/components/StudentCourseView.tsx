@@ -98,10 +98,13 @@ export function StudentCourseView({ courseId }: { courseId: string }) {
       lecture.durationMinutes ? `${lecture.durationMinutes}m` : ''
     ].filter(Boolean).join(' ') || t('courseView.lifetime');
     
-    const ok = await confirm(
-      t('courseView.startLecture'),
-      t('courseView.startLectureDesc', { duration: durationStr })
-    );
+    let ok = true;
+    if (!course?.isFree) {
+      ok = await confirm(
+        t('courseView.startLecture'),
+        t('courseView.startLectureDesc', { duration: durationStr })
+      );
+    }
     if (ok) {
       try {
         await api.post(`/lectures/${lecture.id}/start-access`);

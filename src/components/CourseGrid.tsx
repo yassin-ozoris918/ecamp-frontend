@@ -80,7 +80,12 @@ export function CourseGrid() {
                     <BookOpen className="w-10 h-10 text-neutral-600" />
                   </div>
                 )}
-                <div className="absolute top-4 right-4">
+                <div className="absolute top-4 right-4 flex flex-col gap-2 items-end">
+                  {course.isFree && (
+                    <Badge variant="success" className="bg-emerald-500/90 text-white border-emerald-400 font-bold shadow-lg shadow-emerald-500/20">
+                      FREE
+                    </Badge>
+                  )}
                   <Badge variant="default" className="bg-black/60 backdrop-blur-md border-theme-border">
                     {course.lectures?.length || 0} Lectures
                   </Badge>

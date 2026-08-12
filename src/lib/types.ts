@@ -53,6 +53,7 @@ export interface Course {
   status: ContentStatus;
   audienceType?: EducationLevel;
   validity_days?: number | null;
+  isFree?: boolean;
   createdAt?: string;
   updatedAt?: string;
   instructors?: CourseInstructor[];
@@ -188,6 +189,7 @@ export interface BuilderData {
     introductoryVideoUrl?: string | null;
     audienceType?: EducationLevel;
     validity_days?: number | null;
+    isFree?: boolean;
     instructors?: CourseInstructor[];
   };
   chapters: BuilderChapter[];

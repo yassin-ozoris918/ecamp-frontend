@@ -65,6 +65,24 @@ export function CourseSettingsPanel({ courseId }: { courseId: string }) {
     }
   });
 
+  const toggleFreeMutation = useMutation({
+    mutationFn: async (isFree: boolean) => {
+      return api.put(`/courses/${courseId}`, { 
+        title: courseDetails.title,
+        description: courseDetails.description,
+        audienceType: courseDetails.audienceType,
+        isFree
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['course', courseId] });
+      setFeedback('Course pricing status updated.');
+    },
+    onError: (err: unknown) => {
+      setFeedback((err as any)?.response?.data?.message || 'Failed to update course.');
+    }
+  });
+
   const removeMutation = useMutation({
     mutationFn: async (targetInstructorId: string) => {
       return api.delete(`/courses/${courseId}/instructors/${targetInstructorId}`);
@@ -91,6 +109,30 @@ export function CourseSettingsPanel({ courseId }: { courseId: string }) {
         <span className="rounded-full bg-cyan-500/10 border border-cyan-400/20 px-3 py-1 text-xs font-bold text-cyan-400 uppercase tracking-wider">
           {courseDetails?.audienceType === 'HIGH_SCHOOL' ? '🏫 High School Tier' : '🎓 University Tier'}
         </span>
+      </div>
+
+      <div className="flex items-center justify-between border-b border-neutral-800 pb-4">
+        <div className="flex items-center gap-2">
+          <Sparkles className="h-5 w-5 text-emerald-400" />
+          <div>
+            <h3 className="text-md font-bold">Course Pricing</h3>
+            <p className="text-xs text-theme-muted">Make course free and bypass activation codes.</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          {courseDetails?.isFree && (
+            <span className="rounded-full bg-emerald-500/10 border border-emerald-400/20 px-3 py-1 text-xs font-bold text-emerald-400 uppercase tracking-wider">
+              FREE
+            </span>
+          )}
+          <button
+            onClick={() => toggleFreeMutation.mutate(!courseDetails?.isFree)}
+            disabled={toggleFreeMutation.isPending}
+            className={`btn-ghost py-1 px-3 text-xs border ${courseDetails?.isFree ? 'border-emerald-500/30 hover:bg-emerald-500/10' : 'border-neutral-700 hover:bg-neutral-800'}`}
+          >
+            {courseDetails?.isFree ? 'Make Paid' : 'Make Free'}
+          </button>
+        </div>
       </div>
 
       <div className="space-y-4">

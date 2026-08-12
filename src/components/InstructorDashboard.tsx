@@ -230,6 +230,7 @@ export function CreateCourseModal({
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [audienceType, setAudienceType] = useState('HIGH_SCHOOL');
+  const [isFree, setIsFree] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -243,6 +244,7 @@ export function CreateCourseModal({
         title: title.trim(),
         description: description.trim(),
         audienceType,
+        isFree,
       });
 
       setTitle('');
@@ -273,6 +275,20 @@ export function CreateCourseModal({
             <option value="HIGH_SCHOOL">High School</option>
             <option value="UNIVERSITY">University</option>
           </select>
+        </div>
+        
+        <div className="flex items-center gap-2 mt-4 bg-brand-500/5 p-4 rounded-xl border border-brand-500/10">
+          <input 
+            type="checkbox" 
+            id="isFreeCourse" 
+            checked={isFree} 
+            onChange={(e) => setIsFree(e.target.checked)} 
+            className="w-5 h-5 rounded text-brand-500 focus:ring-brand-500"
+          />
+          <label htmlFor="isFreeCourse" className="flex flex-col cursor-pointer">
+            <span className="font-semibold text-white">Make Course Free</span>
+            <span className="text-sm text-gray-400">Students will bypass activation codes and time limits.</span>
+          </label>
         </div>
 
         {error && <p className="text-sm text-error-300 bg-error-500/10 p-3 rounded-lg">{error}</p>}
