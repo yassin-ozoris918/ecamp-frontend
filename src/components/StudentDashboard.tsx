@@ -166,13 +166,21 @@ export function StudentDashboard() {
                         <img src={course.thumbnailUrl} alt={course.title} className="w-full h-full object-cover absolute inset-0" />
                       )}
                       <div className="absolute inset-0 bg-theme-bg/20" />
-                      {pct >= 100 && (
+                      {pct >= 100 ? (
                         <div className="absolute top-2 end-3">
                           <Badge variant="success" className="bg-theme-bg/40 text-secondary-200 border-theme-border">
                             <CheckCircle2 className="w-3 h-3" />
                             {t('dashboard.complete')}
                           </Badge>
                         </div>
+                      ) : (
+                        course.isFree && (
+                          <div className="absolute top-2 end-3">
+                            <Badge variant="success" className="bg-emerald-500/90 text-white border-emerald-400 font-bold shadow-lg shadow-emerald-500/20">
+                              FREE
+                            </Badge>
+                          </div>
+                        )
                       )}
                     </div>
 
@@ -236,7 +244,12 @@ export function StudentDashboard() {
                         <img src={course.thumbnailUrl} alt={course.title} className="w-full h-full object-cover absolute inset-0" />
                       )}
                       <div className="absolute inset-0 bg-theme-bg/20" />
-                      <div className="absolute top-2 right-2">
+                      <div className="absolute top-2 right-2 flex flex-col gap-2 items-end">
+                        {course.isFree && (
+                          <Badge variant="success" className="bg-emerald-500/90 text-white border-emerald-400 font-bold shadow-lg shadow-emerald-500/20">
+                            FREE
+                          </Badge>
+                        )}
                         <Badge variant="default" className="bg-black/60 backdrop-blur-md border-theme-border">
                           {course.lectures?.length || 0} {t('dashboard.lectures')}
                         </Badge>
