@@ -373,6 +373,7 @@ export interface CourseProgressItem {
   thumbnailUrl: string | null;
   instructorName: string;
   progressPct: number;
+  isFree?: boolean;
 }
 
 export interface StudentLectureInfo {

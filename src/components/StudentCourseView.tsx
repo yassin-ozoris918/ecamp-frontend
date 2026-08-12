@@ -157,15 +157,17 @@ export function StudentCourseView({ courseId }: { courseId: string }) {
             <p className="text-theme-muted text-lg leading-relaxed max-w-3xl mb-6">
               {course.description || t('courseView.noDesc')}
             </p>
-            <div className="flex flex-col sm:flex-row gap-3 items-center">
-              <button 
-                onClick={() => setRedeemModal({ type: 'COURSE', targetId: courseId })} 
-                className="btn-primary w-full sm:w-auto"
-              >
-                <KeyRound className="w-4 h-4" />
-                {t('courseView.unlockFullCourse')}
-              </button>
-            </div>
+            {!course.isFree && (
+              <div className="flex flex-col sm:flex-row gap-3 items-center">
+                <button 
+                  onClick={() => setRedeemModal({ type: 'COURSE', targetId: courseId })} 
+                  className="btn-primary w-full sm:w-auto"
+                >
+                  <KeyRound className="w-4 h-4" />
+                  {t('courseView.unlockFullCourse')}
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
