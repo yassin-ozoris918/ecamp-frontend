@@ -456,14 +456,16 @@ export function AuthScreen() {
             </div>
             
             {/* Video Container */}
-            <div className="relative w-full h-[65vh] sm:h-[70vh] md:h-auto md:aspect-video bg-black">
-              <iframe
-                src="https://drive.google.com/file/d/1L8bkQhYetrjlQWz3Ft98FUdrrO3F7D89/preview"
-                title="Registration Tutorial"
-                className="absolute inset-0 w-full h-full border-0"
-                allow="autoplay"
-                allowFullScreen
-              ></iframe>
+            <div className="relative w-full aspect-video bg-black flex items-center justify-center">
+              <video
+                controls
+                autoPlay
+                className="absolute inset-0 w-full h-full object-contain outline-none"
+                preload="metadata"
+              >
+                <source src="https://drive.google.com/uc?export=download&id=1L8bkQhYetrjlQWz3Ft98FUdrrO3F7D89" type="video/mp4" />
+                {t('auth.videoNotSupported', 'Your browser does not support the video tag.')}
+              </video>
             </div>
           </div>
         </div>
