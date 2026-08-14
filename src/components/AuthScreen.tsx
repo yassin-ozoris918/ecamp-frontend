@@ -456,7 +456,7 @@ export function AuthScreen() {
             </div>
             
             {/* Video Container */}
-            <div className="relative w-full aspect-video bg-black">
+            <div className="relative w-full h-[65vh] sm:h-[70vh] md:h-auto md:aspect-video bg-black">
               <iframe
                 src="https://drive.google.com/file/d/1L8bkQhYetrjlQWz3Ft98FUdrrO3F7D89/preview"
                 title="Registration Tutorial"
