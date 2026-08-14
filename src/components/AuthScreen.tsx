@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { GraduationCap, AlertCircle, Eye, EyeOff } from 'lucide-react';
+import { GraduationCap, AlertCircle, Eye, EyeOff, PlayCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import { api } from '../lib/api';
 import { useAuth } from '../lib/authContext';
 import { generateDeviceFingerprint } from '../lib/device';
@@ -15,6 +15,7 @@ export function AuthScreen() {
   const [localError, setLocalError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [registrationPending, setRegistrationPending] = useState(false);
+  const [showTutorial, setShowTutorial] = useState(false);
 
   // login fields
   const [email, setEmail] = useState('');
@@ -253,6 +254,45 @@ export function AuthScreen() {
             <div className="mb-5 flex items-start gap-2 rounded-xl border border-error-500/30 bg-error-500/10 p-3 text-sm text-error-200">
               <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
               <span>{errMsg}</span>
+            </div>
+          )}
+
+          {mode === 'register' && (
+            <div className="mb-6">
+              <button
+                type="button"
+                onClick={() => setShowTutorial(!showTutorial)}
+                className="w-full flex items-center justify-between p-4 rounded-xl border border-accent-500/30 bg-gradient-to-r from-accent-500/5 to-accent-600/10 hover:from-accent-500/10 hover:to-accent-600/20 transition-all duration-300 group shadow-sm"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-accent-500/20 rounded-lg text-accent-600 dark:text-accent-400 group-hover:scale-110 transition-transform">
+                    <PlayCircle className="w-5 h-5" />
+                  </div>
+                  <div className="text-left">
+                    <h4 className="text-sm font-bold text-theme-text">{t('auth.needHelpRegistering')}</h4>
+                    <p className="text-xs text-theme-muted">{t('auth.watchTutorial')}</p>
+                  </div>
+                </div>
+                <div className="text-accent-500">
+                  {showTutorial ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                </div>
+              </button>
+              
+              <div 
+                className={`overflow-hidden transition-all duration-500 ease-in-out ${
+                  showTutorial ? 'max-h-[500px] opacity-100 mt-4' : 'max-h-0 opacity-0'
+                }`}
+              >
+                <div className="relative w-full rounded-xl overflow-hidden shadow-xl border border-theme-border bg-black aspect-video ring-1 ring-white/10">
+                  <iframe
+                    src="https://drive.google.com/file/d/1L8bkQhYetrjlQWz3Ft98FUdrrO3F7D89/preview"
+                    title="Registration Tutorial"
+                    className="absolute inset-0 w-full h-full border-0"
+                    allow="autoplay"
+                    allowFullScreen
+                  ></iframe>
+                </div>
+              </div>
             </div>
           )}
 

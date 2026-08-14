@@ -41,6 +41,8 @@
     "registrationPendingTitle": "Registration Successful!",
     "registrationPendingMessage": "Your account is currently under review by our administration team. You will be granted access once your details have been verified.",
     "backToLogin": "Back to Login",
+    "needHelpRegistering": "Need help registering?",
+    "watchTutorial": "Watch our quick step-by-step tutorial video",
     "errors": {
       "default": "An error occurred",
       "invalidCredentials": "Email or password is incorrect.",
