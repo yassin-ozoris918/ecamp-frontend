@@ -257,7 +257,8 @@ export function AuthScreen() {
             </div>
           )}
 
-          {mode === 'register' && (
+          {/* [ON HOLD: Registration Tutorial Video]
+          mode === 'register' && (
             <div className="mb-6">
               <button
                 type="button"
@@ -275,7 +276,8 @@ export function AuthScreen() {
                 </div>
               </button>
             </div>
-          )}
+          )
+          */}
 
           <form onSubmit={handleSubmit} className="space-y-4" noValidate>
             {mode === 'register' && (
@@ -428,19 +430,16 @@ export function AuthScreen() {
         </div>
       </div>
 
-      {/* Full-Screen Video Modal */}
-      {showTutorial && (
+      {/* [ON HOLD: Full-Screen Video Modal]
+      showTutorial && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-300">
-          {/* Backdrop */}
           <div 
             className="absolute inset-0 bg-black/80 backdrop-blur-md cursor-pointer"
             onClick={() => setShowTutorial(false)}
           />
           
-          {/* Modal Content */}
           <div className="relative w-full max-w-5xl bg-theme-bg rounded-2xl shadow-2xl overflow-hidden ring-1 ring-white/20 animate-in zoom-in-95 duration-300 flex flex-col">
             
-            {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-theme-border bg-theme-card/80 backdrop-blur-sm z-10">
               <h3 className="font-bold text-theme-text flex items-center gap-2">
                 <PlayCircle className="w-5 h-5 text-accent-500" />
@@ -455,7 +454,6 @@ export function AuthScreen() {
               </button>
             </div>
             
-            {/* Video Container */}
             <div className="relative w-full h-[70vh] md:h-auto md:aspect-video bg-black">
               <iframe
                 src="https://drive.google.com/file/d/1L8bkQhYetrjlQWz3Ft98FUdrrO3F7D89/preview"
@@ -467,7 +465,8 @@ export function AuthScreen() {
             </div>
           </div>
         </div>
-      )}
+      )
+      */}
     </div>
   );
 }
