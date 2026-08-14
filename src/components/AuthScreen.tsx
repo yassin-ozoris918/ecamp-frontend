@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { GraduationCap, AlertCircle, Eye, EyeOff, PlayCircle, ChevronDown, ChevronUp } from 'lucide-react';
+import { GraduationCap, AlertCircle, Eye, EyeOff, PlayCircle, X } from 'lucide-react';
 import { api } from '../lib/api';
 import { useAuth } from '../lib/authContext';
 import { generateDeviceFingerprint } from '../lib/device';
@@ -261,7 +261,7 @@ export function AuthScreen() {
             <div className="mb-6">
               <button
                 type="button"
-                onClick={() => setShowTutorial(!showTutorial)}
+                onClick={() => setShowTutorial(true)}
                 className="w-full flex items-center justify-between p-4 rounded-xl border border-accent-500/30 bg-gradient-to-r from-accent-500/5 to-accent-600/10 hover:from-accent-500/10 hover:to-accent-600/20 transition-all duration-300 group shadow-sm"
               >
                 <div className="flex items-center gap-3">
@@ -273,26 +273,7 @@ export function AuthScreen() {
                     <p className="text-xs text-theme-muted">{t('auth.watchTutorial')}</p>
                   </div>
                 </div>
-                <div className="text-accent-500">
-                  {showTutorial ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-                </div>
               </button>
-              
-              <div 
-                className={`overflow-hidden transition-all duration-500 ease-in-out ${
-                  showTutorial ? 'max-h-[500px] opacity-100 mt-4' : 'max-h-0 opacity-0'
-                }`}
-              >
-                <div className="relative w-full rounded-xl overflow-hidden shadow-xl border border-theme-border bg-black aspect-video ring-1 ring-white/10">
-                  <iframe
-                    src="https://drive.google.com/file/d/1L8bkQhYetrjlQWz3Ft98FUdrrO3F7D89/preview"
-                    title="Registration Tutorial"
-                    className="absolute inset-0 w-full h-full border-0"
-                    allow="autoplay"
-                    allowFullScreen
-                  ></iframe>
-                </div>
-              </div>
             </div>
           )}
 
@@ -446,6 +427,47 @@ export function AuthScreen() {
           </div>
         </div>
       </div>
+
+      {/* Full-Screen Video Modal */}
+      {showTutorial && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-300">
+          {/* Backdrop */}
+          <div 
+            className="absolute inset-0 bg-black/80 backdrop-blur-md cursor-pointer"
+            onClick={() => setShowTutorial(false)}
+          />
+          
+          {/* Modal Content */}
+          <div className="relative w-full max-w-5xl bg-theme-bg rounded-2xl shadow-2xl overflow-hidden ring-1 ring-white/20 animate-in zoom-in-95 duration-300 flex flex-col">
+            
+            {/* Header */}
+            <div className="flex items-center justify-between p-4 border-b border-theme-border bg-theme-card/80 backdrop-blur-sm z-10">
+              <h3 className="font-bold text-theme-text flex items-center gap-2">
+                <PlayCircle className="w-5 h-5 text-accent-500" />
+                {t('auth.needHelpRegistering')}
+              </h3>
+              <button 
+                onClick={() => setShowTutorial(false)}
+                className="p-2 hover:bg-error-500/20 hover:text-error-500 rounded-full transition-colors text-theme-muted"
+                aria-label="Close modal"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            
+            {/* Video Container */}
+            <div className="relative w-full aspect-video bg-black">
+              <iframe
+                src="https://drive.google.com/file/d/1L8bkQhYetrjlQWz3Ft98FUdrrO3F7D89/preview"
+                title="Registration Tutorial"
+                className="absolute inset-0 w-full h-full border-0"
+                allow="autoplay"
+                allowFullScreen
+              ></iframe>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
