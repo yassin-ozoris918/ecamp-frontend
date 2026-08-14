@@ -40,7 +40,29 @@
     "duplicatePhoneError": "Student and Guardian phone numbers cannot be the same.",
     "registrationPendingTitle": "Registration Successful!",
     "registrationPendingMessage": "Your account is currently under review by our administration team. You will be granted access once your details have been verified.",
-    "backToLogin": "Back to Login"
+    "backToLogin": "Back to Login",
+    "errors": {
+      "default": "An error occurred",
+      "invalidCredentials": "Email or password is incorrect.",
+      "accountPending": "Your account is registered but still pending admin approval. You will not be able to log in until it is approved.",
+      "nameRequired": "Full name is required.",
+      "nameInvalid": "Name must be a valid string.",
+      "nameTooShort": "Name must be at least 3 characters.",
+      "nameTooLong": "Name cannot exceed 50 characters.",
+      "emailRequired": "Email address is required.",
+      "invalidEmail": "Please provide a valid email address.",
+      "emailAlreadyInUse": "This email is already in use by another account.",
+      "passwordRequired": "Password is required.",
+      "passwordInvalid": "Password must be a valid string.",
+      "passwordTooShort": "Password must be at least 8 characters.",
+      "passwordCriteria": "Password must contain both letters and numbers.",
+      "duplicatePhoneError": "Student and Guardian phone numbers cannot be the same.",
+      "invalidPhone": "Invalid Egyptian phone number format (e.g. 01012345678).",
+      "parentPhoneRequired": "Parent phone number is required for High School students.",
+      "invalidParentPhone": "Invalid Egyptian parent phone number format.",
+      "deviceRequired": "Device fingerprint is required for student login.",
+      "unrecognizedDevice": "Unrecognized Device. You can only log in from your registered device. Please contact technical support to request a device reset."
+    }
   },
   "dashboard": {
     "welcomeBack": "Welcome back,",

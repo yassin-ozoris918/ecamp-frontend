@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { api } from './api';
 import type { Profile, UserRole } from './types';
+import i18n from './i18n';
 
 type AuthError = { message: string };
 
@@ -71,7 +72,10 @@ export function useAuth() {
         }
         return { error: null };
       } catch (err: any) {
-        return { error: { message: Array.isArray(err.response?.data?.message) ? err.response.data.message.join(', ') : (err.response?.data?.message || 'Registration failed') } };
+        const errorData = err.response?.data;
+        const msgs = Array.isArray(errorData?.message) ? errorData.message : [errorData?.message || 'auth.errors.default'];
+        const translatedMsg = msgs.map((m: string) => i18n.t(m)).join(' - ');
+        return { error: { message: translatedMsg } };
       }
     },
     [],
@@ -98,7 +102,10 @@ export function useAuth() {
 
         return { error: null };
       } catch (err: any) {
-        return { error: { message: Array.isArray(err.response?.data?.message) ? err.response.data.message.join(', ') : (err.response?.data?.message || 'Login failed') } };
+        const errorData = err.response?.data;
+        const msgs = Array.isArray(errorData?.message) ? errorData.message : [errorData?.message || 'auth.errors.default'];
+        const translatedMsg = msgs.map((m: string) => i18n.t(m)).join(' - ');
+        return { error: { message: translatedMsg } };
       }
     },
     [],

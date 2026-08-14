@@ -72,32 +72,47 @@ export function AuthScreen() {
         const { error } = await signIn(email, password, deviceId);
         if (error) setLocalError(error.message);
       } else {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email.trim())) {
+          setLocalError(t('auth.errors.invalidEmail'));
+          return;
+        }
+        
+        if (fullName.trim().length < 3) {
+          setLocalError(t('auth.errors.nameTooShort'));
+          return;
+        }
+        if (fullName.trim().length > 50) {
+          setLocalError(t('auth.errors.nameTooLong'));
+          return;
+        }
+
         if (password.length < 8) {
-          setLocalError('Password must be at least 8 characters.');
+          setLocalError(t('auth.errors.passwordTooShort'));
           return;
         }
         if (!/[A-Za-z]/.test(password) || !/\d/.test(password)) {
-          setLocalError('Password must contain both letters and numbers.');
+          setLocalError(t('auth.errors.passwordCriteria'));
           return;
         }
         const egyptPhoneRegex = /^01[0125][0-9]{8}$/;
         if (!egyptPhoneRegex.test(phoneNumber.trim())) {
-          setLocalError('Invalid Egyptian phone number format (e.g. 01012345678).');
+          setLocalError(t('auth.errors.invalidPhone'));
           return;
         }
         
         if (educationLevel === 'HIGH_SCHOOL' && !parentPhoneNumber.trim()) {
-          setLocalError('Parent phone number is required for High School students.');
+          setLocalError(t('auth.errors.parentPhoneRequired'));
           return;
         }
 
         if (educationLevel === 'HIGH_SCHOOL' && !egyptPhoneRegex.test(parentPhoneNumber.trim())) {
-          setLocalError('Invalid Egyptian parent phone number format.');
+          setLocalError(t('auth.errors.invalidParentPhone'));
           return;
         }
 
         if (phoneNumber.trim() && parentPhoneNumber.trim() && phoneNumber.trim() === parentPhoneNumber.trim()) {
-          setLocalError(t('auth.duplicatePhoneError', 'Student and Guardian phone numbers cannot be the same.'));
+          setLocalError(t('auth.errors.duplicatePhoneError'));
           return;
         }
 
@@ -228,11 +243,11 @@ export function AuthScreen() {
               : t('auth.joinEcampDesc')}
           </p>
 
-          {errMsg?.includes('Unrecognized Device') ? (
+          {errMsg === 'auth.errors.unrecognizedDevice' || errMsg?.includes('Unrecognized Device') ? (
             <div className="mb-5 rounded-xl border border-warning-500/30 bg-warning-500/10 p-5 text-center">
               <AlertCircle className="w-8 h-8 mx-auto text-warning-400 mb-2" />
               <h3 className="text-lg font-bold text-theme-text mb-1">{t('auth.unrecognizedDevice')}</h3>
-              <p className="text-sm text-theme-muted">{t('auth.unrecognizedDeviceDesc')}</p>
+              <p className="text-sm text-theme-muted">{t('auth.errors.unrecognizedDevice')}</p>
             </div>
           ) : errMsg && (
             <div className="mb-5 flex items-start gap-2 rounded-xl border border-error-500/30 bg-error-500/10 p-3 text-sm text-error-200">
