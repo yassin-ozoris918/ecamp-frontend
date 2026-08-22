@@ -29,7 +29,7 @@ export function MaintenanceNotice({ onCheckStatus }: MaintenanceNoticeProps) {
             {t('maintenance.support')}
           </p>
           <p className="text-sm font-bold text-theme-text font-mono mt-1">
-            01287111806
+            01221822703
           </p>
         </div>
       </div>

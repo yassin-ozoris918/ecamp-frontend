@@ -10,8 +10,8 @@ export function ContactScreen() {
       icon: <Laptop className="w-6 h-6 text-accent-500" />,
       title: t('contact.techSupport'),
       description: t('contact.techSupportDesc'),
-      phone: '01287111806',
-      whatsapp: '01287111806',
+      phone: '01221822703',
+      whatsapp: '01221822703',
       bgClass: 'bg-accent-500/10 border-accent-500/20'
     },
     {
