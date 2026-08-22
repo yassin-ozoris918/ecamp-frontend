@@ -18,15 +18,20 @@ export function MaintenanceNotice({ onCheckStatus }: MaintenanceNoticeProps) {
         {t('maintenance.title')}
       </h2>
       
-      <p className="text-theme-muted text-lg mb-8 max-w-md leading-relaxed">
+      <p className="text-theme-muted text-lg mb-8 max-w-md leading-relaxed whitespace-pre-wrap">
         {t('maintenance.message')}
       </p>
 
       <div className="bg-theme-secondary border border-theme-border rounded-xl p-5 w-full max-w-sm mb-6 flex items-start gap-4 text-left">
         <Phone className="w-6 h-6 text-theme-muted shrink-0 mt-1" />
-        <p className="text-sm text-theme-muted leading-relaxed">
-          {t('maintenance.support')}
-        </p>
+        <div className="flex flex-col gap-1">
+          <p className="text-sm text-theme-muted leading-relaxed">
+            {t('maintenance.support')}
+          </p>
+          <p className="text-sm font-bold text-theme-text font-mono mt-1">
+            01287111806
+          </p>
+        </div>
       </div>
 
       {onCheckStatus && (

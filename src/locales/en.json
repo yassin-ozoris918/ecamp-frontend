@@ -67,9 +67,9 @@
     }
   },
   "maintenance": {
-    "title": "Platform Under Maintenance",
-    "message": "We are currently applying updates and improvements to the platform to provide you with a better experience. Access will be restored shortly.",
-    "support": "If you need assistance or experience any issue, please contact Technical Support.",
+    "title": "The Platform Is Temporarily Unavailable",
+    "message": "We apologize for the inconvenience. The platform is currently unavailable due to scheduled maintenance and updates being carried out to improve performance and enhance your overall experience.\n\nWe appreciate your understanding, and access to the platform will be restored as soon as the maintenance work is completed.\n\nThank you for your understanding and cooperation.",
+    "support": "If you need further information or experience any issue related to accessing the platform, please feel free to contact Technical Support for assistance.",
     "checkStatus": "Check Status / Return"
   },
   "dashboard": {

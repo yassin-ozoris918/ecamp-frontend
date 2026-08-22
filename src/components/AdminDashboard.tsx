@@ -224,7 +224,7 @@ function SystemControls() {
     queryKey: ['admin', 'settings', 'maintenance_mode'],
     queryFn: async () => {
       const { data } = await api.get('/admin/settings/maintenance_mode');
-      return data?.value === 'true' || data?.value === true;
+      return data === 'true' || data === true;
     }
   });
 
