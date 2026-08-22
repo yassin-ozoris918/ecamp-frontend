@@ -66,6 +66,12 @@
       "unrecognizedDevice": "Unrecognized Device. You can only log in from your registered device. Please contact technical support to request a device reset."
     }
   },
+  "maintenance": {
+    "title": "Platform Under Maintenance",
+    "message": "We are currently applying updates and improvements to the platform to provide you with a better experience. Access will be restored shortly.",
+    "support": "If you need assistance or experience any issue, please contact Technical Support.",
+    "checkStatus": "Check Status / Return"
+  },
   "dashboard": {
     "welcomeBack": "Welcome back,",
     "totalXp": "Total XP",

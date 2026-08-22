@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { GraduationCap, AlertCircle, Eye, EyeOff, PlayCircle, X } from 'lucide-react';
+import { GraduationCap, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { api } from '../lib/api';
 import { useAuth } from '../lib/authContext';
 import { generateDeviceFingerprint } from '../lib/device';
 import { ThemeToggle } from './common/ThemeToggle';
 import { LanguageToggle } from './common/LanguageToggle';
 import { useTranslation } from 'react-i18next';
+import { MaintenanceNotice } from './common/MaintenanceNotice';
 
 export function AuthScreen() {
   const { signIn, signUp, error, setError } = useAuth();
@@ -15,7 +16,16 @@ export function AuthScreen() {
   const [localError, setLocalError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [registrationPending, setRegistrationPending] = useState(false);
-  const [showTutorial, setShowTutorial] = useState(false);
+  const [maintenanceInterrupted, setMaintenanceInterrupted] = useState(() => sessionStorage.getItem('maintenance_interruption') === 'true');
+
+  const isMaintenanceActive = maintenanceInterrupted || error?.code === 'MAINTENANCE_MODE';
+
+  const clearMaintenance = () => {
+    sessionStorage.removeItem('maintenance_interruption');
+    setMaintenanceInterrupted(false);
+    setError(null);
+    setLocalError(null);
+  };
 
   // login fields
   const [email, setEmail] = useState('');
@@ -188,7 +198,9 @@ export function AuthScreen() {
       {/* Right form panel */}
       <div className="lg:w-1/2 flex items-center justify-center p-6 lg:p-12">
         <div className="w-full max-w-md animate-fade-up">
-          {registrationPending ? (
+          {isMaintenanceActive ? (
+            <MaintenanceNotice onCheckStatus={clearMaintenance} />
+          ) : registrationPending ? (
             <div className="text-center">
               <div className="w-24 h-24 bg-accent-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
                 <GraduationCap className="w-12 h-12 text-accent-500" />

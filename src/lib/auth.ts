@@ -3,7 +3,7 @@ import { api } from './api';
 import type { Profile, UserRole } from './types';
 import i18n from './i18n';
 
-type AuthError = { message: string };
+type AuthError = { message: string; code?: string };
 
 interface RegisterInput {
   fullName: string;
@@ -75,7 +75,7 @@ export function useAuth() {
         const errorData = err.response?.data;
         const msgs = Array.isArray(errorData?.message) ? errorData.message : [errorData?.message || 'auth.errors.default'];
         const translatedMsg = msgs.map((m: string) => i18n.t(m)).join(' - ');
-        return { error: { message: translatedMsg } };
+        return { error: { message: translatedMsg, code: errorData?.code } };
       }
     },
     [],
@@ -105,7 +105,7 @@ export function useAuth() {
         const errorData = err.response?.data;
         const msgs = Array.isArray(errorData?.message) ? errorData.message : [errorData?.message || 'auth.errors.default'];
         const translatedMsg = msgs.map((m: string) => i18n.t(m)).join(' - ');
-        return { error: { message: translatedMsg } };
+        return { error: { message: translatedMsg, code: errorData?.code } };
       }
     },
     [],

@@ -22,9 +22,30 @@ instance.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
+let isRedirectingForMaintenance = false;
+
 instance.interceptors.response.use(
   (response) => response,
   async (error) => {
+    // 1. Maintenance Mode Interceptor
+    if (error.response?.data?.code === 'MAINTENANCE_MODE') {
+      if (!isRedirectingForMaintenance) {
+        isRedirectingForMaintenance = true;
+        
+        // SAFELY clear authentication data only (preserving device ID)
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+        localStorage.removeItem('user');
+        
+        sessionStorage.setItem('maintenance_interruption', 'true');
+        
+        // Redirect to auth/login screen where the maintenance notice will be shown
+        window.location.href = '/';
+      }
+      return Promise.reject(error);
+    }
+
+    // 2. Token Refresh Interceptor
     const originalRequest = error.config;
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
@@ -68,6 +89,7 @@ export class ApiError extends Error {
     message: string,
     public status?: number,
     public errors?: Record<string, string[]>,
+    public code?: string,
   ) {
     super(message);
     this.name = 'ApiError';
@@ -77,13 +99,13 @@ export class ApiError extends Error {
 export function normalizeError(err: unknown): ApiError {
   if (err instanceof ApiError) return err;
   const axiosErr = err as {
-    response?: { data?: { message?: string | string[]; errors?: Record<string, string[]> }; status?: number };
+    response?: { data?: { message?: string | string[]; errors?: Record<string, string[]>; code?: string }; status?: number };
     message?: string;
   };
   const message = Array.isArray(axiosErr.response?.data?.message)
     ? axiosErr.response!.data!.message.join(', ')
     : axiosErr.response?.data?.message || axiosErr.message || 'Unknown error';
-  return new ApiError(message, axiosErr.response?.status, axiosErr.response?.data?.errors);
+  return new ApiError(message, axiosErr.response?.status, axiosErr.response?.data?.errors, axiosErr.response?.data?.code);
 }
 
 export const client = {
