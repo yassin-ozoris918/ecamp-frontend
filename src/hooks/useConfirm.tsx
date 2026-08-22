@@ -4,17 +4,21 @@ interface UseConfirmState {
   open: boolean;
   title: string;
   message: string;
+  confirmText?: string;
+  cancelText?: string;
 }
 
 interface ConfirmDialogProps {
   open: boolean;
   title: string;
   message: string;
+  confirmText?: string;
+  cancelText?: string;
   onConfirm: () => void;
   onCancel: () => void;
 }
 
-export function ConfirmDialog({ open, title, message, onConfirm, onCancel }: ConfirmDialogProps) {
+export function ConfirmDialog({ open, title, message, confirmText, cancelText, onConfirm, onCancel }: ConfirmDialogProps) {
   if (!open) return null;
 
   return (
@@ -27,13 +31,13 @@ export function ConfirmDialog({ open, title, message, onConfirm, onCancel }: Con
             className="px-4 py-2 rounded-lg text-sm font-semibold text-neutral-300 hover:text-white hover:bg-neutral-700 transition-colors"
             onClick={onCancel}
           >
-            Cancel
+            {cancelText || 'Cancel'}
           </button>
           <button
             className="px-4 py-2 rounded-lg text-sm font-semibold bg-error-500 text-white hover:bg-error-400 transition-colors"
             onClick={onConfirm}
           >
-            Confirm
+            {confirmText || 'Confirm'}
           </button>
         </div>
       </div>
@@ -49,10 +53,10 @@ export function useConfirm() {
   });
   const resolveRef = useRef<((value: boolean) => void) | null>(null);
 
-  const confirm = useCallback((title: string, message: string): Promise<boolean> => {
+  const confirm = useCallback((title: string, message: string, confirmText?: string, cancelText?: string): Promise<boolean> => {
     return new Promise((resolve) => {
       resolveRef.current = resolve;
-      setState({ open: true, title, message });
+      setState({ open: true, title, message, confirmText, cancelText });
     });
   }, []);
 

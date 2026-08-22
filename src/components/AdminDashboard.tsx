@@ -24,6 +24,7 @@ import {
   Key,
   Plus,
   Download,
+  Settings,
 } from 'lucide-react';
 import { api } from '../lib/api';
 import type { Profile, UserListItem, ActivationCode, Course, CourseInstructor } from '../lib/types';
@@ -208,9 +209,119 @@ export function AdminDashboard() {
           bg="bg-gold-500/10"
         />
       </div>
+
+      <SystemControls />
     </div>
   );
 }
+
+function SystemControls() {
+  const { t } = useTranslation();
+  const queryClient = useQueryClient();
+  const { confirm, state: confirmState, handleConfirm, handleCancel } = useConfirm();
+
+  const { data: isMaintenanceMode, isLoading } = useQuery({
+    queryKey: ['admin', 'settings', 'maintenance_mode'],
+    queryFn: async () => {
+      const { data } = await api.get('/admin/settings/maintenance_mode');
+      return data?.value === 'true' || data?.value === true;
+    }
+  });
+
+  const mutation = useMutation({
+    mutationFn: async (newValue: boolean) => {
+      await api.put('/admin/settings/maintenance_mode', { value: newValue });
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'settings', 'maintenance_mode'] });
+      if (variables) {
+        toast.success(t('admin.settings.enableSuccess'));
+      } else {
+        toast.success(t('admin.settings.disableSuccess'));
+      }
+    },
+    onError: () => {
+      toast.error(t('errors.default'));
+    }
+  });
+
+  const handleToggle = async (checked: boolean) => {
+    if (checked) {
+      const isConfirmed = await confirm(
+        t('admin.settings.enableConfirmTitle'),
+        t('admin.settings.enableConfirmText'),
+        t('admin.settings.enable'),
+        t('admin.settings.cancel')
+      );
+      if (isConfirmed) {
+        mutation.mutate(true);
+      }
+    } else {
+      mutation.mutate(false);
+    }
+  };
+
+  return (
+    <div className="mt-8">
+      <h2 className="text-xl font-display font-bold text-theme-text mb-4 flex items-center gap-2">
+        <Settings className="w-5 h-5 text-theme-muted" />
+        {t('admin.settings.systemControls')}
+      </h2>
+      <div className="glass rounded-2xl p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h3 className="font-bold text-theme-text">{t('admin.settings.maintenanceMode')}</h3>
+            <p className="text-sm text-theme-muted mt-1 max-w-2xl">
+              {t('admin.settings.maintenanceModeDesc')}
+            </p>
+            {!isLoading && (
+              <div className="mt-3">
+                {isMaintenanceMode ? (
+                  <div className="flex items-center gap-2 text-warning-400 bg-warning-500/10 px-3 py-1.5 rounded w-fit text-sm font-semibold">
+                    <ShieldAlert className="w-4 h-4" />
+                    {t('admin.settings.maintenanceModeOnDesc')}
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 text-emerald-400 bg-emerald-500/10 px-3 py-1.5 rounded w-fit text-sm font-semibold">
+                    <CheckCircle2 className="w-4 h-4" />
+                    {t('admin.settings.maintenanceModeOffDesc')}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+          
+          <div className="flex items-center gap-4">
+            {isLoading || mutation.isPending ? (
+              <Spinner />
+            ) : (
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="sr-only peer"
+                  checked={isMaintenanceMode || false}
+                  onChange={(e) => handleToggle(e.target.checked)}
+                  disabled={mutation.isPending}
+                />
+                <div className="w-11 h-6 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-warning-500"></div>
+              </label>
+            )}
+          </div>
+        </div>
+      </div>
+      <ConfirmDialog 
+        open={confirmState.open} 
+        title={confirmState.title} 
+        message={confirmState.message} 
+        confirmText={confirmState.confirmText} 
+        cancelText={confirmState.cancelText} 
+        onConfirm={handleConfirm} 
+        onCancel={handleCancel} 
+      />
+    </div>
+  );
+}
+
 
 function AdminKpi({
   icon,

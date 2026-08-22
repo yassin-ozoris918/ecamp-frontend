@@ -389,5 +389,20 @@
     "redeeming": "Redeeming...",
     "redeem": "Redeem Code",
     "redeemSuccess": "Code redeemed successfully! Content unlocked."
+  },
+  "admin": {
+    "settings": {
+      "maintenanceMode": "Maintenance Mode",
+      "maintenanceModeDesc": "While enabled, students and instructors will be unable to log in or use the platform temporarily. Administrators will still be able to access the system and manage maintenance.",
+      "maintenanceModeOnDesc": "Maintenance Mode is active. Students and instructors currently cannot access the platform.",
+      "maintenanceModeOffDesc": "Maintenance Mode is disabled. The platform is operating normally.",
+      "enableConfirmTitle": "Are you sure you want to enable Maintenance Mode?",
+      "enableConfirmText": "Students and instructors will be unable to access the platform temporarily, while administrators will still be able to manage the system and disable Maintenance Mode.",
+      "cancel": "Cancel",
+      "enable": "Enable Maintenance Mode",
+      "enableSuccess": "Maintenance Mode has been enabled successfully. Students and instructors will no longer be able to access the platform.",
+      "disableSuccess": "Maintenance Mode has been disabled. The platform is now available to users.",
+      "systemControls": "System Controls"
+    }
   }
 }
