@@ -96,8 +96,13 @@ function Root() {
     if (profileError) {
       console.error("Critical: Session invalidated by server. Initiating forced eviction...");
       
-      // Completely wipe all client storage states
-      localStorage.clear();
+      // Remove only authentication/session keys.
+      // IMPORTANT: Do NOT use localStorage.clear() — it would destroy
+      // the persistent device identity keys (ecamp_device_id, ecamp_device_identity)
+      // which must survive across login/logout cycles.
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
+      localStorage.removeItem('user');
       sessionStorage.clear();
       
       // Purge any active state managers and force-redirect out
