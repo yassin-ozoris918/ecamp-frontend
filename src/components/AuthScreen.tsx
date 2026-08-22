@@ -81,7 +81,13 @@ export function AuthScreen() {
       if (mode === 'login') {
         const deviceId = generateDeviceFingerprint();
         const { error } = await signIn(email, password, deviceId);
-        if (error) setLocalError(error.message);
+        if (error) {
+          if (error.code === 'MAINTENANCE_MODE') {
+            setError(error);
+          } else {
+            setLocalError(error.message);
+          }
+        }
       } else {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email.trim())) {
@@ -139,7 +145,11 @@ export function AuthScreen() {
           deviceId,
         });
         if (error) {
-          setLocalError(error.message);
+          if (error.code === 'MAINTENANCE_MODE') {
+            setError(error);
+          } else {
+            setLocalError(error.message);
+          }
         } else if (status === 'PENDING_APPROVAL') {
           setRegistrationPending(true);
         }
