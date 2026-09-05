@@ -947,6 +947,8 @@ function AddItemModal({
   const [description, setDescription] = useState('');
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'processing' | 'done'>('idle');
   const [passingScore, setPassingScore] = useState('70');
   const [timeLimit, setTimeLimit] = useState('');
   const [busy, setBusy] = useState(false);
@@ -987,11 +989,23 @@ function AddItemModal({
 
       if (type === 'SESSION' && videoFile) {
         setUploading(true);
+        setUploadProgress(0);
+        setUploadStatus('uploading');
         const formData = new FormData();
         formData.append('video', videoFile);
         await api.post(`/sessions/${data.id}/upload-video`, formData, {
           timeout: 0, // no client timeout – videos can be several GB
+          onUploadProgress: (progressEvent) => {
+            if (progressEvent.total) {
+              const pct = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+              setUploadProgress(pct);
+              // Once bytes are fully transferred, server is processing the video
+              if (pct >= 100) setUploadStatus('processing');
+            }
+          },
         });
+        setUploadStatus('done');
+        setUploadProgress(100);
       }
 
       setTitle('');
@@ -999,6 +1013,8 @@ function AddItemModal({
       setVideoFile(null);
       setPassingScore('70');
       setTimeLimit('');
+      setUploadProgress(0);
+      setUploadStatus('idle');
       onAdded();
     } catch (err: any) {
       setError(err.response?.data?.message || err.message);
@@ -1019,10 +1035,50 @@ function AddItemModal({
           <div>
             <label className="label">Video</label>
             {videoFile ? (
-              <div className="rounded-xl bg-secondary-500/10 border border-secondary-500/20 p-3 flex items-center gap-2">
-                <Check className="w-4 h-4 text-secondary-300" />
-                <span className="text-sm text-secondary-200 flex-1">{videoFile.name} (ready to upload)</span>
-                <button type="button" onClick={() => setVideoFile(null)} disabled={uploading} className="btn-ghost text-xs">Remove</button>
+              <div className="rounded-xl bg-secondary-500/10 border border-secondary-500/20 p-3 flex flex-col gap-2">
+                <div className="flex items-center gap-2">
+                  <Check className="w-4 h-4 text-secondary-300 shrink-0" />
+                  <span className="text-sm text-secondary-200 flex-1 truncate">{videoFile.name}</span>
+                  {!uploading && (
+                    <button type="button" onClick={() => setVideoFile(null)} className="btn-ghost text-xs shrink-0">Remove</button>
+                  )}
+                </div>
+                {uploading && (
+                  <div className="space-y-1.5">
+                    {/* Progress bar */}
+                    <div className="w-full h-2 rounded-full bg-white/[0.08] overflow-hidden">
+                      <div
+                        className="h-full rounded-full transition-all duration-300 ease-out"
+                        style={{
+                          width: `${uploadProgress}%`,
+                          background: uploadStatus === 'done'
+                            ? 'linear-gradient(90deg, #22c55e, #16a34a)'
+                            : uploadStatus === 'processing'
+                            ? 'linear-gradient(90deg, #f59e0b, #d97706)'
+                            : 'linear-gradient(90deg, #06b6d4, #0284c7)',
+                        }}
+                      />
+                    </div>
+                    {/* Status text */}
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-medium" style={{
+                        color: uploadStatus === 'done' ? '#4ade80'
+                          : uploadStatus === 'processing' ? '#fbbf24'
+                          : '#67e8f9'
+                      }}>
+                        {uploadStatus === 'done' ? '✓ Upload complete'
+                          : uploadStatus === 'processing' ? '⚙ Processing on server…'
+                          : `⬆ Uploading…`}
+                      </span>
+                      <span className="text-xs text-neutral-400 font-mono">
+                        {uploadProgress}%
+                      </span>
+                    </div>
+                  </div>
+                )}
+                {!uploading && uploadProgress === 0 && (
+                  <span className="text-xs text-neutral-400">Ready to upload</span>
+                )}
               </div>
             ) : (
               <label className="flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-white/[0.08] p-6 cursor-pointer hover:border-accent-500/40 transition-colors">
@@ -1059,9 +1115,12 @@ function AddItemModal({
               <Sparkles className="w-4 h-4" /> Generate with AI
             </button>
           )}
-          <button type="button" onClick={onClose} className="btn-ghost">Cancel</button>
+          <button type="button" onClick={onClose} disabled={uploading} className="btn-ghost">Cancel</button>
           <button type="submit" disabled={busy || uploading || !title.trim() || (type === 'SESSION' && !videoFile)} className="btn-primary">
-            {busy ? 'Saving…' : 'Add'}
+            {uploading
+              ? (uploadStatus === 'processing' ? 'Processing…' : `Uploading ${uploadProgress}%`)
+              : busy ? 'Saving…'
+              : 'Add'}
           </button>
         </div>
       </form>
