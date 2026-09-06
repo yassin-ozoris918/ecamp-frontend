@@ -7,6 +7,14 @@ import { ThemeToggle } from './common/ThemeToggle';
 import { LanguageToggle } from './common/LanguageToggle';
 import { useTranslation } from 'react-i18next';
 import { MaintenanceNotice } from './common/MaintenanceNotice';
+import { 
+  HighSchoolSystem, 
+  StudyMode, 
+  StudyLanguage, 
+  HighSchoolGrade, 
+  TraditionalBranch, 
+  BaccalaureatePath 
+} from '../lib/types';
 
 export function AuthScreen() {
   const { signIn, signUp, error, setError } = useAuth();
@@ -39,6 +47,17 @@ export function AuthScreen() {
   const [profilePictureUrl, setProfilePictureUrl] = useState<string>('');
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
+  // Segmentation fields
+  const [highSchoolSystem, setHighSchoolSystem] = useState<HighSchoolSystem | ''>('');
+  const [studyMode, setStudyMode] = useState<StudyMode | ''>('');
+  const [studyLanguage, setStudyLanguage] = useState<StudyLanguage | ''>('');
+  const [highSchoolGrade, setHighSchoolGrade] = useState<HighSchoolGrade | ''>('');
+  const [traditionalBranch, setTraditionalBranch] = useState<TraditionalBranch | ''>('');
+  const [baccalaureatePath, setBaccalaureatePath] = useState<BaccalaureatePath | ''>('');
+  const [university, setUniversity] = useState('');
+  const [faculty, setFaculty] = useState('');
+  const [department, setDepartment] = useState('');
+  const [academicYear, setAcademicYear] = useState('');
 
   const errMsg = localError ?? error?.message ?? null;
 
@@ -139,6 +158,16 @@ export function AuthScreen() {
           email: email.trim(),
           password,
           educationLevel,
+          highSchoolSystem: highSchoolSystem || undefined,
+          studyMode: studyMode || undefined,
+          studyLanguage: studyLanguage || undefined,
+          highSchoolGrade: highSchoolGrade || undefined,
+          traditionalBranch: traditionalBranch || undefined,
+          baccalaureatePath: baccalaureatePath || undefined,
+          university: university.trim() || undefined,
+          faculty: faculty.trim() || undefined,
+          department: department.trim() || undefined,
+          academicYear: academicYear.trim() || undefined,
           phoneNumber: phoneNumber.trim(),
           parentPhoneNumber: educationLevel === 'HIGH_SCHOOL' ? (parentPhoneNumber.trim() || undefined) : undefined,
           profilePictureUrl: profilePictureUrl || undefined,
@@ -351,6 +380,112 @@ export function AuthScreen() {
                     <option value="UNIVERSITY">{t('auth.university')}</option>
                   </select>
                 </div>
+
+                {educationLevel === 'HIGH_SCHOOL' && (
+                  <div className="space-y-4 p-4 border border-theme-border rounded-xl bg-theme-bg/50">
+                    <h3 className="font-semibold text-theme-text">{t('auth.academicDetails', 'Academic Details')}</h3>
+                    
+                    <div>
+                      <label className="label">{t('auth.highSchoolSystem', 'Educational System')}</label>
+                      <select className="input" value={highSchoolSystem} onChange={(e) => setHighSchoolSystem(e.target.value as HighSchoolSystem)} disabled={busy}>
+                        <option value="">{t('auth.selectSystem', 'Select System')}</option>
+                        <option value="TRADITIONAL">{t('auth.systemTraditional', 'Traditional Secondary')}</option>
+                        <option value="BACCALAUREATE">{t('auth.systemBaccalaureate', 'Egyptian Baccalaureate')}</option>
+                      </select>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="label">{t('auth.studyMode', 'Study Mode')}</label>
+                        <select className="input" value={studyMode} onChange={(e) => setStudyMode(e.target.value as StudyMode)} disabled={busy}>
+                          <option value="">{t('auth.selectMode', 'Select Mode')}</option>
+                          <option value="ONLINE">{t('auth.modeOnline', 'Online')}</option>
+                          <option value="CENTER">{t('auth.modeCenter', 'Center')}</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="label">{t('auth.studyLanguage', 'Study Language')}</label>
+                        <select className="input" value={studyLanguage} onChange={(e) => setStudyLanguage(e.target.value as StudyLanguage)} disabled={busy}>
+                          <option value="">{t('auth.selectLanguage', 'Select Language')}</option>
+                          <option value="ARABIC">{t('auth.langArabic', 'Arabic')}</option>
+                          <option value="ENGLISH">{t('auth.langEnglish', 'English')}</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="label">{t('auth.grade', 'Grade')}</label>
+                      <select className="input" value={highSchoolGrade} onChange={(e) => setHighSchoolGrade(e.target.value as HighSchoolGrade)} disabled={busy}>
+                        <option value="">{t('auth.selectGrade', 'Select Grade')}</option>
+                        <option value="GRADE_1">{t('auth.grade1', 'Grade 1')}</option>
+                        <option value="GRADE_2">{t('auth.grade2', 'Grade 2')}</option>
+                        <option value="GRADE_3">{t('auth.grade3', 'Grade 3')}</option>
+                      </select>
+                    </div>
+
+                    {highSchoolSystem === 'TRADITIONAL' && (highSchoolGrade === 'GRADE_2' || highSchoolGrade === 'GRADE_3') && (
+                      <div>
+                        <label className="label">{t('auth.branch', 'Branch')}</label>
+                        <select className="input" value={traditionalBranch} onChange={(e) => setTraditionalBranch(e.target.value as TraditionalBranch)} disabled={busy}>
+                          <option value="">{t('auth.selectBranch', 'Select Branch')}</option>
+                          {highSchoolGrade === 'GRADE_2' && (
+                            <>
+                              <option value="SCIENCE">{t('auth.branchScience', 'Science')}</option>
+                              <option value="LITERARY">{t('auth.branchLiterary', 'Literary')}</option>
+                            </>
+                          )}
+                          {highSchoolGrade === 'GRADE_3' && (
+                            <>
+                              <option value="SCIENCE_BIOLOGY">{t('auth.branchScienceBiology', 'Science Biology (علمي علوم)')}</option>
+                              <option value="SCIENCE_MATH">{t('auth.branchScienceMath', 'Science Math (علمي رياضة)')}</option>
+                              <option value="LITERARY">{t('auth.branchLiterary', 'Literary')}</option>
+                            </>
+                          )}
+                        </select>
+                      </div>
+                    )}
+
+                    {highSchoolSystem === 'BACCALAUREATE' && (highSchoolGrade === 'GRADE_2' || highSchoolGrade === 'GRADE_3') && (
+                      <div>
+                        <label className="label">{t('auth.path', 'Path')}</label>
+                        <select className="input" value={baccalaureatePath} onChange={(e) => setBaccalaureatePath(e.target.value as BaccalaureatePath)} disabled={busy}>
+                          <option value="">{t('auth.selectPath', 'Select Path')}</option>
+                          <option value="MEDICINE_AND_LIFE_SCIENCES">{t('auth.pathMedicine', 'Medicine & Life Sciences')}</option>
+                          <option value="ENGINEERING_AND_COMPUTER_SCIENCE">{t('auth.pathEngineering', 'Engineering & Computer Science')}</option>
+                          <option value="BUSINESS">{t('auth.pathBusiness', 'Business')}</option>
+                          <option value="ARTS_AND_HUMANITIES">{t('auth.pathArts', 'Arts & Humanities')}</option>
+                        </select>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {educationLevel === 'UNIVERSITY' && (
+                  <div className="space-y-4 p-4 border border-theme-border rounded-xl bg-theme-bg/50">
+                    <h3 className="font-semibold text-theme-text">{t('auth.academicDetails', 'Academic Details')}</h3>
+                    
+                    <div>
+                      <label className="label">{t('auth.universityName', 'University Name')}</label>
+                      <input type="text" className="input" value={university} onChange={(e) => setUniversity(e.target.value)} disabled={busy} placeholder={t('auth.universityPlaceholder', 'e.g. Cairo University')} />
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="label">{t('auth.faculty', 'Faculty')}</label>
+                        <input type="text" className="input" value={faculty} onChange={(e) => setFaculty(e.target.value)} disabled={busy} placeholder={t('auth.facultyPlaceholder', 'e.g. Engineering')} />
+                      </div>
+                      <div>
+                        <label className="label">{t('auth.department', 'Department')}</label>
+                        <input type="text" className="input" value={department} onChange={(e) => setDepartment(e.target.value)} disabled={busy} placeholder={t('auth.departmentPlaceholder', 'e.g. Computer')} />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="label">{t('auth.academicYear', 'Academic Year')}</label>
+                      <input type="text" className="input" value={academicYear} onChange={(e) => setAcademicYear(e.target.value)} disabled={busy} placeholder={t('auth.academicYearPlaceholder', 'e.g. 2026/2027')} />
+                    </div>
+                  </div>
+                )}
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>

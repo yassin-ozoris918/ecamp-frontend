@@ -386,7 +386,7 @@ export function InstructorCourses() {
 // --- Grading Queue ---
 export function GradingQueue() {
   const { profile } = useAuth();
-  const [subs, setSubs] = useState<QuizSubmission[]>([]);
+  const [subs, setSubs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
