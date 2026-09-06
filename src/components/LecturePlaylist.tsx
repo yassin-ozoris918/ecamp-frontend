@@ -9,8 +9,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Clock,
-  Trophy,
-  Sparkles,
   AlertCircle,
   Paperclip,
   Maximize,
@@ -25,12 +23,26 @@ import type {
   Lecture,
   LectureItem,
   PlaylistItem,
-  QuizQuestion,
 } from '../lib/types';
 import { Badge, ProgressBar, Spinner } from './ui';
 import { InteractiveQuizClient } from './InteractiveQuizClient';
-import { LectureFilesSection } from './LectureFilesSection';
 import { useTranslation } from 'react-i18next';
+
+// Minimal type matching official documented API methods
+interface AmaanPlayerInstance {
+  addEventListener(event: string, callback: () => void): void;
+  removeEventListener(event: string, callback: () => void): void;
+}
+
+interface AmaanPlayerStatic {
+  getInstance(iframe: HTMLIFrameElement): AmaanPlayerInstance;
+}
+
+declare global {
+  interface Window {
+    AmaanPlayer?: AmaanPlayerStatic;
+  }
+}
 
 
 export function LecturePlaylist({ lectureId }: { lectureId: string }) {
@@ -149,19 +161,6 @@ export function LecturePlaylist({ lectureId }: { lectureId: string }) {
       console.error(e);
     }
   }, [profile, loadData]);
-
-  const onQuizPassed = useCallback(async (itemId: string, score: number, passed: boolean) => {
-    // FIX: The quiz has already been submitted by the quiz client component with the correct payload.
-    // This callback only needs to update local UI state to mark the item as completed.
-    if (passed) {
-      setCompletedIds((prev) => {
-        const next = new Set(prev);
-        next.add(itemId);
-        return next;
-      });
-      await loadData();
-    }
-  }, [loadData]);
 
   async function handleRedeem(e: React.FormEvent) {
     e.preventDefault();
@@ -487,6 +486,10 @@ function FloatingWatermark() {
   );
 }
 
+type StreamTokenResponse =
+  | { provider?: undefined; playbackUrl: string }
+  | { provider: 'AMAAN'; otp: string; playbackInfo: string };
+
 // --- Video Player ---
 function VideoPlayer({
   item,
@@ -494,18 +497,26 @@ function VideoPlayer({
   isCompleted,
 }: {
   item: LectureItem;
-  onComplete: () => void;
+  onComplete: () => void | Promise<void>;
   isCompleted: boolean;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const [playbackSpeed, setPlaybackSpeed] = useState(1);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const { t } = useTranslation();
-  const [streamUrl, setStreamUrl] = useState<string | null>(null);
-  const [loadingToken, setLoadingToken] = useState(true);
+
   const completedRef = useRef(isCompleted);
   const [showComplete, setShowComplete] = useState(false);
-  const [isFullscreen, setIsFullscreen] = useState(false);
-  const [playbackSpeed, setPlaybackSpeed] = useState(1);
+  
+  const [streamData, setStreamData] = useState<StreamTokenResponse | null>(null);
+  const [loadingToken, setLoadingToken] = useState(true);
+  const [amaanError, setAmaanError] = useState<string | null>(null);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const playerInstanceRef = useRef<any>(null);
+
+  const [isCompleting, setIsCompleting] = useState(false);
+
   const speeds = [0.5, 0.75, 1, 1.25, 1.5, 2];
 
   const cycleSpeed = (e: React.MouseEvent) => {
@@ -549,33 +560,137 @@ function VideoPlayer({
   };
 
   useEffect(() => {
+    let mounted = true;
     if (!item.video_url) {
       setLoadingToken(false);
       return;
     }
     setLoadingToken(true);
+    setAmaanError(null);
+    setStreamData(null);
+    
     api.get(`/lectures/sessions/${item.id}/stream-token`)
       .then((res) => {
-        let url = res.data.playbackUrl;
-        if (url && url.startsWith('/')) {
-          url = `${api.defaults.baseURL?.replace(/\/+$/, '') || 'http://localhost:3000'}${url}`;
+        if (!mounted) return;
+        const data = res.data;
+        if (data.provider === 'AMAAN') {
+          setStreamData({
+            provider: 'AMAAN',
+            otp: data.otp,
+            playbackInfo: data.playbackInfo,
+          });
+        } else {
+          let url = data.playbackUrl;
+          if (url && url.startsWith('/')) {
+            url = `${api.defaults.baseURL?.replace(/\/+$/, '') || 'http://localhost:3000'}${url}`;
+          }
+          setStreamData({ playbackUrl: url });
         }
-        setStreamUrl(url);
       })
       .catch((err) => {
-        console.error('Failed to get stream token', err);
+        if (mounted) console.error('Failed to get stream token', err);
       })
       .finally(() => {
-        setLoadingToken(false);
+        if (mounted) setLoadingToken(false);
       });
+
+    return () => {
+      mounted = false;
+      playerInstanceRef.current = null;
+    };
   }, [item.id, item.video_url]);
 
-  function handleMarkComplete() {
-    if (completedRef.current) return;
-    onComplete();
-    completedRef.current = true;
-    setShowComplete(true);
-    setTimeout(() => setShowComplete(false), 2500);
+  useEffect(() => {
+    if (streamData?.provider !== 'AMAAN' || !iframeRef.current) return;
+    
+    let mounted = true;
+    let playerInstance: AmaanPlayerInstance | null = null;
+    let handleInit: (() => void) | null = null;
+    let handleError: (() => void) | null = null;
+    let handleEnded: (() => void) | null = null;
+
+    const loadAmaanPlayer = async () => {
+      if (!window.AmaanPlayer) {
+        // Load the script
+        const scriptId = 'amaan-player-script';
+        let script = document.getElementById(scriptId) as HTMLScriptElement;
+        
+        if (!script) {
+          script = document.createElement('script');
+          script.id = scriptId;
+          script.src = 'https://api.amaaan.net/static/main/js/amaan-player.min.js';
+          document.head.appendChild(script);
+        }
+
+        await new Promise<void>((resolve, reject) => {
+          if (window.AmaanPlayer) {
+            resolve();
+          } else {
+            script.addEventListener('load', () => resolve());
+            script.addEventListener('error', () => reject(new Error('Failed to load Amaan player')));
+          }
+        });
+      }
+
+      if (!mounted || !iframeRef.current) return;
+
+      try {
+        const AmaanPlayerStatic = window.AmaanPlayer!;
+        playerInstance = AmaanPlayerStatic.getInstance(iframeRef.current);
+        playerInstanceRef.current = playerInstance;
+
+        handleInit = () => {
+          if (!mounted) return;
+          console.log('Amaan player initialized');
+        };
+
+        handleError = () => {
+          if (!mounted) return;
+          setAmaanError('Failed to play secure video.');
+        };
+
+        handleEnded = () => {
+          if (!mounted) return;
+          handleMarkComplete();
+        };
+
+        playerInstance.addEventListener('init', handleInit);
+        playerInstance.addEventListener('error', handleError);
+        playerInstance.addEventListener('ended', handleEnded);
+      } catch (err) {
+        console.error('Amaan initialization error', err);
+        if (mounted) setAmaanError('Failed to initialize secure player.');
+      }
+    };
+
+    loadAmaanPlayer().catch(() => {
+      if (mounted) setAmaanError('Failed to load secure player.');
+    });
+
+    return () => {
+      mounted = false;
+      if (playerInstance) {
+        if (handleInit) playerInstance.removeEventListener('init', handleInit);
+        if (handleError) playerInstance.removeEventListener('error', handleError);
+        if (handleEnded) playerInstance.removeEventListener('ended', handleEnded);
+      }
+    };
+  }, [streamData]);
+
+  async function handleMarkComplete() {
+    if (completedRef.current || isCompleting) return;
+    setIsCompleting(true);
+    try {
+      await onComplete();
+      completedRef.current = true;
+      setShowComplete(true);
+      setTimeout(() => setShowComplete(false), 2500);
+    } catch (e) {
+      console.error(e);
+      // Let it be retried by the user if it fails
+    } finally {
+      setIsCompleting(false);
+    }
   }
 
   if (!item.video_url) {
@@ -602,20 +717,42 @@ function VideoPlayer({
         <FloatingWatermark />
         {loadingToken ? (
           <Spinner className="w-8 h-8 text-accent-400" />
-        ) : streamUrl ? (
-          streamUrl.includes('/uploads/') || 
-          streamUrl.endsWith('.mp4') || 
-          streamUrl.endsWith('.webm') || 
-          streamUrl.endsWith('.mov') || 
-          streamUrl.endsWith('.mkv') || 
-          streamUrl.includes('r2.dev') || 
-          streamUrl.includes('s3') ? (
+        ) : amaanError ? (
+          <div className="text-center p-4">
+            <AlertCircle className="w-8 h-8 mx-auto text-error-400 mb-2" />
+            <p className="text-theme-muted font-medium">{amaanError}</p>
+          </div>
+        ) : streamData ? (
+          streamData.provider === 'AMAAN' ? (
+            (() => {
+              const url = new URL('https://api.amaaan.net/amaan/player/video/');
+              url.searchParams.set('otp', streamData.otp);
+              url.searchParams.set('playbackInfo', streamData.playbackInfo);
+              return (
+                <iframe
+                  ref={iframeRef}
+                  src={url.toString()}
+                  className="w-full h-full border-0"
+                  allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+                  sandbox="allow-scripts allow-same-origin allow-presentation"
+                  allowFullScreen={false}
+                />
+              );
+            })()
+          ) : streamData.playbackUrl.includes('/uploads/') || 
+              streamData.playbackUrl.endsWith('.mp4') || 
+              streamData.playbackUrl.endsWith('.webm') || 
+              streamData.playbackUrl.endsWith('.mov') || 
+              streamData.playbackUrl.endsWith('.mkv') || 
+              streamData.playbackUrl.includes('r2.dev') || 
+              streamData.playbackUrl.includes('s3') ? (
             <video
               ref={videoRef}
-              src={streamUrl}
+              src={streamData.playbackUrl}
               className="w-full h-full object-contain"
               controls
               controlsList="nofullscreen nodownload"
+              onEnded={handleMarkComplete}
               onLoadedMetadata={() => {
                 if (videoRef.current) {
                   videoRef.current.playbackRate = playbackSpeed;
@@ -624,7 +761,7 @@ function VideoPlayer({
             />
           ) : (
             <iframe
-              src={streamUrl}
+              src={streamData.playbackUrl}
               className="w-full h-full border-0"
               allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen={false}
@@ -637,7 +774,7 @@ function VideoPlayer({
           </div>
         )}
 
-        {streamUrl && (
+        {streamData && streamData.provider !== 'AMAAN' && (
           <div className="absolute top-4 right-4 flex items-center gap-2 opacity-80 group-hover:opacity-100 transition-all z-[10000]">
             <button
               onClick={cycleSpeed}
@@ -686,252 +823,6 @@ function VideoPlayer({
   );
 }
 
-// --- Quiz intro card ---
-function QuizIntroCard({
-  item,
-  onBegin,
-  isCompleted,
-}: {
-  item: LectureItem;
-  onBegin: () => void;
-  isCompleted: boolean;
-}) {
-  return (
-    <div className="glass rounded-2xl p-6 sm:p-8">
-      <div className="flex items-start gap-4">
-        <div className="w-12 h-12 rounded-xl bg-accent-500/10 flex items-center justify-center text-accent-700 dark:text-accent-300">
-          <FileQuestion className="w-6 h-6" />
-        </div>
-        <div className="flex-1">
-          <Badge variant="accent" className="mb-2">Quiz</Badge>
-          <h2 className="text-xl font-display font-bold text-theme-text">{item.title}</h2>
-          {item.description && <p className="text-sm text-theme-muted mt-1">{item.description}</p>}
-        </div>
-      </div>
-      <div className="grid grid-cols-3 gap-3 mt-6">
-        <div className="rounded-xl bg-theme-card p-3 text-center">
-          <Trophy className="w-4 h-4 mx-auto text-gold-700 dark:text-gold-300" />
-          <p className="text-xs text-theme-muted mt-1">Pass mark</p>
-          <p className="text-sm font-bold text-theme-text">{item.passing_score ?? 70}%</p>
-        </div>
-        {item.time_limit_minutes && (
-          <div className="rounded-xl bg-theme-card p-3 text-center">
-            <Clock className="w-4 h-4 mx-auto text-accent-700 dark:text-accent-300" />
-            <p className="text-xs text-theme-muted mt-1">Time limit</p>
-            <p className="text-sm font-bold text-theme-text">{item.time_limit_minutes} min</p>
-          </div>
-        )}
-        <div className="rounded-xl bg-theme-card p-3 text-center">
-          <Sparkles className="w-4 h-4 mx-auto text-secondary-700 dark:text-secondary-300" />
-          <p className="text-xs text-theme-muted mt-1">XP reward</p>
-          <p className="text-sm font-bold text-theme-text">+25</p>
-        </div>
-      </div>
-      {isCompleted ? (
-        <div className="mt-6 flex items-center gap-2 text-secondary-700 dark:text-secondary-300 bg-secondary-500/10 border border-secondary-500/20 rounded-xl p-3">
-          <CheckCircle2 className="w-5 h-5" />
-          <span className="text-sm font-semibold">You've already passed this quiz.</span>
-          <button onClick={onBegin} className="btn-ghost ms-auto">Retake</button>
-        </div>
-      ) : (
-        <button onClick={onBegin} className="btn-primary w-full mt-6">
-          <FileQuestion className="w-4 h-4" />
-          Begin Quiz
-        </button>
-      )}
-    </div>
-  );
-}
-
-// --- Quiz Taker Modal ---
-function QuizTakerModal({
-  item,
-  onClose,
-  onSubmit,
-}: {
-  item: LectureItem;
-  onClose: () => void;
-  onSubmit: (score: number, passed: boolean) => Promise<void>;
-}) {
-  const [questions, setQuestions] = useState<QuizQuestion[]>([]);
-  const [answersByQuestion, setAnswersByQuestion] = useState<Record<string, { id: string; answer_text?: string; text?: string }[]>>({});
-  const [selected, setSelected] = useState<Record<string, string[]>>({}); // questionId -> answerIds
-  const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
-  const [result, setResult] = useState<{ score: number; passed: boolean } | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      setLoading(true);
-      try {
-        const { data } = await api.get(`/quizzes/${item.id}`);
-        if (cancelled) return;
-        setQuestions(data.questions || []);
-        
-        const map: Record<string, { id: string; answer_text?: string; text?: string }[]> = {};
-        data.questions?.forEach((q: QuizQuestion & { answers?: { id: string; answer_text?: string; text?: string }[] }) => {
-          map[q.id] = q.answers || [];
-        });
-        setAnswersByQuestion(map);
-      } catch (e) {
-        console.error(e);
-      }
-      setLoading(false);
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [item.id]);
-
-  async function handleSubmit() {
-    setSubmitting(true);
-    try {
-      // FIX: Build answers in the correct format the backend expects:
-      // { answers: [{ questionId, selectedOptionIndex }] }
-      // The `selected` map holds questionId -> [answerId], and questions hold the full options list.
-      // We convert selected answer IDs to their option index.
-      const answers = questions.map((q) => {
-        const selectedAnswerId = selected[q.id]?.[0];
-        const answers_list = answersByQuestion[q.id] || [];
-        const selectedOptionIndex = answers_list.findIndex(
-          (a) => a.id === selectedAnswerId,
-        );
-        return {
-          questionId: q.id,
-          selectedOptionIndex: selectedOptionIndex >= 0 ? selectedOptionIndex : 0,
-        };
-      }).filter((a) => selected[a.questionId]?.length > 0);
-
-      // Start the quiz attempt first if not already started
-      await api.post(`/quizzes/${item.id}/start`).catch(() => {
-        // Attempt may already exist; ignore conflict errors
-      });
-
-      const { data } = await api.post('/quizzes/submit', { answers });
-      setResult({ score: data.score, passed: data.status === 'PASSED' });
-      await onSubmit(data.score, data.status === 'PASSED');
-    } catch (e) {
-      console.error(e);
-    }
-    setSubmitting(false);
-  }
-
-  const allAnswered = questions.length > 0 && questions.every((q) => (selected[q.id]?.length ?? 0) > 0);
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-      <div className="absolute inset-0 bg-theme-bg backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full max-w-2xl max-h-[92vh] overflow-y-auto scrollbar-thin glass-strong rounded-t-3xl sm:rounded-2xl p-6 animate-scale-in">
-        {result ? (
-          <div className="text-center py-8">
-            <div className={`w-20 h-20 mx-auto rounded-full flex items-center justify-center mb-4 ${
-              result.passed ? 'bg-secondary-500/15' : 'bg-error-500/15'
-            }`}>
-              {result.passed ? (
-                <Trophy className="w-10 h-10 text-gold-700 dark:text-gold-300" />
-              ) : (
-                <AlertCircle className="w-10 h-10 text-error-300" />
-              )}
-            </div>
-            <p className="text-2xl font-display font-bold text-theme-text">
-              {result.passed ? 'Quiz Passed!' : 'Keep practicing'}
-            </p>
-            <p className="text-lg text-theme-muted mt-1">You scored {result.score}%</p>
-            <p className="text-xs text-theme-muted mt-1">
-              Passing score: {item.passing_score ?? 70}%
-            </p>
-            {result.passed && (
-              <p className="text-sm text-secondary-700 dark:text-secondary-300 mt-3 flex items-center justify-center gap-1.5">
-                <Sparkles className="w-4 h-4" />
-                +25 XP earned!
-              </p>
-            )}
-            <button onClick={onClose} className="btn-primary mt-6">Continue</button>
-          </div>
-        ) : (
-          <>
-            <div className="flex items-start justify-between gap-4 mb-6">
-              <div>
-                <Badge variant="accent" className="mb-2">Quiz</Badge>
-                <h2 className="text-xl font-display font-bold text-theme-text">{item.title}</h2>
-              </div>
-              <button onClick={onClose} className="text-theme-muted hover:text-white p-2">
-                ✕
-              </button>
-            </div>
-
-            {loading ? (
-              <div className="flex items-center justify-center py-12">
-                <Spinner className="w-6 h-6 text-accent-400" />
-              </div>
-            ) : questions.length === 0 ? (
-              <p className="text-theme-muted text-center py-8">No questions in this quiz yet.</p>
-            ) : (
-              <div className="space-y-6">
-                {questions.map((q, i) => {
-                  const answers = answersByQuestion[q.id] ?? [];
-                  const chosen = selected[q.id] ?? [];
-                  return (
-                    <div key={q.id} className="rounded-xl bg-theme-card p-4">
-                      <p className="font-medium text-theme-text mb-3">
-                        <span className="text-accent-700 dark:text-accent-300 font-bold">{i + 1}.</span> {q.text}
-                      </p>
-                      <div className="space-y-2">
-                        {answers.map((a) => {
-                          const isSelected = chosen.includes(a.id);
-                          return (
-                            <button
-                              key={a.id}
-                              type="button"
-                              onClick={() => {
-                                setSelected((prev) => ({
-                                  ...prev,
-                                  [q.id]: isSelected
-                                    ? chosen.filter((x) => x !== a.id)
-                                    : [...chosen, a.id],
-                                }));
-                              }}
-                              className={`w-full text-start p-3 min-h-[44px] rounded-xl border transition-all flex items-center gap-3 ${
-                                isSelected
-                                  ? 'border-accent-500/40 bg-accent-500/10 text-accent-100'
-                                  : 'border-theme-border bg-white/[0.02] text-theme-muted hover:border-white/[0.12]'
-                              }`}
-                            >
-                              <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                                isSelected ? 'border-accent-400' : 'border-neutral-600'
-                              }`}>
-                                {isSelected && <div className="w-2.5 h-2.5 rounded-full bg-accent-400" />}
-                              </div>
-                              <span className="text-sm">{a.answer_text}</span>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  );
-                })}
-
-                <div className="flex items-center justify-between gap-3 pt-2">
-                  <p className="text-xs text-theme-muted">
-                    {Object.keys(selected).length} / {questions.length} answered
-                  </p>
-                  <button
-                    onClick={handleSubmit}
-                    disabled={!allAnswered || submitting}
-                    className="btn-primary"
-                  >
-                    {submitting ? 'Submitting…' : 'Submit Quiz'}
-                  </button>
-                </div>
-              </div>
-            )}
-          </>
-        )}
-      </div>
-    </div>
-  );
-}
 
 function LectureAttachments({ lectureId }: { lectureId: string }) {
   const { data: attachments = [] } = useQuery({

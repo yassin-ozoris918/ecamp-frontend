@@ -29,11 +29,13 @@ import { AttachmentsModal } from './AttachmentsModal';
 import { LectureSequenceBuilder } from './LectureSequenceBuilder';
 import { LectureFilesSection } from './LectureFilesSection';
 import { AIQuestionReviewStudio } from './AIQuestionReviewStudio';
+import { CourseTargetingModal } from './CourseTargetingModal';
 
 export function CourseSettingsPanel({ courseId }: { courseId: string }) {
   const queryClient = useQueryClient();
   const [selectedInstructorId, setSelectedInstructorId] = useState('');
   const [feedback, setFeedback] = useState<string | null>(null);
+  const [targetingModalOpen, setTargetingModalOpen] = useState(false);
 
   const { data: globalInstructors = [] } = useQuery({
     queryKey: ['global', 'instructors'],
@@ -103,13 +105,29 @@ export function CourseSettingsPanel({ courseId }: { courseId: string }) {
           <GraduationCap className="h-5 w-5 text-cyan-400" />
           <div>
             <h3 className="text-md font-bold">Target Academic Audience</h3>
-            <p className="text-xs text-theme-muted">Determines catalog visibility for high school vs university students.</p>
+            <p className="text-xs text-theme-muted">Determines catalog visibility for students based on their profile.</p>
           </div>
         </div>
-        <span className="rounded-full bg-cyan-500/10 border border-cyan-400/20 px-3 py-1 text-xs font-bold text-cyan-400 uppercase tracking-wider">
-          {courseDetails?.audienceType === 'HIGH_SCHOOL' ? '🏫 High School Tier' : '🎓 University Tier'}
-        </span>
+        <div className="flex items-center gap-3">
+          <span className="rounded-full bg-cyan-500/10 border border-cyan-400/20 px-3 py-1 text-xs font-bold text-cyan-400 uppercase tracking-wider">
+            {courseDetails?.audienceType === 'HIGH_SCHOOL' ? '🏫 High School Tier' : '🎓 University Tier'}
+          </span>
+          <button
+            onClick={() => setTargetingModalOpen(true)}
+            className="btn-ghost py-1 px-3 text-xs border border-neutral-700 hover:bg-neutral-800"
+          >
+            Edit Targeting
+          </button>
+        </div>
       </div>
+
+      {courseDetails && (
+        <CourseTargetingModal 
+          isOpen={targetingModalOpen} 
+          onClose={() => setTargetingModalOpen(false)} 
+          course={courseDetails} 
+        />
+      )}
 
       <div className="flex items-center justify-between border-b border-neutral-800 pb-4">
         <div className="flex items-center gap-2">

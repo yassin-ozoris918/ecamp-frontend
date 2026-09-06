@@ -7,6 +7,7 @@ import { AuthScreen } from './components/AuthScreen';
 import { AppShell } from './components/AppShell';
 import { StudentDashboard } from './components/StudentDashboard';
 import { ProfileScreen } from './components/ProfileScreen';
+import { CompleteProfileScreen } from './components/CompleteProfileScreen';
 import { CourseCatalog } from './components/CourseCatalog';
 import { CourseGrid } from './components/CourseGrid';
 import { StudentCourseView } from './components/StudentCourseView';
@@ -167,6 +168,26 @@ function Root() {
     return <AuthScreen />;
   }
 
+  // Enforce profile completion for students
+  const isStudentOnly = profile.role === 'STUDENT';
+  const isProfileIncomplete = serverProfile?.isProfileComplete === false;
+
+  if (isStudentOnly && isProfileIncomplete && path !== '/complete-profile') {
+    navigate('/complete-profile');
+    return null;
+  }
+
+  // Allow them to see the CompleteProfileScreen
+  if (path === '/complete-profile' && isStudentOnly && isProfileIncomplete) {
+    return (
+      <AppShell>
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-base-950"><div className="w-8 h-8 border-2 border-accent-500/20 border-t-accent-400 rounded-full animate-spin" /></div>}>
+          <CompleteProfileScreen />
+        </Suspense>
+      </AppShell>
+    );
+  }
+
   // Redirect to role-appropriate dashboard if on root
   if (path === '/' || path === '') {
     navigate(roleHome(profile.role));
@@ -174,7 +195,6 @@ function Root() {
   }
 
   // Role guards
-  const isStudentOnly = profile.role === 'STUDENT';
   const isInstructorArea = path === '/instructor' || path.startsWith('/instructor/');
   const isAdminArea = path.startsWith('/admin');
   if (isStudentOnly && (isInstructorArea || isAdminArea)) {

@@ -14,6 +14,16 @@ interface RegisterInput {
   parentPhoneNumber?: string;
   profilePictureUrl?: string;
   deviceId?: string;
+  highSchoolSystem?: string;
+  studyMode?: string;
+  studyLanguage?: string;
+  highSchoolGrade?: string;
+  traditionalBranch?: string;
+  baccalaureatePath?: string;
+  university?: string;
+  faculty?: string;
+  department?: string;
+  academicYear?: string;
 }
 
 export function getInitialRole(): UserRole {
@@ -142,6 +152,20 @@ export function useAuth() {
     }
   }, []);
 
+  const updateProfile = useCallback(async (data: Partial<RegisterInput>) => {
+    try {
+      const res = await api.patch('/users/profile', data);
+      localStorage.setItem('user', JSON.stringify(res.data));
+      setProfile(res.data);
+      return { error: null };
+    } catch (err: any) {
+      const errorData = err.response?.data;
+      const msgs = Array.isArray(errorData?.message) ? errorData.message : [errorData?.message || 'auth.errors.default'];
+      const translatedMsg = msgs.map((m: string) => i18n.t(m)).join(' - ');
+      return { error: { message: translatedMsg, code: errorData?.code } };
+    }
+  }, []);
+
   return {
     session,
     profile,
@@ -152,6 +176,7 @@ export function useAuth() {
     signOut,
     refresh,
     refetchProfile,
+    updateProfile,
     setError,
   };
 }

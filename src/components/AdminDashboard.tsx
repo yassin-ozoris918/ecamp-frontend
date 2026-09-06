@@ -386,18 +386,20 @@ export function AdminUsers() {
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState('All');
+  const [educationLevelFilter, setEducationLevelFilter] = useState('All');
   const [resetUser, setResetUser] = useState<any>(null);
   const [overrideUser, setOverrideUser] = useState<any>(null);
   const [grantAccessUser, setGrantAccessUser] = useState<any>(null);
   const [deleteUser, setDeleteUser] = useState<any>(null);
 
   const { data: users = [], isLoading: loading } = useQuery({
-    queryKey: ['admin', 'users', search, roleFilter, statusFilter],
+    queryKey: ['admin', 'users', search, roleFilter, statusFilter, educationLevelFilter],
     queryFn: async () => {
       let query = `/admin/users?`;
       if (search) query += `search=${encodeURIComponent(search)}&`;
       if (roleFilter !== 'All') query += `role=${roleFilter}&`;
       if (statusFilter !== 'All') query += `isActive=${statusFilter === 'Active' ? 'true' : 'false'}&`;
+      if (educationLevelFilter !== 'All') query += `educationLevel=${educationLevelFilter}&`;
       const { data } = await api.get(query);
       const usersList = data?.items || data || [];
       return (Array.isArray(usersList) ? usersList : []).map((u: UserListItem) => ({
@@ -470,6 +472,15 @@ export function AdminUsers() {
           </select>
           <select 
             className="input w-full sm:w-auto"
+            value={educationLevelFilter}
+            onChange={e => setEducationLevelFilter(e.target.value)}
+          >
+            <option value="All">All Levels</option>
+            <option value="HIGH_SCHOOL">High School</option>
+            <option value="UNIVERSITY">University</option>
+          </select>
+          <select 
+            className="input w-full sm:w-auto"
             value={statusFilter}
             onChange={e => setStatusFilter(e.target.value)}
           >
@@ -482,15 +493,23 @@ export function AdminUsers() {
           </div>
           <button 
             onClick={() => {
-              const headers = ['User ID', 'Name', 'Email', 'Role', 'Education Level', 'Active', 'Device Bound', 'XP', 'Date Joined'];
-              const rows = filtered.map((u: UserWithRemap) => [
+              const headers = ['User ID', 'Name', 'Email', 'Role', 'Education Level', 'System', 'Mode', 'Language', 'Grade', 'Branch', 'Path', 'University', 'Faculty', 'Active', 'Device Bound', 'XP', 'Date Joined'];
+              const rows = filtered.map((u: any) => [
                 u.id,
                 u.full_name || '',
                 u.email || '',
                 formatRole(u.role),
                 formatEducationLevel(u.educationLevel || ''),
-                u.isActive ? 'Yes' : 'No',
-                u.deviceId ? 'Yes' : 'No',
+                u.highSchoolSystem || '',
+                u.studyMode || '',
+                u.studyLanguage || '',
+                u.highSchoolGrade || '',
+                u.traditionalBranch || '',
+                u.baccalaureatePath || '',
+                u.university || '',
+                u.faculty || '',
+                u.is_active ? 'Yes' : 'No',
+                u.device_id ? 'Yes' : 'No',
                 u.xp,
                 new Date(u.created_at).toLocaleDateString()
               ]);

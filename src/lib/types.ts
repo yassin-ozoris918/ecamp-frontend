@@ -1,5 +1,11 @@
 export type UserRole = 'STUDENT' | 'INSTRUCTOR' | 'ADMIN';
 export type EducationLevel = 'HIGH_SCHOOL' | 'UNIVERSITY';
+export type HighSchoolSystem = 'TRADITIONAL' | 'BACCALAUREATE';
+export type StudyMode = 'ONLINE' | 'CENTER';
+export type StudyLanguage = 'ARABIC' | 'ENGLISH';
+export type HighSchoolGrade = 'GRADE_1' | 'GRADE_2' | 'GRADE_3';
+export type TraditionalBranch = 'SCIENCE' | 'SCIENCE_BIOLOGY' | 'SCIENCE_MATH' | 'LITERARY';
+export type BaccalaureatePath = 'MEDICINE_AND_LIFE_SCIENCES' | 'ENGINEERING_AND_COMPUTER_SCIENCE' | 'BUSINESS' | 'ARTS_AND_HUMANITIES';
 export type ContentStatus = 'DRAFT' | 'PUBLISHED';
 export type ItemType = 'SESSION' | 'QUIZ';
 export type AttemptStatusType = 'PENDING' | 'PASSED' | 'FAILED';
@@ -19,6 +25,24 @@ export interface Profile {
   education_level: EducationLevel | null;
   phone_number: string | null;
   parent_phone_number: string | null;
+  
+  // --- High School Dimensions ---
+  highSchoolSystem?: HighSchoolSystem | null;
+  studyMode?: StudyMode | null;
+  studyLanguage?: StudyLanguage | null;
+  highSchoolGrade?: HighSchoolGrade | null;
+  traditionalBranch?: TraditionalBranch | null;
+  baccalaureatePath?: BaccalaureatePath | null;
+
+  // --- University Dimensions ---
+  university?: string | null;
+  faculty?: string | null;
+  department?: string | null;
+  academicYear?: string | null;
+
+  // --- Computed ---
+  isProfileComplete?: boolean;
+
   device_id: string | null;
   profilePictureUrl: string | null;
   xp: number;
@@ -52,6 +76,19 @@ export interface Course {
   introductoryVideoUrl?: string | null;
   status: ContentStatus;
   audienceType?: EducationLevel;
+
+  // --- Targeting Additions ---
+  targetHighSchoolSystem?: HighSchoolSystem | null;
+  targetStudyMode?: StudyMode | null;
+  targetStudyLanguage?: StudyLanguage | null;
+  targetHighSchoolGrade?: HighSchoolGrade | null;
+  targetTraditionalBranch?: TraditionalBranch | null;
+  targetBaccalaureatePath?: BaccalaureatePath | null;
+  targetUniversity?: string | null;
+  targetFaculty?: string | null;
+  targetDepartment?: string | null;
+  targetAcademicYear?: string | null;
+
   validity_days?: number | null;
   isFree?: boolean;
   createdAt?: string;
@@ -64,6 +101,7 @@ export interface InstructorInfo {
   id: string;
   fullName: string;
   email?: string;
+  profilePictureUrl?: string | null;
 }
 
 export interface CourseInstructor {

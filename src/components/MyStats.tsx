@@ -166,7 +166,7 @@ export function MyStats() {
                 <h3 className="font-bold text-theme-text text-lg">{cert.course?.title || 'Course Certificate'}</h3>
                 <p className="text-sm text-theme-muted mt-1">Issued: {new Date(cert.issuedAt).toLocaleDateString()}</p>
                 <div className="mt-4">
-                  <a href={cert.pdfUrl} target="_blank" rel="noreferrer" className="btn-secondary w-full text-center">
+                  <a href={cert.pdfUrl || undefined} target="_blank" rel="noreferrer" className="btn-secondary w-full text-center">
                     View & Download PDF
                   </a>
                 </div>
