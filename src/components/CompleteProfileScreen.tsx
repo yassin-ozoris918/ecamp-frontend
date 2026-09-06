@@ -30,7 +30,7 @@ export function CompleteProfileScreen() {
   const [department, setDepartment] = useState('');
   const [academicYear, setAcademicYear] = useState('');
 
-  const educationLevel = profile?.education_level;
+  const educationLevel = profile?.educationLevel || profile?.education_level;
 
   useEffect(() => {
     if (profile) {

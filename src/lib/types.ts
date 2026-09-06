@@ -19,12 +19,16 @@ export type RequestStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
 
 export interface Profile {
   id: string;
-  full_name: string;
+  full_name?: string;
+  fullName?: string;
   email: string;
   role: UserRole;
-  education_level: EducationLevel | null;
-  phone_number: string | null;
-  parent_phone_number: string | null;
+  education_level?: EducationLevel | null;
+  educationLevel?: EducationLevel | null;
+  phone_number?: string | null;
+  phoneNumber?: string | null;
+  parent_phone_number?: string | null;
+  parentPhoneNumber?: string | null;
   
   // --- High School Dimensions ---
   highSchoolSystem?: HighSchoolSystem | null;
@@ -43,14 +47,20 @@ export interface Profile {
   // --- Computed ---
   isProfileComplete?: boolean;
 
-  device_id: string | null;
+  device_id?: string | null;
+  deviceId?: string | null;
   profilePictureUrl: string | null;
   xp: number;
-  streak_days: number;
-  last_login_date: string | null;
-  is_active: boolean;
-  created_at: string;
-  updated_at: string;
+  streak_days?: number;
+  streakDays?: number;
+  last_login_date?: string | null;
+  lastLoginAt?: string | null;
+  is_active?: boolean;
+  isActive?: boolean;
+  created_at?: string;
+  createdAt?: string;
+  updated_at?: string;
+  updatedAt?: string;
 }
 
 export interface AuthResponse {
