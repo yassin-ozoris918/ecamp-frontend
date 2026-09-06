@@ -635,8 +635,8 @@ export function AdminUsers() {
                             <div className="flex flex-wrap gap-1 mt-1">
                               {u.highSchoolSystem === 'TRADITIONAL' && <Badge variant="accent">Trad</Badge>}
                               {u.highSchoolSystem === 'BACCALAUREATE' && <Badge variant="accent">Bacc</Badge>}
-                              {u.studyMode === 'ONLINE' && <Badge variant="secondary">Online</Badge>}
-                              {u.studyMode === 'CENTER' && <Badge variant="secondary">Center</Badge>}
+                              {u.studyMode === 'ONLINE' && <Badge variant="default">Online</Badge>}
+                              {u.studyMode === 'CENTER' && <Badge variant="default">Center</Badge>}
                               {u.studyLanguage === 'ARABIC' && <Badge variant="default">AR</Badge>}
                               {u.studyLanguage === 'ENGLISH' && <Badge variant="default">EN</Badge>}
                               {u.highSchoolGrade === 'GRADE_1' && <Badge variant="warning">G1</Badge>}
@@ -654,9 +654,9 @@ export function AdminUsers() {
                           )}
                           {u.educationLevel === 'UNIVERSITY' && (
                             <div className="flex flex-wrap gap-1 mt-1">
-                              {u.university && <Badge variant="accent" className="truncate max-w-[100px]" title={u.university}>{u.university}</Badge>}
-                              {u.faculty && <Badge variant="secondary" className="truncate max-w-[100px]" title={u.faculty}>{u.faculty}</Badge>}
-                              {u.department && <Badge variant="info" className="truncate max-w-[100px]" title={u.department}>{u.department}</Badge>}
+                              {u.university && <span title={u.university}><Badge variant="accent" className="truncate max-w-[100px] block">{u.university}</Badge></span>}
+                              {u.faculty && <span title={u.faculty}><Badge variant="default" className="truncate max-w-[100px] block">{u.faculty}</Badge></span>}
+                              {u.department && <span title={u.department}><Badge variant="info" className="truncate max-w-[100px] block">{u.department}</Badge></span>}
                             </div>
                           )}
                         </>
