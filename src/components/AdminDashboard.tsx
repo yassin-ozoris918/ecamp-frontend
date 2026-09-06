@@ -387,19 +387,25 @@ export function AdminUsers() {
   const [roleFilter, setRoleFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState('All');
   const [educationLevelFilter, setEducationLevelFilter] = useState('All');
+  const [highSchoolSystemFilter, setHighSchoolSystemFilter] = useState('All');
+  const [studyModeFilter, setStudyModeFilter] = useState('All');
+  const [studyLanguageFilter, setStudyLanguageFilter] = useState('All');
   const [resetUser, setResetUser] = useState<any>(null);
   const [overrideUser, setOverrideUser] = useState<any>(null);
   const [grantAccessUser, setGrantAccessUser] = useState<any>(null);
   const [deleteUser, setDeleteUser] = useState<any>(null);
 
   const { data: users = [], isLoading: loading } = useQuery({
-    queryKey: ['admin', 'users', search, roleFilter, statusFilter, educationLevelFilter],
+    queryKey: ['admin', 'users', search, roleFilter, statusFilter, educationLevelFilter, highSchoolSystemFilter, studyModeFilter, studyLanguageFilter],
     queryFn: async () => {
       let query = `/admin/users?`;
       if (search) query += `search=${encodeURIComponent(search)}&`;
       if (roleFilter !== 'All') query += `role=${roleFilter}&`;
       if (statusFilter !== 'All') query += `isActive=${statusFilter === 'Active' ? 'true' : 'false'}&`;
       if (educationLevelFilter !== 'All') query += `educationLevel=${educationLevelFilter}&`;
+      if (highSchoolSystemFilter !== 'All') query += `highSchoolSystem=${highSchoolSystemFilter}&`;
+      if (studyModeFilter !== 'All') query += `studyMode=${studyModeFilter}&`;
+      if (studyLanguageFilter !== 'All') query += `studyLanguage=${studyLanguageFilter}&`;
       const { data } = await api.get(query);
       const usersList = data?.items || data || [];
       return (Array.isArray(usersList) ? usersList : []).map((u: UserListItem) => ({
@@ -479,6 +485,37 @@ export function AdminUsers() {
             <option value="HIGH_SCHOOL">High School</option>
             <option value="UNIVERSITY">University</option>
           </select>
+          {educationLevelFilter === 'HIGH_SCHOOL' && (
+            <>
+              <select 
+                className="input w-full sm:w-auto"
+                value={highSchoolSystemFilter}
+                onChange={e => setHighSchoolSystemFilter(e.target.value)}
+              >
+                <option value="All">All Systems</option>
+                <option value="TRADITIONAL">Traditional</option>
+                <option value="BACCALAUREATE">Baccalaureate</option>
+              </select>
+              <select 
+                className="input w-full sm:w-auto"
+                value={studyModeFilter}
+                onChange={e => setStudyModeFilter(e.target.value)}
+              >
+                <option value="All">All Modes</option>
+                <option value="ONLINE">Online</option>
+                <option value="CENTER">Center</option>
+              </select>
+              <select 
+                className="input w-full sm:w-auto"
+                value={studyLanguageFilter}
+                onChange={e => setStudyLanguageFilter(e.target.value)}
+              >
+                <option value="All">All Languages</option>
+                <option value="ARABIC">Arabic</option>
+                <option value="ENGLISH">English</option>
+              </select>
+            </>
+          )}
           <select 
             className="input w-full sm:w-auto"
             value={statusFilter}
