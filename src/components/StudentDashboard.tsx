@@ -1,4 +1,3 @@
-import toast from 'react-hot-toast';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   KeyRound,
@@ -225,59 +224,105 @@ export function StudentDashboard() {
                 const cover = COURSE_COVERS[course.id] ?? COURSE_COVERS.default;
                 const isOwned = ownedCourseIds.has(course.id);
                 return (
-                  <a
-                    key={course.id}
-                    href={`#/course/${course.id}`}
-                    className="group glass rounded-2xl overflow-hidden flex flex-col hover:border-white/[0.12] transition-all hover:-translate-y-0.5 cursor-pointer"
-                    onClick={(e) => {
-                      if (isOwned) {
-                        e.preventDefault();
-                        toast.error(t('dashboard.alreadyEnrolledError'));
-                      }
-                    }}
-                  >
-                    <div
-                      className="h-32 relative bg-gradient-to-br bg-theme-secondary"
-                      style={{ background: course.thumbnailUrl ? 'none' : cover.gradient }}
-                    >
-                      {course.thumbnailUrl && (
-                        <img src={course.thumbnailUrl} alt={course.title} className="w-full h-full object-cover absolute inset-0" />
-                      )}
-                      <div className="absolute inset-0 bg-theme-bg/20" />
-                      <div className="absolute top-2 right-2 flex flex-col gap-2 items-end">
-                        {course.isFree && (
-                          <Badge variant="success" className="bg-emerald-500/90 text-white border-emerald-400 font-bold shadow-lg shadow-emerald-500/20">
-                            FREE
-                          </Badge>
-                        )}
-                        <Badge variant="default" className="bg-black/60 backdrop-blur-md border-theme-border">
-                          {course.lectures?.length || 0} {t('dashboard.lectures')}
-                        </Badge>
-                      </div>
-                    </div>
-                    <div className="p-5 flex-1 flex flex-col">
-                      <p className="font-display font-bold text-theme-text text-lg leading-snug group-hover:text-accent-200 transition-colors">
-                        {course.title}
-                      </p>
-                      <div className="mt-1 flex -space-x-2">
-                        {course.instructors?.map((inst: any) => (
-                          <div key={inst.instructor.id} className="w-6 h-6 rounded-full border-2 border-base-900 bg-neutral-800 flex items-center justify-center text-[10px] font-bold text-theme-text shadow-sm relative z-[1]" title={inst.instructor.fullName}>
-                            {inst.instructor?.profilePictureUrl ? (
-                              <img src={inst.instructor.profilePictureUrl} alt={inst.instructor.fullName} className="w-full h-full rounded-full object-cover" />
-                            ) : (
-                              inst.instructor?.fullName?.charAt(0) || '?'
-                            )}
+                  <div key={course.id} className="relative">
+                    {isOwned ? (
+                      <div className="group glass rounded-2xl overflow-hidden flex flex-col cursor-not-allowed opacity-80 h-full border-accent-500/30">
+                        <div
+                          className="h-32 relative bg-gradient-to-br bg-theme-secondary"
+                          style={{ background: course.thumbnailUrl ? 'none' : cover.gradient }}
+                        >
+                          {course.thumbnailUrl && (
+                            <img src={course.thumbnailUrl} alt={course.title} className="w-full h-full object-cover absolute inset-0 grayscale-[50%]" />
+                          )}
+                          <div className="absolute inset-0 bg-theme-bg/40 backdrop-blur-[2px] z-0" />
+                          <div className="absolute inset-0 flex flex-col items-center justify-center z-10">
+                            <Badge variant="accent" className="bg-accent-500/90 text-white border-accent-400 font-bold shadow-xl shadow-accent-500/30 px-3 py-1.5 text-xs text-center whitespace-normal">
+                              {t('dashboard.alreadyAddedBadge')}
+                            </Badge>
                           </div>
-                        ))}
+                          <div className="absolute top-2 right-2 flex flex-col gap-2 items-end z-20">
+                            {course.isFree && (
+                              <Badge variant="success" className="bg-emerald-500/90 text-white border-emerald-400 font-bold shadow-lg shadow-emerald-500/20">
+                                FREE
+                              </Badge>
+                            )}
+                            <Badge variant="default" className="bg-black/60 backdrop-blur-md border-theme-border">
+                              {course.lectures?.length || 0} {t('dashboard.lectures')}
+                            </Badge>
+                          </div>
+                        </div>
+                        <div className="p-5 flex-1 flex flex-col">
+                          <p className="font-display font-bold text-theme-text text-lg leading-snug">
+                            {course.title}
+                          </p>
+                          <div className="mt-1 flex -space-x-2">
+                            {course.instructors?.map((inst: any) => (
+                              <div key={inst.instructor.id} className="w-6 h-6 rounded-full border-2 border-base-900 bg-neutral-800 flex items-center justify-center text-[10px] font-bold text-theme-text shadow-sm relative z-[1]" title={inst.instructor.fullName}>
+                                {inst.instructor?.profilePictureUrl ? (
+                                  <img src={inst.instructor.profilePictureUrl} alt={inst.instructor.fullName} className="w-full h-full rounded-full object-cover" />
+                                ) : (
+                                  inst.instructor?.fullName?.charAt(0) || '?'
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                          <p className="text-xs text-theme-muted mt-2 line-clamp-2">{course.description}</p>
+                          <div className="mt-auto pt-4 flex gap-2">
+                            <div className="btn-secondary w-full justify-center text-xs py-2 pointer-events-none bg-accent-500/10 text-accent-700 dark:text-accent-300 border-accent-500/20">
+                              {t('dashboard.alreadyOwned')}
+                            </div>
+                          </div>
+                        </div>
                       </div>
-                      <p className="text-xs text-theme-muted mt-2 line-clamp-2">{course.description}</p>
-                      <div className="mt-auto pt-4 flex gap-2">
-                         <div className={`btn-secondary w-full justify-center text-xs py-2 pointer-events-none ${isOwned ? 'bg-accent-500/10 text-accent-700 dark:text-accent-300 border-accent-500/20' : ''}`}>
-                           {isOwned ? t('dashboard.alreadyOwned') : t('dashboard.viewDetails')}
-                         </div>
-                      </div>
-                    </div>
-                  </a>
+                    ) : (
+                      <a
+                        href={`#/course/${course.id}`}
+                        className="group glass rounded-2xl overflow-hidden flex flex-col hover:border-white/[0.12] transition-all hover:-translate-y-0.5 cursor-pointer h-full"
+                      >
+                        <div
+                          className="h-32 relative bg-gradient-to-br bg-theme-secondary"
+                          style={{ background: course.thumbnailUrl ? 'none' : cover.gradient }}
+                        >
+                          {course.thumbnailUrl && (
+                            <img src={course.thumbnailUrl} alt={course.title} className="w-full h-full object-cover absolute inset-0" />
+                          )}
+                          <div className="absolute inset-0 bg-theme-bg/20" />
+                          <div className="absolute top-2 right-2 flex flex-col gap-2 items-end">
+                            {course.isFree && (
+                              <Badge variant="success" className="bg-emerald-500/90 text-white border-emerald-400 font-bold shadow-lg shadow-emerald-500/20">
+                                FREE
+                              </Badge>
+                            )}
+                            <Badge variant="default" className="bg-black/60 backdrop-blur-md border-theme-border">
+                              {course.lectures?.length || 0} {t('dashboard.lectures')}
+                            </Badge>
+                          </div>
+                        </div>
+                        <div className="p-5 flex-1 flex flex-col">
+                          <p className="font-display font-bold text-theme-text text-lg leading-snug group-hover:text-accent-200 transition-colors">
+                            {course.title}
+                          </p>
+                          <div className="mt-1 flex -space-x-2">
+                            {course.instructors?.map((inst: any) => (
+                              <div key={inst.instructor.id} className="w-6 h-6 rounded-full border-2 border-base-900 bg-neutral-800 flex items-center justify-center text-[10px] font-bold text-theme-text shadow-sm relative z-[1]" title={inst.instructor.fullName}>
+                                {inst.instructor?.profilePictureUrl ? (
+                                  <img src={inst.instructor.profilePictureUrl} alt={inst.instructor.fullName} className="w-full h-full rounded-full object-cover" />
+                                ) : (
+                                  inst.instructor?.fullName?.charAt(0) || '?'
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                          <p className="text-xs text-theme-muted mt-2 line-clamp-2">{course.description}</p>
+                          <div className="mt-auto pt-4 flex gap-2">
+                            <div className="btn-secondary w-full justify-center text-xs py-2 pointer-events-none">
+                              {t('dashboard.viewDetails')}
+                            </div>
+                          </div>
+                        </div>
+                      </a>
+                    )}
+                  </div>
                 );
               })}
             </div>

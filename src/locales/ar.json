@@ -172,6 +172,8 @@
     "complete": "مكتمل",
     "lectures": "المحاضرات",
     "alreadyOwned": "مفعل لديك",
+    "alreadyAddedBadge": "مضاف بالفعل في كورساتك",
+    "alreadyEnrolledError": "أنت مسجل بالفعل في هذا الكورس.",
     "viewDetails": "تفاصيل المقرر",
     "enrollNow": "الانضمام الآن",
     "featuredCourses": "المقررات المميزة",

@@ -134,6 +134,8 @@
     "complete": "Completed",
     "lectures": "Lectures",
     "alreadyOwned": "Unlocked",
+    "alreadyAddedBadge": "Already Added to Your Courses",
+    "alreadyEnrolledError": "You are already enrolled in this course.",
     "viewDetails": "View Course Details",
     "enrollNow": "Enroll Now",
     "featuredCourses": "Featured Courses",
