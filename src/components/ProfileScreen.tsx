@@ -1,14 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../lib/authContext';
 import { api } from '../lib/api';
-import { User, Lock, Camera, ShieldAlert, Edit2 } from 'lucide-react';
+import { User, Lock, Camera, ShieldAlert, Edit2, GraduationCap, Save } from 'lucide-react';
+import type { HighSchoolSystem, StudyMode, StudyLanguage, HighSchoolGrade, TraditionalBranch, BaccalaureatePath } from '../lib/types';
 import { Spinner, Badge } from './ui';
 import { Modal } from './Modal';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 
 export function ProfileScreen() {
-  const { profile, refetchProfile } = useAuth();
+  const { profile, refetchProfile, updateProfile } = useAuth();
   const { t } = useTranslation();
   
   // Password State
@@ -23,11 +24,37 @@ export function ProfileScreen() {
   const [fullName, setFullName] = useState((profile as any).fullName || profile?.full_name || '');
   const [phoneNumber, setPhoneNumber] = useState((profile as any).phoneNumber || profile?.phone_number || '');
   const [parentPhoneNumber, setParentPhoneNumber] = useState((profile as any).parentPhoneNumber || profile?.parent_phone_number || '');
+  // Academic State
+  const [highSchoolSystem, setHighSchoolSystem] = useState<HighSchoolSystem | ''>('');
+  const [studyMode, setStudyMode] = useState<StudyMode | ''>('');
+  const [studyLanguage, setStudyLanguage] = useState<StudyLanguage | ''>('');
+  const [highSchoolGrade, setHighSchoolGrade] = useState<HighSchoolGrade | ''>('');
+  const [traditionalBranch, setTraditionalBranch] = useState<TraditionalBranch | ''>('');
+  const [baccalaureatePath, setBaccalaureatePath] = useState<BaccalaureatePath | ''>('');
+  const [university, setUniversity] = useState('');
+  const [faculty, setFaculty] = useState('');
+  const [department, setDepartment] = useState('');
+  const [academicYear, setAcademicYear] = useState('');
+  const [academicLoading, setAcademicLoading] = useState(false);
+  const [academicError, setAcademicError] = useState<string | null>(null);
+  const [academicSuccess, setAcademicSuccess] = useState(false);
+  const educationLevel = profile?.educationLevel || profile?.education_level;
+
   useEffect(() => {
     if (profile) {
       setFullName((profile as any).fullName || profile.full_name || '');
       setPhoneNumber((profile as any).phoneNumber || profile.phone_number || '');
       setParentPhoneNumber((profile as any).parentPhoneNumber || profile.parent_phone_number || '');
+      setHighSchoolSystem(profile.highSchoolSystem || '');
+      setStudyMode(profile.studyMode || '');
+      setStudyLanguage(profile.studyLanguage || '');
+      setHighSchoolGrade(profile.highSchoolGrade || '');
+      setTraditionalBranch(profile.traditionalBranch || '');
+      setBaccalaureatePath(profile.baccalaureatePath || '');
+      setUniversity(profile.university || '');
+      setFaculty(profile.faculty || '');
+      setDepartment(profile.department || '');
+      setAcademicYear(profile.academicYear || '');
     }
   }, [profile]);
 
@@ -123,6 +150,63 @@ export function ProfileScreen() {
       setReqError(err.response?.data?.message || t('profile.reqSubmitFailed'));
     }
     setReqLoading(false);
+  }
+
+  async function handleAcademicSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setAcademicError(null);
+    setAcademicSuccess(false);
+
+    if (educationLevel === 'HIGH_SCHOOL') {
+      if (!highSchoolSystem || !studyMode || !studyLanguage || !highSchoolGrade) {
+        setAcademicError(t('auth.errors.missingFields', 'Please fill in all required fields.'));
+        return;
+      }
+      if (highSchoolSystem === 'TRADITIONAL' && (highSchoolGrade === 'GRADE_2' || highSchoolGrade === 'GRADE_3') && !traditionalBranch) {
+        setAcademicError(t('auth.errors.missingBranch', 'Please select a branch.'));
+        return;
+      }
+      if (highSchoolSystem === 'BACCALAUREATE' && (highSchoolGrade === 'GRADE_2' || highSchoolGrade === 'GRADE_3') && !baccalaureatePath) {
+        setAcademicError(t('auth.errors.missingPath', 'Please select a path.'));
+        return;
+      }
+    }
+
+    setAcademicLoading(true);
+    const payload: any = {};
+    if (educationLevel === 'HIGH_SCHOOL') {
+      payload.highSchoolSystem = highSchoolSystem || null;
+      payload.studyMode = studyMode || null;
+      payload.studyLanguage = studyLanguage || null;
+      payload.highSchoolGrade = highSchoolGrade || null;
+      payload.traditionalBranch = traditionalBranch || null;
+      payload.baccalaureatePath = baccalaureatePath || null;
+      payload.university = null;
+      payload.faculty = null;
+      payload.department = null;
+      payload.academicYear = null;
+    } else if (educationLevel === 'UNIVERSITY') {
+      payload.university = university || null;
+      payload.faculty = faculty || null;
+      payload.department = department || null;
+      payload.academicYear = academicYear || null;
+      payload.highSchoolSystem = null;
+      payload.studyMode = null;
+      payload.studyLanguage = null;
+      payload.highSchoolGrade = null;
+      payload.traditionalBranch = null;
+      payload.baccalaureatePath = null;
+    }
+
+    try {
+      const res = await updateProfile(payload);
+      if (res.error) throw res.error;
+      setAcademicSuccess(true);
+      await refetchProfile();
+    } catch (err: any) {
+      setAcademicError(err.message || t('profile.academicUpdateFailed', 'Failed to update academic details.'));
+    }
+    setAcademicLoading(false);
   }
 
   function openRequestModal() {
@@ -254,6 +338,139 @@ export function ProfileScreen() {
                 </button>
               </div>
             </div>
+          </div>
+
+          {/* Academic Details Form */}
+          <div className="glass rounded-3xl p-8">
+            <div className="flex items-center gap-3 mb-6 border-b border-theme-border pb-6">
+              <div className="w-10 h-10 rounded-xl bg-primary-500/10 flex items-center justify-center text-primary-400">
+                <GraduationCap className="w-5 h-5" />
+              </div>
+              <h2 className="text-xl font-display font-bold text-theme-text">{t('auth.academicDetails', 'Academic Details')}</h2>
+            </div>
+
+            <form onSubmit={handleAcademicSubmit} className="space-y-5">
+              {academicError && (
+                <div className="p-4 rounded-xl bg-error-500/10 border border-error-500/20 text-error-400 text-sm">
+                  {academicError}
+                </div>
+              )}
+              {academicSuccess && (
+                <div className="p-4 rounded-xl bg-success-500/10 border border-success-500/20 text-success-400 text-sm">
+                  {t('profile.academicUpdatedSuccess', 'Academic details updated successfully.')}
+                </div>
+              )}
+
+              {educationLevel === 'HIGH_SCHOOL' && (
+                <div className="space-y-5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-theme-muted mb-1.5">{t('auth.highSchoolSystem', 'High School System')} <span className="text-error-500">*</span></label>
+                      <select className="input w-full" value={highSchoolSystem} onChange={(e) => setHighSchoolSystem(e.target.value as HighSchoolSystem)} disabled={academicLoading} required>
+                        <option value="">{t('auth.selectSystem', 'Select System')}</option>
+                        <option value="TRADITIONAL">{t('auth.systemTraditional', 'Traditional')}</option>
+                        <option value="BACCALAUREATE">{t('auth.systemBaccalaureate', 'Baccalaureate')}</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-theme-muted mb-1.5">{t('auth.studyMode', 'Study Mode')} <span className="text-error-500">*</span></label>
+                      <select className="input w-full" value={studyMode} onChange={(e) => setStudyMode(e.target.value as StudyMode)} disabled={academicLoading} required>
+                        <option value="">{t('auth.selectMode', 'Select Mode')}</option>
+                        <option value="ONLINE">{t('auth.modeOnline', 'Online')}</option>
+                        <option value="CENTER">{t('auth.modeCenter', 'Center')}</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-theme-muted mb-1.5">{t('auth.studyLanguage', 'Study Language')} <span className="text-error-500">*</span></label>
+                      <select className="input w-full" value={studyLanguage} onChange={(e) => setStudyLanguage(e.target.value as StudyLanguage)} disabled={academicLoading} required>
+                        <option value="">{t('auth.selectLanguage', 'Select Language')}</option>
+                        <option value="ARABIC">{t('auth.langArabic', 'Arabic')}</option>
+                        <option value="ENGLISH">{t('auth.langEnglish', 'English')}</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-theme-muted mb-1.5">{t('auth.grade', 'Grade')} <span className="text-error-500">*</span></label>
+                      <select className="input w-full" value={highSchoolGrade} onChange={(e) => setHighSchoolGrade(e.target.value as HighSchoolGrade)} disabled={academicLoading} required>
+                        <option value="">{t('auth.selectGrade', 'Select Grade')}</option>
+                        <option value="GRADE_1">{t('auth.grade1', 'Grade 1')}</option>
+                        <option value="GRADE_2">{t('auth.grade2', 'Grade 2')}</option>
+                        <option value="GRADE_3">{t('auth.grade3', 'Grade 3')}</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {highSchoolSystem === 'TRADITIONAL' && (highSchoolGrade === 'GRADE_2' || highSchoolGrade === 'GRADE_3') && (
+                    <div>
+                      <label className="block text-sm font-medium text-theme-muted mb-1.5">{t('auth.branch', 'Branch')} <span className="text-error-500">*</span></label>
+                      <select className="input w-full" value={traditionalBranch} onChange={(e) => setTraditionalBranch(e.target.value as TraditionalBranch)} disabled={academicLoading} required>
+                        <option value="">{t('auth.selectBranch', 'Select Branch')}</option>
+                        {highSchoolGrade === 'GRADE_2' && (
+                          <>
+                            <option value="SCIENCE">{t('auth.branchScience', 'Science')}</option>
+                            <option value="LITERARY">{t('auth.branchLiterary', 'Literary')}</option>
+                          </>
+                        )}
+                        {highSchoolGrade === 'GRADE_3' && (
+                          <>
+                            <option value="SCIENCE_BIOLOGY">{t('auth.branchScienceBiology', 'Science Biology')}</option>
+                            <option value="SCIENCE_MATH">{t('auth.branchScienceMath', 'Science Math')}</option>
+                            <option value="LITERARY">{t('auth.branchLiterary', 'Literary')}</option>
+                          </>
+                        )}
+                      </select>
+                    </div>
+                  )}
+
+                  {highSchoolSystem === 'BACCALAUREATE' && (highSchoolGrade === 'GRADE_2' || highSchoolGrade === 'GRADE_3') && (
+                    <div>
+                      <label className="block text-sm font-medium text-theme-muted mb-1.5">{t('auth.path', 'Path')} <span className="text-error-500">*</span></label>
+                      <select className="input w-full" value={baccalaureatePath} onChange={(e) => setBaccalaureatePath(e.target.value as BaccalaureatePath)} disabled={academicLoading} required>
+                        <option value="">{t('auth.selectPath', 'Select Path')}</option>
+                        <option value="MEDICINE_AND_LIFE_SCIENCES">{t('auth.pathMedicine', 'Medicine & Life Sciences')}</option>
+                        <option value="ENGINEERING_AND_COMPUTER_SCIENCE">{t('auth.pathEngineering', 'Engineering & Computer Science')}</option>
+                        <option value="BUSINESS">{t('auth.pathBusiness', 'Business')}</option>
+                        <option value="ARTS_AND_HUMANITIES">{t('auth.pathArts', 'Arts & Humanities')}</option>
+                      </select>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {educationLevel === 'UNIVERSITY' && (
+                <div className="space-y-5">
+                  <div>
+                    <label className="block text-sm font-medium text-theme-muted mb-1.5">{t('auth.universityName', 'University Name')}</label>
+                    <input type="text" className="input w-full" value={university} onChange={(e) => setUniversity(e.target.value)} disabled={academicLoading} placeholder={t('auth.universityPlaceholder', 'e.g. Cairo University')} />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-theme-muted mb-1.5">{t('auth.faculty', 'Faculty')}</label>
+                      <input type="text" className="input w-full" value={faculty} onChange={(e) => setFaculty(e.target.value)} disabled={academicLoading} placeholder={t('auth.facultyPlaceholder', 'e.g. Engineering')} />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-theme-muted mb-1.5">{t('auth.department', 'Department')}</label>
+                      <input type="text" className="input w-full" value={department} onChange={(e) => setDepartment(e.target.value)} disabled={academicLoading} placeholder={t('auth.departmentPlaceholder', 'e.g. Computer')} />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-theme-muted mb-1.5">{t('auth.academicYear', 'Academic Year')}</label>
+                    <input type="text" className="input w-full" value={academicYear} onChange={(e) => setAcademicYear(e.target.value)} disabled={academicLoading} placeholder={t('auth.academicYearPlaceholder', 'e.g. 2026/2027')} />
+                  </div>
+                </div>
+              )}
+
+              <div className="pt-4 flex justify-end">
+                <button type="submit" disabled={academicLoading} className="btn-primary">
+                  {academicLoading ? <Spinner className="w-4 h-4 mr-2" /> : <Save className="w-4 h-4 mr-2" />}
+                  {t('profile.saveChanges', 'Save Changes')}
+                </button>
+              </div>
+            </form>
           </div>
 
           {/* Change Password Form */}
