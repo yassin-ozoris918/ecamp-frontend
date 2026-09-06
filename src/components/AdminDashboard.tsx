@@ -455,7 +455,24 @@ export function AdminUsers() {
     toggleInstructorMutation.mutate(user);
   }
 
-  type UserWithRemap = UserListItem & { full_name: string; device_id: string | null; is_active: boolean; created_at: string; phoneNumber?: string | null; parentPhoneNumber?: string | null; };
+  type UserWithRemap = UserListItem & { 
+    full_name: string; 
+    device_id: string | null; 
+    is_active: boolean; 
+    created_at: string; 
+    phoneNumber?: string | null; 
+    parentPhoneNumber?: string | null; 
+    highSchoolSystem?: string | null;
+    studyMode?: string | null;
+    studyLanguage?: string | null;
+    highSchoolGrade?: string | null;
+    traditionalBranch?: string | null;
+    baccalaureatePath?: string | null;
+    university?: string | null;
+    faculty?: string | null;
+    department?: string | null;
+    academicYear?: string | null;
+  };
   const filtered = users; // Filtering is now handled securely by the backend
 
   return (
@@ -610,9 +627,39 @@ export function AdminUsers() {
                         {u.role}
                       </Badge>
                       {u.role === 'STUDENT' && u.educationLevel && (
-                        <Badge variant="default">
-                          {u.educationLevel === 'HIGH_SCHOOL' ? 'High School' : 'University'}
-                        </Badge>
+                        <>
+                          <Badge variant="default">
+                            {u.educationLevel === 'HIGH_SCHOOL' ? 'High School' : 'University'}
+                          </Badge>
+                          {u.educationLevel === 'HIGH_SCHOOL' && (
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {u.highSchoolSystem === 'TRADITIONAL' && <Badge variant="accent">Trad</Badge>}
+                              {u.highSchoolSystem === 'BACCALAUREATE' && <Badge variant="accent">Bacc</Badge>}
+                              {u.studyMode === 'ONLINE' && <Badge variant="secondary">Online</Badge>}
+                              {u.studyMode === 'CENTER' && <Badge variant="secondary">Center</Badge>}
+                              {u.studyLanguage === 'ARABIC' && <Badge variant="default">AR</Badge>}
+                              {u.studyLanguage === 'ENGLISH' && <Badge variant="default">EN</Badge>}
+                              {u.highSchoolGrade === 'GRADE_1' && <Badge variant="warning">G1</Badge>}
+                              {u.highSchoolGrade === 'GRADE_2' && <Badge variant="warning">G2</Badge>}
+                              {u.highSchoolGrade === 'GRADE_3' && <Badge variant="warning">G3</Badge>}
+                              {u.traditionalBranch === 'SCIENCE' && <Badge variant="info">Sci</Badge>}
+                              {u.traditionalBranch === 'SCIENCE_BIOLOGY' && <Badge variant="info">SciBio</Badge>}
+                              {u.traditionalBranch === 'SCIENCE_MATH' && <Badge variant="info">SciMath</Badge>}
+                              {u.traditionalBranch === 'LITERARY' && <Badge variant="info">Lit</Badge>}
+                              {u.baccalaureatePath === 'MEDICINE_AND_LIFE_SCIENCES' && <Badge variant="info">Med</Badge>}
+                              {u.baccalaureatePath === 'ENGINEERING_AND_COMPUTER_SCIENCE' && <Badge variant="info">Eng</Badge>}
+                              {u.baccalaureatePath === 'BUSINESS' && <Badge variant="info">Bus</Badge>}
+                              {u.baccalaureatePath === 'ARTS_AND_HUMANITIES' && <Badge variant="info">Arts</Badge>}
+                            </div>
+                          )}
+                          {u.educationLevel === 'UNIVERSITY' && (
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {u.university && <Badge variant="accent" className="truncate max-w-[100px]" title={u.university}>{u.university}</Badge>}
+                              {u.faculty && <Badge variant="secondary" className="truncate max-w-[100px]" title={u.faculty}>{u.faculty}</Badge>}
+                              {u.department && <Badge variant="info" className="truncate max-w-[100px]" title={u.department}>{u.department}</Badge>}
+                            </div>
+                          )}
+                        </>
                       )}
                       {!u.is_active && <Badge variant="error">Suspended</Badge>}
                     </div>

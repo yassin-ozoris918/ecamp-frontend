@@ -343,6 +343,16 @@ export interface UserListItem {
   phoneNumber: string | null;
   deviceId?: string | null;
   profilePictureUrl?: string | null;
+  highSchoolSystem?: HighSchoolSystem | null;
+  studyMode?: StudyMode | null;
+  studyLanguage?: StudyLanguage | null;
+  highSchoolGrade?: HighSchoolGrade | null;
+  traditionalBranch?: TraditionalBranch | null;
+  baccalaureatePath?: BaccalaureatePath | null;
+  university?: string | null;
+  faculty?: string | null;
+  department?: string | null;
+  academicYear?: string | null;
 }
 
 export interface AdminUserDetail extends UserListItem {
