@@ -958,6 +958,20 @@ function GrantAccessModal({
     } catch(e) { console.error(e); } finally { setBusy(false); }
   };
 
+  const handleRevoke = async (type: string, id: string) => {
+    if (!user) return;
+    if (!confirm('Are you sure you want to revoke access?')) return;
+    setBusy(true);
+    try {
+      if (type === 'COURSE') {
+        await api.post(`/admin/users/${user.id}/remove-course`, { courseId: id });
+      } else {
+        await api.post(`/admin/users/${user.id}/remove-lecture`, { lectureId: id });
+      }
+      onClose();
+    } catch(e) { console.error(e); } finally { setBusy(false); }
+  };
+
   return (
     <Modal open={!!user} onClose={onClose} title="Direct Grant Access" description={user ? `Grant a course or lecture to ${user.full_name}.` : ''} size="lg">
       <div className="space-y-4">
@@ -981,7 +995,10 @@ function GrantAccessModal({
                    <span className="shrink-0 text-[10px] font-bold text-primary-400 bg-primary-500/10 px-2 py-1 rounded">COURSE</span>
                    <p className="text-sm text-theme-text truncate">{c.title}</p>
                 </div>
-                <button onClick={() => handleGrant('COURSE', c.id)} disabled={busy} className="shrink-0 btn-secondary text-xs px-3">Grant Access</button>
+                <div className="flex items-center gap-2">
+                  <button onClick={() => handleGrant('COURSE', c.id)} disabled={busy} className="shrink-0 btn-secondary text-xs px-3">Grant Access</button>
+                  <button onClick={() => handleRevoke('COURSE', c.id)} disabled={busy} className="shrink-0 btn-danger text-xs px-3">Revoke Access</button>
+                </div>
               </div>
             ))}
             {results.lectures.map((l) => (
@@ -993,7 +1010,10 @@ function GrantAccessModal({
                    </div>
                    <p className="text-xs text-theme-muted sm:pl-[4.5rem] truncate" title={l.courseTitle}>in {l.courseTitle}</p>
                 </div>
-                <button onClick={() => handleGrant('LECTURE', l.id)} disabled={busy} className="shrink-0 btn-secondary text-xs px-3">Grant Access</button>
+                <div className="flex items-center gap-2">
+                  <button onClick={() => handleGrant('LECTURE', l.id)} disabled={busy} className="shrink-0 btn-secondary text-xs px-3">Grant Access</button>
+                  <button onClick={() => handleRevoke('LECTURE', l.id)} disabled={busy} className="shrink-0 btn-danger text-xs px-3">Revoke Access</button>
+                </div>
               </div>
             ))}
           </div>
