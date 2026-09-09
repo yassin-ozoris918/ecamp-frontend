@@ -432,6 +432,8 @@
     "unowned": "Unowned",
     "openLecture": "Open Lecture",
     "renewAccess": "Renew Access",
+    "expiredAccessTitle": "Access Expired",
+    "expiredAccessMessage": "Access to this lecture has expired. To reactivate it, please contact technical support at ",
     "unlockLecture": "Unlock Lecture",
     "finalExams": "Final Exams",
     "comprehensive": "Comprehensive assessment.",

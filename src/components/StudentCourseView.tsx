@@ -39,6 +39,8 @@ export function StudentCourseView({ courseId }: { courseId: string }) {
   const [redeemError, setRedeemError] = useState<string | null>(null);
   const [redeemSuccess, setRedeemSuccess] = useState(false);
 
+  const [showExpiredModal, setShowExpiredModal] = useState(false);
+
   const loadData = useCallback(async () => {
     if (!profile) {
       navigate('/auth');
@@ -228,7 +230,7 @@ export function StudentCourseView({ courseId }: { courseId: string }) {
                             </button>
                           )
                         ) : (
-                          <button onClick={() => lecture.isExpired ? alert("Access to this lecture has expired. To reactivate it, please contact technical support at 01221822703.") : setRedeemModal({ type: 'LECTURE', targetId: lecture.id })} className="btn-ghost text-theme-muted hover:text-white hover:bg-white/5 text-sm">
+                          <button onClick={() => lecture.isExpired ? setShowExpiredModal(true) : setRedeemModal({ type: 'LECTURE', targetId: lecture.id })} className="btn-ghost text-theme-muted hover:text-white hover:bg-white/5 text-sm">
                             <Lock className="w-4 h-4" />
                             {lecture.isExpired ? t('courseView.renewAccess') : t('courseView.unlockLecture')}
                           </button>
@@ -272,7 +274,7 @@ export function StudentCourseView({ courseId }: { courseId: string }) {
                           Open Lecture
                         </Link>
                       ) : (
-                        <button onClick={() => lecture.isExpired ? alert("Access to this lecture has expired. To reactivate it, please contact technical support at 01221822703.") : setRedeemModal({ type: 'LECTURE', targetId: lecture.id })} className="btn-ghost text-theme-muted hover:text-white hover:bg-white/5 text-sm">
+                        <button onClick={() => lecture.isExpired ? setShowExpiredModal(true) : setRedeemModal({ type: 'LECTURE', targetId: lecture.id })} className="btn-ghost text-theme-muted hover:text-white hover:bg-white/5 text-sm">
                           <Lock className="w-4 h-4" />
                           {lecture.isExpired ? 'Renew Access' : 'Unlock Lecture'}
                         </button>
@@ -394,6 +396,21 @@ export function StudentCourseView({ courseId }: { courseId: string }) {
         onConfirm={handleConfirm}
         onCancel={handleCancel}
       />
+
+      <Modal open={showExpiredModal} onClose={() => setShowExpiredModal(false)} title={t('courseView.expiredAccessTitle')}>
+        <div className="p-4 text-center space-y-4">
+          <div className="mx-auto w-12 h-12 bg-error-500/10 text-error-400 rounded-full flex items-center justify-center mb-4">
+            <Lock className="w-6 h-6" />
+          </div>
+          <p className="text-theme-text text-lg font-medium">
+            {t('courseView.expiredAccessMessage')}
+            <a href="tel:01221822703" className="text-primary-400 font-bold hover:underline" dir="ltr">01221822703</a>.
+          </p>
+          <button onClick={() => setShowExpiredModal(false)} className="btn-primary w-full mt-4">
+            {t('common.ok', 'OK')}
+          </button>
+        </div>
+      </Modal>
     </div>
   );
 }

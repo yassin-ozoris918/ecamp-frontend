@@ -427,6 +427,8 @@
     "unowned": "غير مملوك",
     "openLecture": "فتح المحاضرة",
     "renewAccess": "تجديد الوصول",
+    "expiredAccessTitle": "انتهت صلاحية الوصول",
+    "expiredAccessMessage": "لقد انتهت صلاحية وصولك لهذه المحاضرة. لإعادة تفعيلها، يرجى التواصل مع الدعم الفني على ",
     "unlockLecture": "فتح المحاضرة",
     "finalExams": "الامتحانات النهائية",
     "comprehensive": "تقييم شامل.",
