@@ -391,6 +391,7 @@ export function AdminUsers() {
   const [studyModeFilter, setStudyModeFilter] = useState('All');
   const [studyLanguageFilter, setStudyLanguageFilter] = useState('All');
   const [resetUser, setResetUser] = useState<any>(null);
+  const [resetPasswordUser, setResetPasswordUser] = useState<any>(null);
   const [overrideUser, setOverrideUser] = useState<any>(null);
   const [grantAccessUser, setGrantAccessUser] = useState<any>(null);
   const [deleteUser, setDeleteUser] = useState<any>(null);
@@ -688,6 +689,13 @@ export function AdminUsers() {
                             <RotateCcw className="w-3.5 h-3.5" /> Reset Device
                           </button>
                           <button
+                            onClick={() => setResetPasswordUser(u)}
+                            className="btn-ghost text-xs"
+                            title="Reset password"
+                          >
+                            <KeyRound className="w-3.5 h-3.5 text-warning-400" /> Reset Password
+                          </button>
+                          <button
                             onClick={() => setGrantAccessUser(u)}
                             className="btn-ghost text-xs"
                             title="Direct grant access"
@@ -752,6 +760,22 @@ export function AdminUsers() {
         }}
       />
 
+      <ResetPasswordModal
+        user={resetPasswordUser}
+        onClose={() => setResetPasswordUser(null)}
+        onReset={async (newPassword) => {
+          if (!resetPasswordUser) return;
+          try {
+            await api.post(`/admin/users/${resetPasswordUser.id}/reset-password`, { newPassword });
+            setResetPasswordUser(null);
+            toast.success('Password reset successfully.');
+          } catch(e) {
+            console.error(e);
+            toast.error('Failed to reset password.');
+          }
+        }}
+      />
+
       <OverrideModal
         user={overrideUser}
         onClose={() => setOverrideUser(null)}
@@ -807,6 +831,94 @@ function ResetDeviceModal({
           </button>
         </div>
       </div>
+    </Modal>
+  );
+}
+
+function ResetPasswordModal({
+  user,
+  onClose,
+  onReset,
+}: {
+  user: Profile | null;
+  onClose: () => void;
+  onReset: (newPassword: string) => Promise<void>;
+}) {
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    if (!user) {
+      setNewPassword('');
+      setConfirmPassword('');
+    }
+  }, [user]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newPassword.length < 6) {
+      toast.error('Password must be at least 6 characters.');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      toast.error('Passwords do not match.');
+      return;
+    }
+    setBusy(true);
+    await onReset(newPassword);
+    setBusy(false);
+  };
+
+  return (
+    <Modal open={!!user} onClose={onClose} title="Reset Password" description={user ? `Set a new temporary password for ${user.full_name} (${user.email}).` : ''}>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="flex items-start gap-3 rounded-xl bg-warning-500/10 border border-warning-500/20 p-3 mb-4">
+          <AlertCircle className="w-4 h-4 text-warning-700 dark:text-warning-300 mt-0.5 shrink-0" />
+          <p className="text-sm text-warning-200">
+            This will immediately overwrite the student's password and log them out of all active sessions.
+          </p>
+        </div>
+        
+        <div>
+          <label className="block text-sm font-medium text-theme-text mb-1">New Password</label>
+          <input
+            type="password"
+            className="input w-full"
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            minLength={6}
+            required
+            autoComplete="new-password"
+            placeholder="At least 6 characters"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-theme-text mb-1">Confirm Password</label>
+          <input
+            type="password"
+            className="input w-full"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            minLength={6}
+            required
+            autoComplete="new-password"
+            placeholder="Re-type new password"
+          />
+        </div>
+
+        <div className="flex justify-end gap-2 mt-6">
+          <button type="button" onClick={onClose} className="btn-ghost">Cancel</button>
+          <button
+            type="submit"
+            disabled={busy || !newPassword || !confirmPassword}
+            className="btn-danger"
+          >
+            <KeyRound className="w-4 h-4" />
+            {busy ? 'Resetting…' : 'Reset Password'}
+          </button>
+        </div>
+      </form>
     </Modal>
   );
 }
