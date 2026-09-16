@@ -152,8 +152,14 @@ export function AIQuestionReviewStudio({ examId, initialQuestions, onSaved, onCa
                     <input 
                       type="number"
                       className="input-field"
-                      value={q.points}
-                      onChange={(e) => updateQuestion(idx, { points: parseFloat(e.target.value) || 0.5 })}
+                      defaultValue={q.points}
+                      onChange={(e) => { e.target.dataset.dirty = 'true'; }}
+                      onBlur={(e) => {
+                        const val = parseFloat(e.target.value);
+                        const safe = isNaN(val) || val < 0.5 ? 0.5 : val;
+                        e.target.value = String(safe);
+                        updateQuestion(idx, { points: safe });
+                      }}
                       min="0.5"
                       step="0.5"
                     />
