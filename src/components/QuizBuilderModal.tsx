@@ -7,6 +7,27 @@ import type { ExamQuestion, ExamAnswer, QuestionType } from '../lib/types';
 import { Spinner } from './ui';
 import { useTranslation } from 'react-i18next';
 
+/** Standalone points input — keeps its own string state so users can freely
+ *  clear the field and type decimals like "0.5" without it snapping back. */
+function PointsInput({ value, onChange }: { value: number; onChange: (v: number) => void }) {
+  const [raw, setRaw] = useState(String(value));
+  useEffect(() => { setRaw(String(value)); }, [value]);
+  return (
+    <input
+      type="number" min="0.5" step="0.5"
+      value={raw}
+      onChange={(e) => setRaw(e.target.value)}
+      onBlur={(e) => {
+        const val = parseFloat(e.target.value);
+        const safe = isNaN(val) || val < 0.5 ? 0.5 : val;
+        setRaw(String(safe));
+        onChange(safe);
+      }}
+      className="w-16 rounded-lg border border-neutral-800 bg-neutral-950 p-1.5 text-center text-sm outline-none focus:border-cyan-500"
+    />
+  );
+}
+
 interface QuizBuilderModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -338,19 +359,9 @@ export function QuizBuilderModal({ isOpen, onClose, targetId, type }: QuizBuilde
                       </button>
                       <div className="flex flex-col gap-1 items-end">
                         <span className="text-[10px] font-bold text-theme-muted uppercase tracking-wider">Points</span>
-                        <input
-                          type="number" min="0.5" step="0.5" defaultValue={q.points}
-                          onChange={(e) => {
-                            // allow free typing — don't update state on every keystroke
-                            e.target.dataset.dirty = 'true';
-                          }}
-                          onBlur={(e) => {
-                            const val = parseFloat(e.target.value);
-                            const safe = isNaN(val) || val < 0.5 ? 0.5 : val;
-                            e.target.value = String(safe);
-                            updateQuestion(q.id, { points: safe });
-                          }}
-                          className="w-16 rounded-lg border border-neutral-800 bg-neutral-950 p-1.5 text-center text-sm outline-none focus:border-cyan-500"
+                        <PointsInput
+                          value={q.points}
+                          onChange={(safe) => updateQuestion(q.id, { points: safe })}
                         />
                       </div>
                     </div>

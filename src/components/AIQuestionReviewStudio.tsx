@@ -1,8 +1,27 @@
 import toast from 'react-hot-toast';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { api } from '../lib/api';
 import { Loader2, Save, Trash2, Sparkles } from 'lucide-react';
 import { QuestionType } from '../lib/types';
+
+function PointsInput({ value, onChange, className }: { value: number; onChange: (v: number) => void; className?: string }) {
+  const [raw, setRaw] = useState(String(value));
+  useEffect(() => { setRaw(String(value)); }, [value]);
+  return (
+    <input
+      type="number" min="0.5" step="0.5"
+      value={raw}
+      onChange={(e) => setRaw(e.target.value)}
+      onBlur={(e) => {
+        const val = parseFloat(e.target.value);
+        const safe = isNaN(val) || val < 0.5 ? 0.5 : val;
+        setRaw(String(safe));
+        onChange(safe);
+      }}
+      className={className}
+    />
+  );
+}
 
 interface AIQuestion {
   text: string;
@@ -149,19 +168,10 @@ export function AIQuestionReviewStudio({ examId, initialQuestions, onSaved, onCa
                   </div>
                   <div>
                     <label className="text-xs font-bold text-theme-muted uppercase tracking-wider mb-2 block">Points Weight</label>
-                    <input 
-                      type="number"
+                    <PointsInput
+                      value={q.points}
+                      onChange={(safe) => updateQuestion(idx, { points: safe })}
                       className="input-field"
-                      defaultValue={q.points}
-                      onChange={(e) => { e.target.dataset.dirty = 'true'; }}
-                      onBlur={(e) => {
-                        const val = parseFloat(e.target.value);
-                        const safe = isNaN(val) || val < 0.5 ? 0.5 : val;
-                        e.target.value = String(safe);
-                        updateQuestion(idx, { points: safe });
-                      }}
-                      min="0.5"
-                      step="0.5"
                     />
                   </div>
                 </div>
