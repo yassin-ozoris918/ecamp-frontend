@@ -339,8 +339,8 @@ export function QuizBuilderModal({ isOpen, onClose, targetId, type }: QuizBuilde
                       <div className="flex flex-col gap-1 items-end">
                         <span className="text-[10px] font-bold text-theme-muted uppercase tracking-wider">Points</span>
                         <input
-                          type="number" min="1" value={q.points}
-                          onChange={(e) => updateQuestion(q.id, { points: parseInt(e.target.value, 10) || 1 })}
+                          type="number" min="0.5" step="0.5" value={q.points}
+                          onChange={(e) => updateQuestion(q.id, { points: parseFloat(e.target.value) || 0.5 })}
                           className="w-16 rounded-lg border border-neutral-800 bg-neutral-950 p-1.5 text-center text-sm outline-none focus:border-cyan-500"
                         />
                       </div>

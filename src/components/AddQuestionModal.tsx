@@ -89,7 +89,7 @@ export function AddQuestionModal({ isOpen, onClose, targetId, type }: AddQuestio
 
           <div>
             <label className="block text-xs text-theme-muted mb-1">{t('quizBuilder.pointsAllocated')}</label>
-            <input type="number" min="1" value={points} onChange={(e) => setPoints(parseInt(e.target.value, 10) || 1)} className="w-40 rounded-xl border border-neutral-800 bg-neutral-950 p-3 text-sm outline-none" />
+            <input type="number" min="0.5" step="0.5" value={points} onChange={(e) => setPoints(parseFloat(e.target.value) || 0.5)} className="w-40 rounded-xl border border-neutral-800 bg-neutral-950 p-3 text-sm outline-none" />
           </div>
 
           <div className="flex justify-end gap-2 border-t border-neutral-800 pt-3">

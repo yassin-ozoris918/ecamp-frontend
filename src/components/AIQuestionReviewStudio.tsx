@@ -153,8 +153,9 @@ export function AIQuestionReviewStudio({ examId, initialQuestions, onSaved, onCa
                       type="number"
                       className="input-field"
                       value={q.points}
-                      onChange={(e) => updateQuestion(idx, { points: Number(e.target.value) })}
-                      min="0"
+                      onChange={(e) => updateQuestion(idx, { points: parseFloat(e.target.value) || 0.5 })}
+                      min="0.5"
+                      step="0.5"
                     />
                   </div>
                 </div>
