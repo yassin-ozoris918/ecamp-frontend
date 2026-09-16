@@ -10,7 +10,7 @@ export type ContentStatus = 'DRAFT' | 'PUBLISHED';
 export type ItemType = 'SESSION' | 'QUIZ';
 export type AttemptStatusType = 'PENDING' | 'PASSED' | 'FAILED';
 export type OwnershipState = 'ACTIVE' | 'EXPIRED' | 'UNOWNED';
-export type QuestionType = 'MCQ' | 'TRUE_FALSE' | 'ESSAY' | 'SHORT_ANSWER' | 'READ_ONLY_TEXT' | 'MULTIPLE_CHOICE';
+export type QuestionType = 'MCQ' | 'TRUE_FALSE' | 'ESSAY' | 'SHORT_ANSWER' | 'READ_ONLY_TEXT' | 'MULTIPLE_CHOICE' | 'MATCHING' | 'ORDERING';
 export type SettingType = 'STRING' | 'BOOLEAN' | 'INTEGER' | 'JSON';
 export type EntityType = 'chapter' | 'lecture' | 'session' | 'quiz' | 'quiz-question';
 export type ExportEntity = 'users' | 'courses' | 'lectures' | 'quiz-attempts' | 'exam-attempts' | 'activation-codes' | 'audit-logs' | 'progress';
@@ -166,10 +166,15 @@ export interface QuizQuestion {
   id: string;
   quizId: string;
   text: string;
-  type: string;
-  options: string[];
+  type: QuestionType;
+  options?: string[];
   points: number;
   orderIndex?: number;
+  version?: 'A' | 'B';
+  correctOptionIndex?: number;
+  referenceAnswer?: string;
+  matchOptions?: { left: string; right: string }[];
+  correctOrder?: string[];
 }
 
 export interface PlaylistItem {
@@ -491,9 +496,12 @@ export interface ExamQuestion {
   text: string;
   type: QuestionType;
   points: number;
-  options: string[];
-  correctOptionIndex: number;
+  options?: string[];
+  correctOptionIndex?: number;
   answers?: ExamAnswer[];
+  referenceAnswer?: string;
+  matchOptions?: { left: string; right: string }[];
+  correctOrder?: string[];
 }
 
 export interface ExamAnswer {

@@ -1,7 +1,7 @@
 import toast from 'react-hot-toast';
 import React, { useState, useEffect } from 'react';
 import { api } from '../lib/api';
-import { Clock, CheckCircle2, XCircle, ArrowRight } from 'lucide-react';
+import { Clock, CheckCircle2, XCircle, ArrowRight, ArrowDownUp } from 'lucide-react';
 import { QuizQuestion, PlaylistItem } from '../lib/types';
 import { Modal } from './Modal';
 import { useTranslation } from 'react-i18next';
@@ -14,8 +14,9 @@ type QuizResult = {
   message: string;
   isExhausted: boolean;
   maxAttempts: number;
-  correctAnswers: Record<string, number>;
-  studentAnswers: Record<string, number>;
+  correctAnswers: Record<string, any>;
+  studentAnswers: Record<string, any>;
+  feedback?: Record<string, any>;
 };
 
 export function InteractiveQuizClient({
@@ -33,20 +34,17 @@ export function InteractiveQuizClient({
 }) {
   const { t } = useTranslation();
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
-  const [answers, setAnswers] = useState<Record<string, number>>({});
+  const [answers, setAnswers] = useState<Record<string, any>>({});
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   
-  // Intro Screen State
   const [isStarted, setIsStarted] = useState(false);
   const [startLoading, setStartLoading] = useState(false);
   const [startError, setStartError] = useState<string | null>(null);
   const [quizDetails, setQuizDetails] = useState<any>(null);
   
-  // Timer State
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   
-  // Result & Review State
   const [result, setResult] = useState<QuizResult | null>(null);
   const [reviewMode, setReviewMode] = useState(false);
   
@@ -66,9 +64,7 @@ export function InteractiveQuizClient({
         if (quiz.isCompleted || quiz.isExhausted) {
           const { data: pastAttempt } = await api.get(`/quizzes/${quiz.id}/attempts/last-submitted`);
           if (!isMounted) return;
-          if (pastAttempt) {
-            setPastResult(pastAttempt);
-          }
+          if (pastAttempt) setPastResult(pastAttempt);
         } else {
           const { data: attempt } = await api.get(`/quizzes/${quiz.id}/attempts/current`);
           if (!isMounted) return;
@@ -83,13 +79,9 @@ export function InteractiveQuizClient({
               const remaining = Math.max(0, (data.timeLimit * 60) - elapsedSeconds);
               setTimeLeft(remaining);
             }
-            if (attempt.draftAnswers) {
-              setAnswers(attempt.draftAnswers);
-            }
+            if (attempt.draftAnswers) setAnswers(attempt.draftAnswers);
           } else {
-             if (data.timeLimit) {
-                setTimeLeft(data.timeLimit * 60);
-             }
+             if (data.timeLimit) setTimeLeft(data.timeLimit * 60);
           }
         }
       } catch (err: any) {
@@ -99,11 +91,8 @@ export function InteractiveQuizClient({
       }
     }
     
-    if (!quiz.isLocked) {
-        loadQuizMetadata();
-    } else {
-        setLoading(false);
-    }
+    if (!quiz.isLocked) loadQuizMetadata();
+    else setLoading(false);
     return () => { isMounted = false; };
   }, [quiz.id, quiz.isCompleted, quiz.isLocked, quiz.isExhausted]);
 
@@ -116,11 +105,10 @@ export function InteractiveQuizClient({
       if (onPauseTimer) onPauseTimer();
     } catch (err: any) {
       if (err.response?.status === 400) {
-        // Already started
         setIsStarted(true);
         if (onPauseTimer) onPauseTimer();
       } else {
-        setStartError(err.response?.data?.message || t('quiz.failedStart'));
+        setStartError(err.response?.data?.message ? t(err.response.data.message) : t('quiz.failedStart'));
       }
     } finally {
       setStartLoading(false);
@@ -129,26 +117,22 @@ export function InteractiveQuizClient({
 
   useEffect(() => {
     if (!isStarted || timeLeft === null || timeLeft <= 0 || result || submitting) return;
-
     const timerId = setInterval(() => {
       setTimeLeft(prev => {
         if (prev !== null && prev <= 1) {
           clearInterval(timerId);
-          handleSubmit(true); // Auto-submit when time is up
+          handleSubmit(true);
           return 0;
         }
         return prev !== null ? prev - 1 : null;
       });
     }, 1000);
-
     return () => clearInterval(timerId);
   }, [isStarted, timeLeft, result, submitting]);
 
-  // Handle abandoning quiz on unmount (e.g. clicking another lecture item)
   const isStartedRef = React.useRef(isStarted);
   const resultRef = React.useRef(result);
   const submittingRef = React.useRef(submitting);
-
   useEffect(() => {
     isStartedRef.current = isStarted;
     resultRef.current = result;
@@ -157,7 +141,6 @@ export function InteractiveQuizClient({
 
   useEffect(() => {
     return () => {
-      // If we are unmounting, and the quiz was started but not submitted/surrendered, abandon it
       if (isStartedRef.current && !resultRef.current && !submittingRef.current) {
         api.post(`/quizzes/${quiz.id}/abandon`).catch(() => {});
         if (onResumeTimer) onResumeTimer();
@@ -169,9 +152,9 @@ export function InteractiveQuizClient({
     if (submitting) return;
     setSubmitting(true);
     try {
-      const payloadAnswers = Object.entries(answers).map(([qId, oIdx]) => ({
+      const payloadAnswers = Object.entries(answers).map(([qId, ans]) => ({
         questionId: qId,
-        selectedOptionIndex: oIdx,
+        ...ans,
       }));
       
       const { data } = await api.post('/quizzes/submit', {
@@ -179,7 +162,6 @@ export function InteractiveQuizClient({
       });
       setResult(data as QuizResult);
       if (onResumeTimer) onResumeTimer();
-      // Remove onComplete() call here so the user can review their results first
     } catch (err: any) {
       console.error(err);
     } finally {
@@ -196,335 +178,372 @@ export function InteractiveQuizClient({
   };
 
   const handleSurrender = async () => {
-    const confirmed = await confirm(
-      t('quiz.surrenderTitle'),
-      t('quiz.surrenderDesc')
-    );
-    if (!confirmed) return;
-    
-    try {
-      setSubmitting(true);
-      await api.post(`/quizzes/${quiz.id}/surrender`);
-      setResult(prev => prev ? { ...prev, isExhausted: true, message: 'Quiz surrendered.' } : null);
-      setReviewMode(true);
-      if (onResumeTimer) onResumeTimer();
-    } catch (err: any) {
-      console.error(err);
-      toast.error(t('quiz.failedSubmit'));
-    } finally {
-      setSubmitting(false);
+    const confirmed = await confirm(t('quiz.surrenderTitle'), t('quiz.surrenderDesc'), 'destructive');
+    if (confirmed) {
+      handleSubmit();
     }
   };
 
-  if (quiz.isLocked) {
-    return (
-      <div className="p-8 text-center glass rounded-2xl">
-        <p className="text-theme-muted">{t('quiz.locked')}</p>
-      </div>
-    );
-  }
+  // --- Handlers for 7 Question Types ---
+  const handleSelectOption = (qId: string, idx: number) => {
+    if (reviewMode) return;
+    setAnswers(prev => ({ ...prev, [qId]: { selectedOptionIndex: idx } }));
+  };
 
-  if (quiz.isCompleted && !reviewMode && !result) {
-    return (
-      <div className="p-8 text-center glass rounded-2xl bg-secondary-500/10 border-secondary-500/20 animate-scale-in">
-        <CheckCircle2 className="w-12 h-12 text-secondary-400 mx-auto mb-3" />
-        <h3 className="text-xl font-bold text-secondary-200">{t('quiz.completedTitle')}</h3>
-        <p className="text-secondary-200/80 mt-2 mb-6">{t('quiz.completedDesc')}</p>
-        
-        {pastResult && (
-          <button 
-            onClick={handleReviewPast} 
-            className="btn-secondary py-2 px-6 shadow-lg shadow-black/20"
-          >
-            {t('quiz.reviewPast')}
-          </button>
-        )}
-      </div>
-    );
-  }
+  const handleTextChange = (qId: string, text: string) => {
+    if (reviewMode) return;
+    setAnswers(prev => ({ ...prev, [qId]: { textResponse: text } }));
+  };
 
-  if (loading) {
-    return <div className="p-8 text-center text-theme-muted">Loading quiz...</div>;
-  }
+  const handleMatchChange = (qId: string, leftItem: string, rightItem: string) => {
+    if (reviewMode) return;
+    setAnswers(prev => {
+      const currentArr = prev[qId]?.matchAnswer || [];
+      const filtered = currentArr.filter((pair: any) => pair.left !== leftItem);
+      return { ...prev, [qId]: { matchAnswer: [...filtered, { left: leftItem, right: rightItem }] } };
+    });
+  };
+
+  const handleOrderChange = (qId: string, idx: number, direction: 'up' | 'down') => {
+    if (reviewMode) return;
+    setAnswers(prev => {
+      const currentOrder = prev[qId]?.orderAnswer || questions.find(q => q.id === qId)?.correctOrder || [];
+      if (!currentOrder || currentOrder.length === 0) return prev;
+      
+      const arr = [...currentOrder];
+      if (direction === 'up' && idx > 0) {
+        [arr[idx - 1], arr[idx]] = [arr[idx], arr[idx - 1]];
+      } else if (direction === 'down' && idx < arr.length - 1) {
+        [arr[idx + 1], arr[idx]] = [arr[idx], arr[idx + 1]];
+      }
+      return { ...prev, [qId]: { orderAnswer: arr } };
+    });
+  };
+
+  const isAnswered = (qId: string) => {
+    return !!answers[qId];
+  };
 
   const formatTime = (seconds: number) => {
     const m = Math.floor(seconds / 60);
     const s = seconds % 60;
-    return `${m}:${String(s).padStart(2, '0')}`;
+    return `${m}:${s.toString().padStart(2, '0')}`;
   };
 
-  if (!isStarted && quizDetails && !result) {
+  if (loading) {
     return (
-      <div className="glass p-8 rounded-3xl text-center max-w-2xl mx-auto border-white/[0.05] animate-scale-in">
-        <h2 className="text-2xl sm:text-3xl font-display font-bold text-theme-text mb-6">{quiz.title}</h2>
-        
-        <div className="flex flex-wrap justify-center gap-8 mb-10">
-          <div className="text-center">
-            <p className="text-xs text-theme-muted uppercase tracking-wider mb-1">{t('quiz.questions')}</p>
-            <p className="text-xl font-bold text-theme-text">{questions.length}</p>
-          </div>
-          <div className="text-center">
-            <p className="text-xs text-theme-muted uppercase tracking-wider mb-1">{t('quiz.timeLimit')}</p>
-            <p className="text-xl font-bold text-theme-text">{quizDetails.timeLimit ? `${quizDetails.timeLimit} mins` : 'None'}</p>
-          </div>
-          <div className="text-center">
-            <p className="text-xs text-theme-muted uppercase tracking-wider mb-1">{t('quiz.passGrade')}</p>
-            <p className="text-xl font-bold text-theme-text">{quizDetails.passGrade}%</p>
-          </div>
-        </div>
+      <div className="flex justify-center py-20">
+        <div className="w-8 h-8 rounded-full border-2 border-cyan-500 border-t-transparent animate-spin" />
+      </div>
+    );
+  }
 
-        {quiz.isExhausted ? (
-          <div className="flex flex-col items-center gap-4 w-full">
-            <div className="p-4 rounded-xl bg-error-500/10 border border-error-500/20 text-error-300 text-sm max-w-sm w-full">
-              <XCircle className="w-5 h-5 mx-auto mb-2 opacity-80" />
-              {t('quiz.exhaustedDesc')}
-            </div>
+  if (!isStarted) {
+    return (
+      <div className="max-w-2xl mx-auto py-12">
+        <div className="bg-neutral-900 rounded-3xl p-8 sm:p-12 text-center border border-neutral-800 shadow-2xl relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 via-transparent to-transparent opacity-50" />
+          <div className="relative z-10">
+            <h2 className="text-3xl font-display font-bold text-white mb-4">{quizDetails?.title || quiz.title}</h2>
+            {quizDetails?.description && <p className="text-theme-muted mb-8">{quizDetails.description}</p>}
             
-            <div className="flex flex-wrap justify-center gap-4 w-full">
-              {pastResult && (
-                <button 
-                  onClick={handleReviewPast} 
-                  className="btn-secondary py-3 px-8 text-lg w-full sm:w-auto"
-                >
-                  {t('quiz.reviewPast')}
-                </button>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-6 mb-12">
+              {quizDetails?.timeLimit && (
+                <div className="flex items-center gap-2 bg-neutral-950 px-4 py-2 rounded-xl border border-neutral-800">
+                  <Clock className="w-5 h-5 text-cyan-400" />
+                  <span className="font-bold font-mono text-white">{quizDetails.timeLimit} {t('quiz.minutes')}</span>
+                </div>
               )}
-              <button 
-                onClick={onComplete} 
-                className="btn-primary py-3 px-8 text-lg shadow-lg shadow-accent-500/20 w-full sm:w-auto"
-              >
-                {t('quiz.continueNext')}
-              </button>
+              <div className="flex items-center gap-2 bg-neutral-950 px-4 py-2 rounded-xl border border-neutral-800">
+                <CheckCircle2 className="w-5 h-5 text-accent-400" />
+                <span className="font-bold text-white">{t('quiz.passGrade')}: {quizDetails?.passGrade || quiz.passGrade}%</span>
+              </div>
+              <div className="flex items-center gap-2 bg-neutral-950 px-4 py-2 rounded-xl border border-neutral-800">
+                <span className="font-bold text-theme-muted">
+                  {t('quiz.attempts')}: <span className="text-white">{quiz.attemptsCount}</span> / {quiz.maxAttempts}
+                </span>
+              </div>
             </div>
-          </div>
-        ) : (
-          <div className="flex flex-col items-center gap-4 w-full">
+
             {startError && (
-              <div className="mb-2 p-4 rounded-xl bg-error-500/10 border border-error-500/20 text-error-300 text-sm max-w-sm w-full">
-                <XCircle className="w-5 h-5 mx-auto mb-2 opacity-80" />
+              <div className="mb-6 p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-sm font-bold">
                 {startError}
               </div>
             )}
-            
-            {startError && startError.toLowerCase().includes('maximum number of attempts') ? (
-              <button 
-                onClick={onComplete} 
-                className="btn-primary py-3 px-8 text-lg shadow-lg shadow-accent-500/20 w-full sm:w-auto"
-              >
-                {t('quiz.continueNext')}
+
+            {!quiz.isExhausted && !quiz.isCompleted ? (
+              <button onClick={handleStartQuiz} disabled={startLoading} className="btn-primary w-full sm:w-auto px-12 py-4 text-lg group">
+                {startLoading ? t('common.loading') : (
+                  <>
+                    {quiz.attemptsCount > 0 ? t('quiz.startRetry') : t('quiz.startAttempt')}
+                    <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+                  </>
+                )}
               </button>
             ) : (
-              <button 
-                onClick={handleStartQuiz} 
-                disabled={startLoading}
-                className="btn-primary py-3 px-8 text-lg shadow-lg shadow-accent-500/20 w-full sm:w-auto"
-              >
-                {startLoading ? t('quiz.preparing') : (startError ? t('quiz.tryAgain') : t('quiz.startQuiz'))}
-              </button>
+              <div className="space-y-4">
+                <div className="p-4 rounded-xl bg-neutral-950 border border-neutral-800 text-theme-muted font-medium">
+                  {quiz.isCompleted ? t('quiz.completedInfo') : t('quiz.exhaustedInfo')}
+                </div>
+                {pastResult && (
+                  <button onClick={handleReviewPast} className="btn-secondary">
+                    {t('quiz.reviewLastAttempt')}
+                  </button>
+                )}
+              </div>
             )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (result) {
+    const isPassed = result.status === 'PASSED';
+    const isPending = result.status === 'PENDING';
+    
+    return (
+      <div className="max-w-4xl mx-auto py-8">
+        {!reviewMode && (
+          <div className="mb-12 text-center bg-neutral-900 border border-neutral-800 rounded-3xl p-12 relative overflow-hidden shadow-2xl">
+             <div className={`absolute inset-0 bg-gradient-to-b ${isPassed ? 'from-accent-500/10' : isPending ? 'from-amber-500/10' : 'from-rose-500/10'} to-transparent opacity-50`} />
+             <div className="relative z-10">
+                <div className={`w-24 h-24 mx-auto rounded-full flex items-center justify-center mb-6 shadow-xl ${isPassed ? 'bg-accent-500/20 text-accent-400' : isPending ? 'bg-amber-500/20 text-amber-400' : 'bg-rose-500/20 text-rose-400'}`}>
+                  {isPassed ? <CheckCircle2 className="w-12 h-12" /> : isPending ? <Clock className="w-12 h-12" /> : <XCircle className="w-12 h-12" />}
+                </div>
+                <h2 className="text-4xl font-display font-bold text-white mb-4">
+                  {isPassed ? t('quiz.passedTitle') : isPending ? t('quiz.pendingReview') : t('quiz.failedTitle')}
+                </h2>
+                <div className="flex justify-center items-end gap-2 mb-4">
+                  <span className={`text-6xl font-display font-black ${isPassed ? 'text-accent-400' : isPending ? 'text-amber-400' : 'text-rose-400'}`}>
+                    {result.score}
+                  </span>
+                  <span className="text-2xl text-theme-muted font-bold mb-2">%</span>
+                </div>
+                <p className="text-theme-muted font-medium mb-8">
+                  {isPending ? t('quiz.pendingReviewDesc') : t('quiz.passGradeWas', { grade: result.passGrade })}
+                </p>
+                
+                <div className="flex gap-4 justify-center">
+                  <button onClick={() => setReviewMode(true)} className="btn-secondary px-8">
+                    {t('quiz.reviewAnswers')}
+                  </button>
+                  <button onClick={onComplete} className="btn-primary px-8">
+                    {t('common.continue')} <ArrowRight className="w-4 h-4 ml-2" />
+                  </button>
+                </div>
+             </div>
+          </div>
+        )}
+
+        {(reviewMode || result.status !== 'PENDING') && (
+          <div className="space-y-6">
+            <h3 className="text-xl font-bold text-white px-2 flex justify-between items-center">
+              {reviewMode && !pastResult ? t('quiz.reviewMode') : t('quiz.resultsDetails')}
+              {reviewMode && <button onClick={onComplete} className="text-sm font-bold text-cyan-400 hover:text-cyan-300">{t('common.close')}</button>}
+            </h3>
+            
+            {questions.map((q, idx) => {
+              const stuAns = result.studentAnswers[q.id];
+              const corAns = result.correctAnswers[q.id];
+              
+              // Objective logic
+              const isCorrectMCQ = (q.type === 'MCQ' || q.type === 'TRUE_FALSE') && stuAns?.selectedOptionIndex === corAns;
+              const isWrongMCQ = (q.type === 'MCQ' || q.type === 'TRUE_FALSE') && stuAns?.selectedOptionIndex !== corAns;
+              
+              return (
+                <div key={q.id} className={`p-6 rounded-2xl border bg-neutral-900 relative overflow-hidden transition-all duration-300 ${isCorrectMCQ ? 'border-accent-500/30 shadow-[0_0_20px_rgba(34,197,94,0.05)]' : isWrongMCQ ? 'border-rose-500/30' : 'border-neutral-800'}`}>
+                  {/* ... Header logic similar to before ... */}
+                  <div className="flex items-start gap-4 mb-6">
+                     <div className={`w-8 h-8 shrink-0 rounded-full flex items-center justify-center font-bold text-sm ${isCorrectMCQ ? 'bg-accent-500/20 text-accent-400' : isWrongMCQ ? 'bg-rose-500/20 text-rose-400' : 'bg-neutral-800 text-theme-muted'}`}>
+                       {idx + 1}
+                     </div>
+                     <h4 className="text-lg font-medium text-white flex-1">{q.text}</h4>
+                  </div>
+                  
+                  {/* Type Specific Review Rendering */}
+                  {['MCQ', 'TRUE_FALSE', 'MULTIPLE_CHOICE'].includes(q.type) && (
+                    <div className="space-y-3 pl-12">
+                      {q.options?.map((opt, optIdx) => {
+                        const isSelected = stuAns?.selectedOptionIndex === optIdx;
+                        const isActualCorrect = corAns === optIdx;
+                        
+                        let stateClass = "border-neutral-800 bg-neutral-950 text-theme-muted";
+                        if (isActualCorrect && isSelected) stateClass = "border-accent-500 bg-accent-500/10 text-accent-100 font-medium";
+                        else if (isActualCorrect && !isSelected) stateClass = "border-accent-500/50 bg-neutral-950 text-accent-200 border-dashed";
+                        else if (!isActualCorrect && isSelected) stateClass = "border-rose-500 bg-rose-500/10 text-rose-100 font-medium";
+                        
+                        return (
+                           <div key={optIdx} className={`p-4 rounded-xl border ${stateClass} flex items-center justify-between transition-colors`}>
+                             <span>{opt}</span>
+                             {isActualCorrect && <CheckCircle2 className="w-5 h-5 text-accent-500" />}
+                             {!isActualCorrect && isSelected && <XCircle className="w-5 h-5 text-rose-500" />}
+                           </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {['ESSAY', 'SHORT_ANSWER'].includes(q.type) && (
+                    <div className="space-y-3 pl-12">
+                       <div className="p-4 rounded-xl border border-neutral-800 bg-neutral-950 text-theme-text opacity-70">
+                         <strong>Your Answer:</strong><br/>
+                         {stuAns?.textResponse || <span className="text-theme-muted italic">No answer provided</span>}
+                       </div>
+                       {result.status !== 'PENDING' && (
+                         <div className="p-4 rounded-xl border border-cyan-500/30 bg-cyan-500/5 text-cyan-200">
+                           <strong>Points Awarded:</strong> {result.feedback?.[q.id]?.points || 0} / {q.points}<br/>
+                           {result.feedback?.[q.id]?.feedback && <p className="mt-2 text-sm italic">{result.feedback[q.id].feedback}</p>}
+                         </div>
+                       )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
     );
   }
 
-  const correctCount = result ? questions.filter(q => result.studentAnswers[q.id] !== undefined && result.studentAnswers[q.id] === result.correctAnswers[q.id]).length : 0;
+  // Active Quiz Taking UI
+  const answeredCount = Object.keys(answers).length;
+  const progressPct = questions.length > 0 ? (answeredCount / questions.length) * 100 : 0;
 
   return (
-    <div className="flex flex-col lg:flex-row gap-8 items-start relative">
-      {/* Sidebar for Navigation */}
-      <div className="w-full lg:w-64 shrink-0 lg:sticky lg:top-6 flex flex-col gap-4">
-        <div className="glass p-4 rounded-2xl border-white/[0.05]">
-          <h3 className="font-bold text-theme-text mb-3">{t('quiz.questions')}</h3>
-          <div className="grid grid-cols-5 sm:grid-cols-8 lg:grid-cols-4 gap-2">
-            {questions.map((q, idx) => {
-              const isAnswered = answers[q.id] !== undefined;
-              let btnClass = 'bg-white/[0.02] border-white/[0.05] text-theme-muted hover:bg-theme-card';
-              
-              if (reviewMode && result) {
-                const isCorrect = result.correctAnswers[q.id] === result.studentAnswers[q.id];
-                if (isCorrect) {
-                  btnClass = 'bg-secondary-500/20 border-secondary-500/50 text-secondary-700 dark:text-secondary-300';
-                } else {
-                  btnClass = 'bg-error-500/20 border-error-500/50 text-error-300';
-                }
-              } else if (isAnswered) {
-                btnClass = 'bg-accent-500/20 border-accent-500/50 text-theme-text';
-              }
+    <div className="max-w-4xl mx-auto py-6 relative">
+      <ConfirmDialog state={confirmState} onConfirm={handleConfirm} onCancel={handleCancel} />
+      
+      {/* Sticky Header */}
+      <div className="sticky top-6 z-40 bg-neutral-900/80 backdrop-blur-xl border border-neutral-800 p-4 rounded-2xl flex items-center justify-between mb-8 shadow-2xl">
+        <div className="flex items-center gap-4">
+          <div className="flex flex-col gap-1">
+             <span className="text-xs font-bold text-theme-muted uppercase tracking-wider">{t('quiz.progress')}</span>
+             <div className="flex items-center gap-2">
+               <span className="text-white font-mono font-bold text-lg">{answeredCount}</span>
+               <span className="text-theme-muted">/</span>
+               <span className="text-theme-muted font-mono">{questions.length}</span>
+             </div>
+          </div>
+        </div>
+        
+        {timeLeft !== null && (
+          <div className={`flex items-center gap-2 px-4 py-2 rounded-xl border ${timeLeft < 60 ? 'bg-rose-500/10 border-rose-500/30 text-rose-400 animate-pulse' : 'bg-neutral-950 border-neutral-800 text-white'}`}>
+            <Clock className="w-5 h-5" />
+            <span className="font-bold font-mono text-lg">{formatTime(timeLeft)}</span>
+          </div>
+        )}
 
-              return (
-                <button
-                  key={q.id}
-                  onClick={() => document.getElementById(`q-${q.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
-                  className={`w-full aspect-square rounded-lg border flex items-center justify-center font-mono font-bold transition-all text-sm ${btnClass}`}
-                >
-                  {idx + 1}
-                </button>
-              );
-            })}
-          </div>
-          
-          <div className="mt-4 pt-4 border-t border-white/[0.05] flex flex-col gap-2 text-xs text-theme-muted">
-            {reviewMode ? (
-              <>
-                <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-secondary-500/50" /> {t('quiz.correct')}</div>
-                <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-error-500/50" /> {t('quiz.incorrect')}</div>
-              </>
-            ) : (
-              <>
-                <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-accent-500/50" /> {t('quiz.answered')}</div>
-                <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-theme-card" /> {t('quiz.unanswered')}</div>
-              </>
-            )}
-          </div>
+        <div className="flex items-center gap-3">
+          <button onClick={handleSurrender} className="text-sm font-bold text-theme-muted hover:text-rose-400 transition-colors px-3 py-2 rounded-lg hover:bg-neutral-800">
+            {t('quiz.surrender')}
+          </button>
+          <button 
+            onClick={() => handleSubmit()} 
+            disabled={submitting || answeredCount === 0}
+            className="btn-primary"
+          >
+            {submitting ? '...' : t('quiz.submitFinish')}
+          </button>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="flex-1 w-full space-y-6">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between glass p-4 rounded-2xl border-white/[0.05] gap-4">
-          <div>
-            <h2 className="text-xl font-bold text-theme-text">{quiz.title}</h2>
-            {quiz.passGrade ? <p className="text-sm text-theme-muted mt-1">{t('quiz.passGrade')}: {quiz.passGrade}%</p> : null}
-          </div>
-          {timeLeft !== null && !reviewMode && (
-            <div className="flex items-center gap-2 px-4 py-2 bg-accent-500/10 text-accent-700 dark:text-accent-300 rounded-xl font-mono font-bold shrink-0">
-              <Clock className="w-5 h-5" />
-              {formatTime(timeLeft)}
+      <div className="space-y-8 pb-32">
+        {questions.map((q, idx) => (
+          <div key={q.id} id={`q-${q.id}`} className={`p-6 sm:p-8 rounded-3xl border bg-neutral-900 shadow-xl transition-all duration-300 ${isAnswered(q.id) ? 'border-cyan-500/30' : 'border-neutral-800'}`}>
+            <div className="flex items-start gap-4 mb-8">
+               <div className={`w-10 h-10 shrink-0 rounded-2xl flex items-center justify-center font-bold text-lg ${isAnswered(q.id) ? 'bg-cyan-500/20 text-cyan-400' : 'bg-neutral-800 text-theme-muted'}`}>
+                 {idx + 1}
+               </div>
+               <div>
+                 <h4 className="text-xl font-medium text-white leading-relaxed">{q.text}</h4>
+                 <div className="mt-2 text-xs font-bold text-theme-muted uppercase tracking-wider">
+                   {q.points} {t('quiz.points')} • {t(`quiz.questionTypes.${q.type}`)}
+                 </div>
+               </div>
             </div>
-          )}
-          {reviewMode && result && (
-            <div className={`flex items-center gap-2 px-4 py-2 rounded-xl font-mono font-bold shrink-0 ${result.status === 'PASSED' ? 'bg-secondary-500/10 text-secondary-700 dark:text-secondary-300' : 'bg-error-500/10 text-error-300'}`}>
-              {t('quiz.score')}: {correctCount}/{questions.length}
-            </div>
-          )}
-        </div>
 
-        {/* Questions */}
-        <div className="space-y-4">
-          {questions.map((q, idx) => (
-            <div id={`q-${q.id}`} key={q.id} className="glass p-6 rounded-2xl border-white/[0.05] scroll-mt-24">
-              <p className="text-lg font-medium text-theme-text mb-4">
-                <span className="text-accent-400 mr-2">{idx + 1}.</span>
-                {q.text}
-              </p>
-              <div className="space-y-2">
-                {q.options?.map((opt, oIdx) => {
-                  let optClass = 'bg-white/[0.02] border-white/[0.05] text-theme-muted hover:bg-theme-card';
-                  let isSelected = answers[q.id] === oIdx;
-
-                  if (reviewMode && result) {
-                    const isCorrectOption = result.correctAnswers[q.id] === oIdx;
-                    const isStudentChoice = result.studentAnswers[q.id] === oIdx;
-                    
-                    if (isCorrectOption) {
-                      optClass = 'bg-secondary-500/20 border-secondary-500/50 text-secondary-100 font-medium relative overflow-hidden';
-                    } else if (isStudentChoice && !isCorrectOption) {
-                      optClass = 'bg-error-500/20 border-error-500/50 text-error-100 opacity-80 relative overflow-hidden';
-                    } else {
-                      optClass = 'bg-white/[0.02] border-white/[0.02] text-theme-muted opacity-50 relative';
-                    }
-                  } else if (isSelected) {
-                    optClass = 'bg-accent-500/20 border-accent-500/50 text-theme-text';
-                  }
-
+            {/* Answer Interactions based on Type */}
+            {['MCQ', 'TRUE_FALSE', 'MULTIPLE_CHOICE'].includes(q.type) && (
+              <div className="grid gap-3 pl-0 sm:pl-14">
+                {q.options?.map((opt, optIdx) => {
+                  const isSelected = answers[q.id]?.selectedOptionIndex === optIdx;
                   return (
                     <button
-                      key={`${q.id}-${oIdx}`}
-                      disabled={submitting || result !== null || reviewMode}
-                      onClick={() => setAnswers(prev => ({ ...prev, [q.id]: oIdx }))}
-                      className={`w-full text-left px-4 py-3 rounded-xl border transition-all ${optClass}`}
+                      key={optIdx}
+                      onClick={() => handleSelectOption(q.id, optIdx)}
+                      className={`text-left p-4 rounded-2xl border transition-all duration-200 flex items-center gap-4 group hover:-translate-y-0.5 ${isSelected ? 'bg-cyan-500/10 border-cyan-500/50 shadow-[0_0_15px_rgba(6,182,212,0.1)]' : 'bg-neutral-950 border-neutral-800 hover:border-neutral-700'}`}
                     >
-                      {opt}
-                      {reviewMode && result && result.correctAnswers[q.id] === oIdx && (
-                        <CheckCircle2 className="absolute top-1/2 right-4 -translate-y-1/2 w-5 h-5 text-secondary-400" />
-                      )}
-                      {reviewMode && result && result.studentAnswers[q.id] === oIdx && result.correctAnswers[q.id] !== oIdx && (
-                        <XCircle className="absolute top-1/2 right-4 -translate-y-1/2 w-5 h-5 text-error-400" />
-                      )}
+                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${isSelected ? 'border-cyan-500' : 'border-neutral-700 group-hover:border-neutral-500'}`}>
+                        {isSelected && <div className="w-2.5 h-2.5 rounded-full bg-cyan-500" />}
+                      </div>
+                      <span className={`text-base ${isSelected ? 'text-white font-medium' : 'text-theme-muted group-hover:text-theme-text'}`}>{opt}</span>
                     </button>
                   );
                 })}
               </div>
-            </div>
-          ))}
-        </div>
+            )}
 
-        {!reviewMode ? (
-          <div className="flex justify-end pt-4">
-            <button
-              onClick={() => handleSubmit()}
-              disabled={submitting || result !== null}
-              className="btn-primary py-3 px-8 text-lg shadow-lg shadow-accent-500/20 w-full sm:w-auto"
-            >
-              {submitting ? t('quiz.submitting') : t('quiz.submitQuiz')}
-            </button>
-          </div>
-        ) : (
-          <div className="flex justify-end pt-4 mt-8 border-t border-white/[0.05]">
-            <button
-              onClick={() => onComplete()}
-              className="btn-primary py-3 px-8 text-lg shadow-lg shadow-accent-500/20 w-full sm:w-auto"
-            >
-              {t('quiz.continueNext')}
-            </button>
-          </div>
-        )}
-
-        {/* Summary Modal */}
-        <Modal open={result !== null && !reviewMode} onClose={() => {}} title={t('quiz.resultsTitle')}>
-          {result && (
-            <div className="text-center py-6">
-              {result.status === 'PASSED' ? (
-                <CheckCircle2 className="w-16 h-16 text-secondary-500 mx-auto mb-4" />
-              ) : (
-                <XCircle className="w-16 h-16 text-error-500 mx-auto mb-4" />
-              )}
-              <p className="text-xl font-medium text-accent-700 dark:text-accent-300 mb-2 flex items-center justify-center gap-1.5">
-                <span>{t('quiz.correctText')}</span>
-                <span dir="ltr" className="font-mono font-bold">
-                  {Object.keys(result.correctAnswers || {}).filter(qId => result.correctAnswers[qId] === result.studentAnswers[qId]).length} / {questions.length}
-                </span>
-              </p>
-              <p className="text-lg text-theme-muted mb-6">
-                {result.status === 'PASSED' ? t('quiz.passed') : t('quiz.failed')}
-              </p>
-              
-              {result.passGrade === 0 && (
-                <p className="text-sm text-theme-muted mb-4">{t('quiz.informational')}</p>
-              )}
-              {result.isExhausted && (
-                <p className="text-sm text-warning-400 mb-4">{t('quiz.exhausted')}</p>
-              )}
-              <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
-                {(result.status === 'PASSED' || result.passGrade === 0 || result.isExhausted) ? (
-                  <>
-                    <button onClick={() => setReviewMode(true)} className="btn-secondary">
-                      {t('quiz.reviewPast')}
-                    </button>
-                    <button onClick={() => onComplete()} className="btn-primary">
-                      {t('quiz.continueNext')} <ArrowRight className="w-4 h-4 ml-2 rtl:rotate-180" />
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <button onClick={() => window.location.reload()} className="btn-primary">
-                      {t('quiz.retry')}
-                    </button>
-                    <button 
-                      onClick={handleSurrender} 
-                      disabled={submitting}
-                      className="btn-danger bg-error-500 hover:bg-error-400 text-theme-text border-none shadow-error-500/20"
-                    >
-                      {submitting ? t('quiz.surrendering') : t('quiz.surrender')}
-                    </button>
-                  </>
-                )}
+            {['ESSAY', 'SHORT_ANSWER'].includes(q.type) && (
+              <div className="pl-0 sm:pl-14">
+                <textarea
+                  value={answers[q.id]?.textResponse || ''}
+                  onChange={(e) => handleTextChange(q.id, e.target.value)}
+                  className="w-full rounded-2xl border border-neutral-800 bg-neutral-950 p-4 text-white placeholder-neutral-600 outline-none focus:border-cyan-500 transition-colors h-32 resize-none"
+                  placeholder="Type your answer here..."
+                />
               </div>
-            </div>
-          )}
-        </Modal>
+            )}
+
+            {q.type === 'MATCHING' && (
+              <div className="grid gap-4 pl-0 sm:pl-14">
+                {(q.matchOptions || []).map((matchPair, idx) => {
+                  const selectedRight = answers[q.id]?.matchAnswer?.find((m: any) => m.left === matchPair.left)?.right || '';
+                  return (
+                    <div key={idx} className="flex flex-col sm:flex-row items-center gap-4 bg-neutral-950 p-4 rounded-2xl border border-neutral-800">
+                      <div className="flex-1 w-full text-center sm:text-right font-medium text-white">{matchPair.left}</div>
+                      <ArrowRight className="w-5 h-5 text-theme-muted hidden sm:block" />
+                      <select 
+                        value={selectedRight}
+                        onChange={(e) => handleMatchChange(q.id, matchPair.left, e.target.value)}
+                        className="flex-1 w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-white outline-none focus:border-cyan-500"
+                      >
+                        <option value="">Select a match...</option>
+                        {q.matchOptions?.map(mo => (
+                          <option key={mo.right} value={mo.right}>{mo.right}</option>
+                        ))}
+                      </select>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {q.type === 'ORDERING' && (
+              <div className="grid gap-3 pl-0 sm:pl-14">
+                {(answers[q.id]?.orderAnswer || q.correctOrder || []).map((item: string, idx: number) => (
+                  <div key={idx} className="flex items-center gap-4 bg-neutral-950 p-4 rounded-2xl border border-neutral-800">
+                    <span className="w-8 h-8 shrink-0 flex items-center justify-center bg-neutral-900 text-theme-muted rounded-xl font-bold">{idx + 1}</span>
+                    <span className="flex-1 text-white font-medium">{item}</span>
+                    <div className="flex flex-col gap-1">
+                      <button disabled={idx === 0} onClick={() => handleOrderChange(q.id, idx, 'up')} className="p-1 rounded bg-neutral-900 text-theme-muted hover:text-white disabled:opacity-30"><ArrowDownUp className="w-4 h-4 rotate-180" /></button>
+                      <button disabled={idx === (q.correctOrder?.length || 0) - 1} onClick={() => handleOrderChange(q.id, idx, 'down')} className="p-1 rounded bg-neutral-900 text-theme-muted hover:text-white disabled:opacity-30"><ArrowDownUp className="w-4 h-4" /></button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {q.type === 'READ_ONLY_TEXT' && (
+              <div className="pl-0 sm:pl-14">
+                 <div className="p-4 rounded-2xl bg-neutral-950 border border-neutral-800 text-theme-muted italic">
+                   Please read the text above carefully. No answer is required.
+                 </div>
+              </div>
+            )}
+          </div>
+        ))}
       </div>
     </div>
   );
