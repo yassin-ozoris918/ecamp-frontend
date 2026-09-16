@@ -1,5 +1,5 @@
 import toast from 'react-hot-toast';
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { api } from '../lib/api';
 import { Loader2, Send } from 'lucide-react';
 

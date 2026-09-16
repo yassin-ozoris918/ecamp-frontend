@@ -1,4 +1,3 @@
-import React from 'react';
 import { Cpu, ShieldCheck, Code, Sparkles, CheckCircle2, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 

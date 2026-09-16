@@ -1,5 +1,5 @@
 import toast from 'react-hot-toast';
-import React, { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { ShieldAlert, Phone, Activity, Search, RefreshCw, Smartphone } from 'lucide-react';
 import { client } from '../lib/api';
 import { Badge, Skeleton, EmptyState, Button, SectionHeader } from './ui';
@@ -12,7 +12,7 @@ export function AcademicRiskDashboard() {
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebounce(search, 300);
   const { confirm, state: confirmState, handleConfirm, handleCancel } = useConfirm();
-  const [pendingStudentId, setPendingStudentId] = useState<string | null>(null);
+  const [, setPendingStudentId] = useState<string | null>(null);
 
   const fetchRiskData = async () => {
     setLoading(true);

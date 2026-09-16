@@ -1,9 +1,7 @@
-import toast from 'react-hot-toast';
 import React, { useState, useEffect } from 'react';
 import { api } from '../lib/api';
 import { Clock, CheckCircle2, XCircle, ArrowRight, ArrowDownUp } from 'lucide-react';
 import { QuizQuestion, PlaylistItem } from '../lib/types';
-import { Modal } from './Modal';
 import { useTranslation } from 'react-i18next';
 import { useConfirm, ConfirmDialog } from '../hooks/useConfirm';
 
@@ -20,7 +18,6 @@ type QuizResult = {
 };
 
 export function InteractiveQuizClient({
-  lectureId,
   quiz,
   onComplete,
   onPauseTimer,
@@ -148,7 +145,7 @@ export function InteractiveQuizClient({
     };
   }, [quiz.id, onResumeTimer]);
 
-  const handleSubmit = async (isAutoSubmit = false) => {
+  const handleSubmit = async (_isAutoSubmit = false) => {
     if (submitting) return;
     setSubmitting(true);
     try {
@@ -344,8 +341,8 @@ export function InteractiveQuizClient({
             </h3>
             
             {questions.map((q, idx) => {
-              const stuAns = result.studentAnswers[q.id];
-              const corAns = result.correctAnswers[q.id];
+              const stuAns = result.studentAnswers?.[q.id];
+              const corAns = result.correctAnswers?.[q.id];
               
               // Objective logic
               const isCorrectMCQ = (q.type === 'MCQ' || q.type === 'TRUE_FALSE') && stuAns?.selectedOptionIndex === corAns;
@@ -409,11 +406,10 @@ export function InteractiveQuizClient({
 
   // Active Quiz Taking UI
   const answeredCount = Object.keys(answers).length;
-  const progressPct = questions.length > 0 ? (answeredCount / questions.length) * 100 : 0;
 
   return (
     <div className="max-w-4xl mx-auto py-6 relative">
-      <ConfirmDialog state={confirmState} onConfirm={handleConfirm} onCancel={handleCancel} />
+      <ConfirmDialog {...confirmState} onConfirm={handleConfirm} onCancel={handleCancel} />
       
       {/* Sticky Header */}
       <div className="sticky top-6 z-40 bg-neutral-900/80 backdrop-blur-xl border border-neutral-800 p-4 rounded-2xl flex items-center justify-between mb-8 shadow-2xl">

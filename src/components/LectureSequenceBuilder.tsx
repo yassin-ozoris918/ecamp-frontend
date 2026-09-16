@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { api } from '../lib/api';
-import { ArrowUp, ArrowDown, GripVertical, FileQuestion, PlayCircle, Paperclip, Trash2, Edit3 } from 'lucide-react';
+import { ArrowUp, ArrowDown, FileQuestion, PlayCircle, Paperclip, Trash2, Edit3 } from 'lucide-react';
 import { Badge, Spinner } from './ui';
 import { useConfirm, ConfirmDialog } from '../hooks/useConfirm';
 

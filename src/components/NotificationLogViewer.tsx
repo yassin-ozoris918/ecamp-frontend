@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { MessageSquare, RefreshCw, CheckCircle2, AlertTriangle, Clock } from 'lucide-react';
 import { api } from '../lib/api';
 import { Badge, Skeleton, EmptyState, Button, SectionHeader } from './ui';

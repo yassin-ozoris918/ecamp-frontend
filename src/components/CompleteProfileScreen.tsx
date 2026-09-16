@@ -13,7 +13,7 @@ import {
 import { AlertCircle, Save } from 'lucide-react';
 
 export function CompleteProfileScreen() {
-  const { profile, updateProfile } = useAuth();
+  const { profile } = useAuth();
   const { t } = useTranslation();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);

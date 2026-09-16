@@ -1,5 +1,5 @@
 import toast from 'react-hot-toast';
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { FileText, RefreshCw, Download, Database } from 'lucide-react';
 import { api } from '../lib/api';
 import { Badge, Skeleton, EmptyState, Button, SectionHeader } from './ui';
