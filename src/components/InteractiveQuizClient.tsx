@@ -354,9 +354,14 @@ export function InteractiveQuizClient({
                       {t('common.continue')} <ArrowRight className="w-4 h-4 ml-2" />
                     </button>
                   ) : (
-                    <button onClick={handleAcceptFailureAndEndAttempts} disabled={submitting} className="px-6 py-3 font-bold text-sm bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 rounded-xl transition-all">
-                      {submitting ? '...' : 'Accept Failure & End Attempts / قبول الرسوب وإنهاء المحاولات'}
-                    </button>
+                    <>
+                      <button onClick={() => window.location.reload()} disabled={submitting} className="btn-primary px-8 group">
+                        {t('quiz.startRetry') || 'Take Again'} <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+                      </button>
+                      <button onClick={handleAcceptFailureAndEndAttempts} disabled={submitting} className="px-6 py-3 font-bold text-sm bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 rounded-xl transition-all">
+                        {submitting ? '...' : 'Accept Failure & End Attempts / قبول الرسوب وإنهاء المحاولات'}
+                      </button>
+                    </>
                   )}
                 </div>
 
