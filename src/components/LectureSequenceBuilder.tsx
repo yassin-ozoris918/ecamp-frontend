@@ -70,7 +70,7 @@ export function LectureSequenceBuilder({
       const payload = newItems.map((item, index) => ({
         id: item.id,
         type: item.type,
-        newOrderIndex: index,
+        orderIndex: index,
       }));
       await api.put(`/lectures/${lectureId}/reorder`, { items: payload });
     },
