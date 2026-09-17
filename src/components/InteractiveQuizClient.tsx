@@ -387,7 +387,11 @@ export function InteractiveQuizClient({
                          <strong>Your Answer:</strong><br/>
                          {stuAns?.textResponse || <span className="text-theme-muted italic">No answer provided</span>}
                        </div>
-                       {result.status !== 'PENDING' && (
+                       {result.status === 'PENDING' ? (
+                         <div className="p-4 rounded-xl border border-amber-500/30 bg-amber-500/5 text-amber-200">
+                           <strong>Points Awarded:</strong> <span className="italic">Pending AI Grading</span>
+                         </div>
+                       ) : (
                          <div className="p-4 rounded-xl border border-cyan-500/30 bg-cyan-500/5 text-cyan-200">
                            <strong>Points Awarded:</strong> {result.feedback?.[q.id]?.points ?? 0} / {q.points}<br/>
                            {result.feedback?.[q.id]?.feedback && <p className="mt-2 text-sm italic">{result.feedback[q.id].feedback}</p>}
@@ -398,7 +402,7 @@ export function InteractiveQuizClient({
 
                   {q.type === 'MATCHING' && (
                     <div className="space-y-3 pl-12">
-                      {(q.matchOptions || []).map((pair: any, pIdx: number) => {
+                      {(result.correctAnswers?.[q.id] || []).map((pair: any, pIdx: number) => {
                         const studentRight = stuAns?.matchAnswer?.find((m: any) => m.left === pair.left)?.right;
                         const isCorrect = studentRight === pair.right;
                         return (
@@ -422,9 +426,15 @@ export function InteractiveQuizClient({
                           </div>
                         );
                       })}
-                      <div className="p-3 rounded-xl border border-cyan-500/30 bg-cyan-500/5 text-cyan-200 text-sm">
-                        <strong>Points Awarded:</strong> {result.feedback?.[q.id]?.points ?? 0} / {q.points}
-                      </div>
+                      {result.status === 'PENDING' ? (
+                        <div className="p-3 rounded-xl border border-amber-500/30 bg-amber-500/5 text-amber-200 text-sm">
+                          <strong>Points Awarded:</strong> <span className="italic">Pending AI Grading</span>
+                        </div>
+                      ) : (
+                        <div className="p-3 rounded-xl border border-cyan-500/30 bg-cyan-500/5 text-cyan-200 text-sm">
+                          <strong>Points Awarded:</strong> {result.feedback?.[q.id]?.points ?? 0} / {q.points}
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
