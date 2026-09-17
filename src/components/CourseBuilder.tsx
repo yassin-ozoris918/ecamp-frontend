@@ -547,7 +547,7 @@ export function CourseBuilder({ courseId }: { courseId: string }) {
                         {chapter.lectures.length === 0 ? (
                           <p className="text-sm text-theme-muted text-center py-4">No lectures in this chapter yet.</p>
                         ) : (
-                            <LectureList lectures={chapter.lectures} items={items} expandedLecs={expandedLecs} toggleLec={toggleLec} load={load} setAiModalLecInfo={setAiModalLecInfo} onAddQuestion={(id: string, type: 'EXAM'|'QUIZ') => { setAddQuestionTargetId(id); setAddQuestionTargetType(type); }} />
+                            <LectureList lectures={chapter.lectures} items={items} expandedLecs={expandedLecs} toggleLec={toggleLec} load={load} setAiModalLecInfo={setAiModalLecInfo} onAddQuestion={(id: string, type: 'EXAM'|'QUIZ') => { setAddQuestionTargetId(id); setAddQuestionTargetType(type); }} onEditQuizSettings={(quiz) => setEditQuiz(quiz)} />
                         )}
                         
                         {/* Chapter Exams */}
@@ -651,7 +651,7 @@ export function CourseBuilder({ courseId }: { courseId: string }) {
               {unassignedLectures.length > 0 && (
                 <div className="space-y-3">
                   <h3 className="text-sm font-bold text-theme-muted tracking-wider uppercase pl-2 pt-4">Unassigned Lectures</h3>
-                  <LectureList lectures={unassignedLectures} items={items} expandedLecs={expandedLecs} toggleLec={toggleLec} load={load} setAiModalLecInfo={setAiModalLecInfo} onAddQuestion={(id: string, type: 'EXAM'|'QUIZ') => { setAddQuestionTargetId(id); setAddQuestionTargetType(type); }} />
+                  <LectureList lectures={unassignedLectures} items={items} expandedLecs={expandedLecs} toggleLec={toggleLec} load={load} setAiModalLecInfo={setAiModalLecInfo} onAddQuestion={(id: string, type: 'EXAM'|'QUIZ') => { setAddQuestionTargetId(id); setAddQuestionTargetType(type); }} onEditQuizSettings={(quiz) => setEditQuiz(quiz)} />
                 </div>
               )}
             </div>
@@ -1462,7 +1462,7 @@ function IssueCertificateModal({
   }
 }
 
-export function LectureList({ lectures, items, expandedLecs, toggleLec, load, setAiModalLecInfo, onAddQuestion }: {
+export function LectureList({ lectures, items, expandedLecs, toggleLec, load, setAiModalLecInfo, onAddQuestion, onEditQuizSettings }: {
   lectures: BuilderLecture[];
   items: Record<string, BuilderItem[]>;
   expandedLecs: Set<string>;
@@ -1470,6 +1470,7 @@ export function LectureList({ lectures, items, expandedLecs, toggleLec, load, se
   load: () => Promise<void>;
   setAiModalLecInfo: (info: { lectureId: string; title?: string; description?: string; passGrade?: number; timeLimit?: number } | null) => void;
   onAddQuestion: (id: string, type: 'EXAM' | 'QUIZ') => void;
+  onEditQuizSettings?: (quiz: any) => void;
 }) {
   return (
     <div className="space-y-3">
@@ -1502,7 +1503,8 @@ export function LectureList({ lectures, items, expandedLecs, toggleLec, load, se
                     lectureId={lec.id} 
                     initialItems={lecItems} 
                     onReordered={load}
-                    onAddQuestion={onAddQuestion} 
+                    onAddQuestion={onAddQuestion}
+                    onEditQuizSettings={onEditQuizSettings}
                   />
                 )}
                 <div className="flex flex-wrap gap-2 pt-2">

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { api } from '../lib/api';
-import { ArrowUp, ArrowDown, FileQuestion, PlayCircle, Paperclip, Trash2, Edit3 } from 'lucide-react';
+import { ArrowUp, ArrowDown, FileQuestion, PlayCircle, Paperclip, Trash2, Edit3, Settings } from 'lucide-react';
 import { Badge, Spinner } from './ui';
 import { useConfirm, ConfirmDialog } from '../hooks/useConfirm';
 
@@ -57,6 +57,7 @@ export function LectureSequenceBuilder({
   initialItems: any[];
   onReordered: () => void;
   onAddQuestion?: (id: string, type: 'EXAM'|'QUIZ') => void;
+  onEditQuizSettings?: (quiz: any) => void;
 }) {
   const [items, setItems] = useState(() => {
     // Ensure items are sorted initially
@@ -140,6 +141,15 @@ export function LectureSequenceBuilder({
           </div>
 
           <div className="shrink-0 flex items-center gap-2">
+            {item.type === 'QUIZ' && onEditQuizSettings && (
+              <button 
+                onClick={(e) => { e.stopPropagation(); onEditQuizSettings(item); }} 
+                className="p-1.5 rounded-lg text-theme-muted hover:text-emerald-400 hover:bg-emerald-500/10 transition-colors" 
+                title="Edit Quiz Settings"
+              >
+                <Settings className="w-3.5 h-3.5" />
+              </button>
+            )}
             {item.type === 'QUIZ' && onAddQuestion && (
               <button 
                 onClick={(e) => { e.stopPropagation(); onAddQuestion(item.id, 'QUIZ'); }} 
