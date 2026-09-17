@@ -61,8 +61,8 @@ export function LectureSequenceBuilder({
   onEditQuizSettings?: (quiz: any) => void;
 }) {
   const [items, setItems] = useState(() => {
-    // Ensure items are sorted initially
-    return [...initialItems].sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0));
+    // Sort by sortOrder (the canonical field saved by reorder API)
+    return [...initialItems].sort((a, b) => (a.sortOrder ?? a.orderIndex ?? 0) - (b.sortOrder ?? b.orderIndex ?? 0));
   });
 
   const reorderMutation = useMutation({
@@ -92,8 +92,10 @@ export function LectureSequenceBuilder({
     } else {
       return;
     }
-    setItems(newItems);
-    reorderMutation.mutate(newItems);
+    // Patch sortOrder on local copies so subsequent sorts remain stable
+    const withUpdatedOrder = newItems.map((item, i) => ({ ...item, sortOrder: i }));
+    setItems(withUpdatedOrder);
+    reorderMutation.mutate(withUpdatedOrder);
   }
 
   if (items.length === 0) {
