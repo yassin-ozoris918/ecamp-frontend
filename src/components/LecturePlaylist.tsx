@@ -396,7 +396,7 @@ export function LecturePlaylist({ lectureId }: { lectureId: string }) {
                     }`}>
                       {entry.title}
                     </p>
-                    {entry.duration && (
+                    {!!entry.duration && (
                       <p className="text-xs text-theme-muted mt-0.5 flex items-center gap-1">
                         <Clock className="w-3 h-3" />
                         {formatDuration(entry.duration)}
