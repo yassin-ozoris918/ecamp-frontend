@@ -51,7 +51,8 @@ export function LectureSequenceBuilder({
   lectureId, 
   initialItems, 
   onReordered,
-  onAddQuestion
+  onAddQuestion,
+  onEditQuizSettings
 }: { 
   lectureId: string; 
   initialItems: any[];
