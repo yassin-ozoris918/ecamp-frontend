@@ -10,11 +10,11 @@ type QuizResult = {
   status: 'PASSED' | 'FAILED' | 'PENDING';
   passGrade: number;
   message: string;
-  isExhausted: boolean;
-  maxAttempts: number;
-  correctAnswers: Record<string, any>;
   studentAnswers: Record<string, any>;
-  feedback?: Record<string, any>;
+  correctAnswers: Record<string, any>;
+  feedback: Record<string, { points: number | null; feedback: string | null }>;
+  earnedPoints?: number;
+  totalPoints?: number;
 };
 
 export function InteractiveQuizClient({
@@ -181,6 +181,26 @@ export function InteractiveQuizClient({
     }
   };
 
+  const handleAcceptFailureAndEndAttempts = async () => {
+    const confirmed = await confirm(
+      'Are you sure?',
+      'This will permanently consume your remaining attempts and lock this lecture item. This action cannot be undone.',
+      'destructive'
+    );
+    if (confirmed) {
+      setSubmitting(true);
+      try {
+        await api.post(`/quizzes/${quiz.id}/surrender`, { studentId: '' /* handled by backend token */ });
+        onComplete();
+      } catch (err: any) {
+        console.error(err);
+        alert(err.response?.data?.message || 'Error surrendering attempts');
+      } finally {
+        setSubmitting(false);
+      }
+    }
+  };
+
   // --- Handlers for 7 Question Types ---
   const handleSelectOption = (qId: string, idx: number) => {
     if (reviewMode) return;
@@ -313,9 +333,9 @@ export function InteractiveQuizClient({
                 </h2>
                 <div className="flex justify-center items-end gap-2 mb-4">
                   <span className={`text-6xl font-display font-black ${isPassed ? 'text-accent-400' : isPending ? 'text-amber-400' : 'text-rose-400'}`}>
-                    {result.score}
+                    {result.earnedPoints ?? result.score}
                   </span>
-                  <span className="text-2xl text-theme-muted font-bold mb-2">%</span>
+                  <span className="text-2xl text-theme-muted font-bold mb-2">/ {result.totalPoints ?? 100}</span>
                 </div>
                 <p className="text-theme-muted font-medium mb-8">
                   {isPending ? t('quiz.pendingReviewDesc') : t('quiz.passGradeWas', { grade: result.passGrade })}
@@ -325,10 +345,31 @@ export function InteractiveQuizClient({
                   <button onClick={() => setReviewMode(true)} className="btn-secondary px-8">
                     {t('quiz.reviewAnswers')}
                   </button>
-                  <button onClick={onComplete} className="btn-primary px-8">
-                    {t('common.continue')} <ArrowRight className="w-4 h-4 ml-2" />
-                  </button>
+                  {isPassed ? (
+                    <button onClick={onComplete} className="btn-primary px-8">
+                      {t('common.continue')} <ArrowRight className="w-4 h-4 ml-2" />
+                    </button>
+                  ) : quiz.isExhausted ? (
+                    <button onClick={onComplete} className="btn-primary px-8">
+                      {t('common.continue')} <ArrowRight className="w-4 h-4 ml-2" />
+                    </button>
+                  ) : (
+                    <button onClick={handleAcceptFailureAndEndAttempts} disabled={submitting} className="px-6 py-3 font-bold text-sm bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 rounded-xl transition-all">
+                      {submitting ? '...' : 'Accept Failure & End Attempts / قبول الرسوب وإنهاء المحاولات'}
+                    </button>
+                  )}
                 </div>
+
+                {(!isPassed && quiz.isExhausted) && (
+                  <div className="mt-8 p-6 rounded-2xl border-2 border-rose-500 bg-rose-500/10 text-center shadow-[0_0_30px_rgba(244,63,94,0.2)]">
+                    <p className="text-xl font-bold text-rose-400 mb-2">
+                      You have exhausted all attempts without achieving a passing grade; the administration will contact both you and your guardian to take the appropriate action.
+                    </p>
+                    <p className="text-xl font-bold text-rose-400">
+                      لقد استنفدت جميع المحاولات دون الحصول على درجة النجاح؛ ستتواصل الإدارة معك ومع ولي أمرك لاتخاذ الإجراء المناسب.
+                    </p>
+                  </div>
+                )}
              </div>
           </div>
         )}

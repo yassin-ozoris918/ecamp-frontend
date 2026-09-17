@@ -15,6 +15,7 @@ import {
   Users,
   GraduationCap,
   Pencil,
+  Settings,
 } from 'lucide-react';
 import { api } from '../lib/api';
 import { useAuth } from '../lib/authContext';
@@ -228,6 +229,9 @@ export function CourseBuilder({ courseId }: { courseId: string }) {
   const [editTitle, setEditTitle] = useState('');
   const [editDesc, setEditDesc] = useState('');
   const [activeChapterId, setActiveChapterId] = useState<string | null>(null);
+
+  const [editExam, setEditExam] = useState<Exam | null>(null);
+  const [editQuiz, setEditQuiz] = useState<any | null>(null);
 
   const [exams, setExams] = useState<Exam[]>([]);
   const [createExamOpen, setCreateExamOpen] = useState(false);
@@ -565,6 +569,12 @@ export function CourseBuilder({ courseId }: { courseId: string }) {
                                     </div>
                                     <div className="flex items-center gap-2">
                                        <button 
+                                         onClick={() => setEditExam(exam)}
+                                         className="p-2 hover:bg-emerald-500/10 rounded-md transition-colors group" title="Edit Exam Settings"
+                                       >
+                                         <Settings className="w-4 h-4 text-theme-muted group-hover:text-emerald-400" />
+                                       </button>
+                                       <button 
                                          onClick={async () => {
                                            const ok = await confirm('Delete Exam', 'Are you sure you want to delete this exam?');
                                            if (!ok) return;
@@ -678,6 +688,13 @@ export function CourseBuilder({ courseId }: { courseId: string }) {
                     </div>
                     <div className="flex items-center gap-2">
                        <button 
+                         onClick={() => setEditExam(exam)}
+                         className="p-2 rounded-lg text-theme-muted hover:text-emerald-400 hover:bg-emerald-500/10 transition-colors"
+                         title="Edit Exam Settings"
+                       >
+                         <Settings className="w-4 h-4" />
+                       </button>
+                       <button 
                          onClick={async () => {
                            const ok = await confirm('Delete Exam', 'Are you sure you want to delete this exam?');
                            if (!ok) return;
@@ -778,6 +795,20 @@ export function CourseBuilder({ courseId }: { courseId: string }) {
           setActiveAiExamId(examId);
           fileInputRef.current?.click();
         }}
+      />
+
+      <EditExamSettingsModal
+        open={!!editExam}
+        exam={editExam}
+        onClose={() => setEditExam(null)}
+        onUpdated={() => { setEditExam(null); load(); }}
+      />
+      
+      <EditQuizSettingsModal
+        open={!!editQuiz}
+        quiz={editQuiz}
+        onClose={() => setEditQuiz(null)}
+        onUpdated={() => { setEditQuiz(null); load(); }}
       />
 
       {addQuestionTargetId && (
@@ -951,6 +982,7 @@ function AddItemModal({
   const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'processing' | 'done'>('idle');
   const [passingScore, setPassingScore] = useState('70');
   const [timeLimit, setTimeLimit] = useState('');
+  const [maxAttempts, setMaxAttempts] = useState('3');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -984,6 +1016,7 @@ function AddItemModal({
         description: description.trim() || null,
         timeLimit: type === 'QUIZ' && timeLimit ? Number(timeLimit) : undefined,
         passGrade: type === 'QUIZ' && passingScore ? Number(passingScore) : undefined,
+        maxAttempts: type === 'QUIZ' && maxAttempts ? Number(maxAttempts) : undefined,
         sortOrder,
       });
 
@@ -1101,6 +1134,10 @@ function AddItemModal({
             <div>
               <label className="label">Time Limit (min)</label>
               <input type="number" min={1} className="input" value={timeLimit} onChange={(e) => setTimeLimit(e.target.value)} placeholder="Optional" />
+            </div>
+            <div>
+              <label className="label">Max Attempts</label>
+              <input type="number" min={1} className="input" value={maxAttempts} onChange={(e) => setMaxAttempts(e.target.value)} placeholder="e.g. 3" />
             </div>
           </div>
         )}
@@ -1532,6 +1569,144 @@ export function CreateChapterModal({ open, courseId, sortOrder, onClose, onCreat
         <div className="flex justify-end gap-2">
           <button type="button" onClick={onClose} className="btn-ghost">Cancel</button>
           <button type="submit" disabled={busy} className="btn-primary">{busy ? 'Adding…' : 'Add Chapter'}</button>
+        </div>
+      </form>
+    </Modal>
+  );
+}
+
+function EditExamSettingsModal({
+  open,
+  exam,
+  onClose,
+  onUpdated
+}: {
+  open: boolean;
+  exam: Exam | null;
+  onClose: () => void;
+  onUpdated: () => void;
+}) {
+  const [passingScore, setPassingScore] = useState('');
+  const [timeLimit, setTimeLimit] = useState('');
+  const [maxAttempts, setMaxAttempts] = useState('');
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    if (exam) {
+      setPassingScore(exam.passGrade?.toString() || '70');
+      setTimeLimit(exam.timeLimit?.toString() || '');
+      setMaxAttempts(exam.maxAttempts?.toString() || '1');
+    }
+  }, [exam]);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!exam) return;
+    setBusy(true);
+    try {
+      await api.put(`/admin/exams/${exam.id}`, {
+        passingScore: Number(passingScore),
+        timeLimit: timeLimit ? Number(timeLimit) : null,
+        maxAttempts: Number(maxAttempts)
+      });
+      onUpdated();
+      onClose();
+    } catch(err) {
+      console.error(err);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Modal open={open} onClose={onClose} title="Edit Exam Settings">
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="label">Passing Score (%)</label>
+            <input type="number" min={0} max={100} className="input" value={passingScore} onChange={(e) => setPassingScore(e.target.value)} required />
+          </div>
+          <div>
+            <label className="label">Time Limit (mins)</label>
+            <input type="number" min={1} className="input" value={timeLimit} onChange={(e) => setTimeLimit(e.target.value)} placeholder="Optional" />
+          </div>
+        </div>
+        <div>
+          <label className="label">Max Attempts Allowed</label>
+          <input type="number" min={1} className="input" value={maxAttempts} onChange={(e) => setMaxAttempts(e.target.value)} required />
+        </div>
+        <div className="flex justify-end gap-2">
+          <button type="button" onClick={onClose} className="btn-ghost" disabled={busy}>Cancel</button>
+          <button type="submit" className="btn-primary" disabled={busy}>{busy ? 'Saving...' : 'Save Settings'}</button>
+        </div>
+      </form>
+    </Modal>
+  );
+}
+
+function EditQuizSettingsModal({
+  open,
+  quiz,
+  onClose,
+  onUpdated
+}: {
+  open: boolean;
+  quiz: any | null;
+  onClose: () => void;
+  onUpdated: () => void;
+}) {
+  const [passingScore, setPassingScore] = useState('');
+  const [timeLimit, setTimeLimit] = useState('');
+  const [maxAttempts, setMaxAttempts] = useState('');
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    if (quiz) {
+      setPassingScore(quiz.passGrade?.toString() || '70');
+      setTimeLimit(quiz.timeLimit?.toString() || '');
+      setMaxAttempts(quiz.maxAttempts?.toString() || '1');
+    }
+  }, [quiz]);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!quiz) return;
+    setBusy(true);
+    try {
+      await api.put(`/quizzes/${quiz.id}`, {
+        passGrade: Number(passingScore),
+        timeLimit: timeLimit ? Number(timeLimit) : null,
+        maxAttempts: Number(maxAttempts)
+      });
+      onUpdated();
+      onClose();
+    } catch(err) {
+      console.error(err);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Modal open={open} onClose={onClose} title="Edit Quiz Settings">
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="label">Passing Score (%)</label>
+            <input type="number" min={0} max={100} className="input" value={passingScore} onChange={(e) => setPassingScore(e.target.value)} required />
+          </div>
+          <div>
+            <label className="label">Time Limit (mins)</label>
+            <input type="number" min={1} className="input" value={timeLimit} onChange={(e) => setTimeLimit(e.target.value)} placeholder="Optional" />
+          </div>
+        </div>
+        <div>
+          <label className="label">Max Attempts Allowed</label>
+          <input type="number" min={1} className="input" value={maxAttempts} onChange={(e) => setMaxAttempts(e.target.value)} required />
+        </div>
+        <div className="flex justify-end gap-2">
+          <button type="button" onClick={onClose} className="btn-ghost" disabled={busy}>Cancel</button>
+          <button type="submit" className="btn-primary" disabled={busy}>{busy ? 'Saving...' : 'Save Settings'}</button>
         </div>
       </form>
     </Modal>
