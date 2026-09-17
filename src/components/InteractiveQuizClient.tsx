@@ -381,7 +381,7 @@ export function InteractiveQuizClient({
                     </div>
                   )}
 
-                  {['ESSAY', 'SHORT_ANSWER'].includes(q.type) && (
+                   {['ESSAY', 'SHORT_ANSWER'].includes(q.type) && (
                     <div className="space-y-3 pl-12">
                        <div className="p-4 rounded-xl border border-neutral-800 bg-neutral-950 text-theme-text opacity-70">
                          <strong>Your Answer:</strong><br/>
@@ -389,10 +389,42 @@ export function InteractiveQuizClient({
                        </div>
                        {result.status !== 'PENDING' && (
                          <div className="p-4 rounded-xl border border-cyan-500/30 bg-cyan-500/5 text-cyan-200">
-                           <strong>Points Awarded:</strong> {result.feedback?.[q.id]?.points || 0} / {q.points}<br/>
+                           <strong>Points Awarded:</strong> {result.feedback?.[q.id]?.points ?? 0} / {q.points}<br/>
                            {result.feedback?.[q.id]?.feedback && <p className="mt-2 text-sm italic">{result.feedback[q.id].feedback}</p>}
                          </div>
                        )}
+                    </div>
+                  )}
+
+                  {q.type === 'MATCHING' && (
+                    <div className="space-y-3 pl-12">
+                      {(q.matchOptions || []).map((pair: any, pIdx: number) => {
+                        const studentRight = stuAns?.matchAnswer?.find((m: any) => m.left === pair.left)?.right;
+                        const isCorrect = studentRight === pair.right;
+                        return (
+                          <div key={pIdx} className={`p-4 rounded-xl border flex flex-col sm:flex-row sm:items-center gap-3 ${isCorrect ? 'border-accent-500/40 bg-accent-500/5' : 'border-rose-500/40 bg-rose-500/5'}`}>
+                            <span className="flex-1 font-medium text-white">{pair.left}</span>
+                            <span className="text-theme-muted text-sm hidden sm:block">→</span>
+                            <div className="flex flex-col gap-1 flex-1">
+                              {studentRight ? (
+                                <span className={`text-sm font-semibold ${isCorrect ? 'text-accent-400' : 'text-rose-400'}`}>
+                                  {isCorrect ? '✓' : '✗'} {studentRight}
+                                </span>
+                              ) : (
+                                <span className="text-sm text-theme-muted italic">No answer</span>
+                              )}
+                              {!isCorrect && (
+                                <span className="text-xs text-accent-400 border border-dashed border-accent-500/40 rounded px-2 py-0.5 w-fit">
+                                  Correct: {pair.right}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                      <div className="p-3 rounded-xl border border-cyan-500/30 bg-cyan-500/5 text-cyan-200 text-sm">
+                        <strong>Points Awarded:</strong> {result.feedback?.[q.id]?.points ?? 0} / {q.points}
+                      </div>
                     </div>
                   )}
                 </div>
