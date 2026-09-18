@@ -458,6 +458,8 @@ export interface StudentQuizAttemptInfo {
   status: string;
   passGrade: number | null;
   submittedAt: string | null;
+  earnedPoints: number;
+  totalPoints: number;
 }
 
 export interface StudentExamAttemptInfo {
@@ -467,6 +469,8 @@ export interface StudentExamAttemptInfo {
   status: string;
   passGrade: number | null;
   submittedAt: string | null;
+  earnedPoints: number;
+  totalPoints: number;
 }
 
 export interface StudentProgressFull {

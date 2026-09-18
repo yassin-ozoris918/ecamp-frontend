@@ -250,7 +250,9 @@ export function Student360Workspace() {
                       >
                         <span className="text-theme-text truncate flex-1">{attempt.quizTitle || 'Quiz'}</span>
                         <Badge variant={attempt.status === 'PASSED' ? 'success' : attempt.status === 'FAILED' ? 'error' : 'default'}>
-                          {attempt.score}% • {attempt.status}
+                          {attempt.earnedPoints != null && attempt.totalPoints != null && attempt.totalPoints > 0
+                            ? `${attempt.earnedPoints}/${attempt.totalPoints}`
+                            : `${attempt.score}%`} • {attempt.status}
                         </Badge>
                       </div>
                     ))}
