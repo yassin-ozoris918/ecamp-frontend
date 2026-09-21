@@ -1,10 +1,11 @@
 import toast from 'react-hot-toast';
 import { useState, useEffect, useMemo } from 'react';
-import { Users, User, ShieldAlert, BookOpen, Search, X, Smartphone } from 'lucide-react';
+import { Users, User, ShieldAlert, BookOpen, Search, X, Smartphone, Eye } from 'lucide-react';
 import { client } from '../lib/api';
 import { Badge, Skeleton, EmptyState, Button, SectionHeader } from './ui';
 import { useConfirm, ConfirmDialog } from '../hooks/useConfirm';
 import { useDebounce } from '../hooks/useDebounce';
+import { QuizAttemptReviewModal } from './QuizAttemptReviewModal';
 
 export function Student360Workspace() {
   const [students, setStudents] = useState<any[]>([]);
@@ -15,6 +16,7 @@ export function Student360Workspace() {
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
   const [profileData, setProfileData] = useState<any | null>(null);
   const [profileLoading, setProfileLoading] = useState(false);
+  const [reviewAttemptId, setReviewAttemptId] = useState<string | null>(null);
   const { confirm, state: confirmState, handleConfirm, handleCancel } = useConfirm();
 
   const fetchStudents = async () => {
@@ -246,14 +248,25 @@ export function Student360Workspace() {
                     {profileData.quizAttempts.slice(0, 10).map((attempt: any, idx: number) => (
                       <div
                         key={idx}
-                        className="flex items-center justify-between text-sm p-2 rounded-lg bg-white/[0.02]"
+                        className="flex items-center justify-between text-sm p-2 rounded-lg bg-white/[0.02] hover:bg-white/[0.04] transition-colors"
                       >
                         <span className="text-theme-text truncate flex-1">{attempt.quizTitle || 'Quiz'}</span>
-                        <Badge variant={attempt.status === 'PASSED' ? 'success' : attempt.status === 'FAILED' ? 'error' : 'default'}>
-                          {attempt.earnedPoints != null && attempt.totalPoints != null && attempt.totalPoints > 0
-                            ? `${attempt.earnedPoints}/${attempt.totalPoints}`
-                            : `${attempt.score}%`} • {attempt.status}
-                        </Badge>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <Badge variant={attempt.status === 'PASSED' ? 'success' : attempt.status === 'FAILED' ? 'error' : 'default'}>
+                            {attempt.earnedPoints != null && attempt.totalPoints != null && attempt.totalPoints > 0
+                              ? `${attempt.earnedPoints}/${attempt.totalPoints}`
+                              : `${attempt.score}%`} • {attempt.status}
+                          </Badge>
+                          {attempt.attemptId && (
+                            <button
+                              onClick={() => setReviewAttemptId(attempt.attemptId)}
+                              className="p-1 rounded hover:bg-accent-500/10 text-theme-muted hover:text-accent-400 transition-colors"
+                              title="Review attempt"
+                            >
+                              <Eye className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -272,6 +285,12 @@ export function Student360Workspace() {
         onConfirm={handleConfirm}
         onCancel={handleCancel}
       />
+      {reviewAttemptId && (
+        <QuizAttemptReviewModal
+          attemptId={reviewAttemptId}
+          onClose={() => setReviewAttemptId(null)}
+        />
+      )}
     </div>
   );
 }

@@ -53,6 +53,7 @@ const AcademicRiskDashboard = lazyImport(() => import('./components/AcademicRisk
 const NotificationLogViewer = lazyImport(() => import('./components/NotificationLogViewer').then(m => ({ default: m.NotificationLogViewer })));
 const Student360Workspace = lazyImport(() => import('./components/Student360Workspace').then(m => ({ default: m.Student360Workspace })));
 const SystemAuditViewer = lazyImport(() => import('./components/SystemAuditViewer').then(m => ({ default: m.SystemAuditViewer })));
+const QuizAttemptsManager = lazyImport(() => import('./components/QuizAttemptsManager').then(m => ({ default: m.QuizAttemptsManager })));
 
 
 import { ThemeProvider } from './lib/ThemeProvider';
@@ -243,6 +244,7 @@ function RoleRoutes({ role }: { role: string }) {
           { pattern: '/instructor', element: () => <InstructorDashboard /> },
           { pattern: '/instructor/courses', element: () => <InstructorCourses /> },
           { pattern: '/instructor/grading', element: () => <GradingQueue /> },
+          { pattern: '/instructor/quiz-review', element: () => <QuizAttemptsManager /> },
           { pattern: '/instructor/course/:courseId', element: (p) => <CourseBuilder courseId={p.courseId} /> },
           { pattern: '/profile', element: () => <ProfileScreen /> },
           { pattern: '/contact', element: () => <ContactScreen /> },
@@ -266,9 +268,11 @@ function RoleRoutes({ role }: { role: string }) {
         { pattern: '/admin/audit-logs', element: () => <SystemAuditViewer /> },
         { pattern: '/admin/profile-requests', element: () => <AdminProfileRequests /> },
         { pattern: '/admin/pending-users', element: () => <AdminPendingUsers /> },
+        { pattern: '/admin/quiz-review', element: () => <QuizAttemptsManager /> },
         { pattern: '/instructor', element: () => <InstructorDashboard /> },
         { pattern: '/instructor/courses', element: () => <InstructorCourses /> },
         { pattern: '/instructor/grading', element: () => <GradingQueue /> },
+        { pattern: '/instructor/quiz-review', element: () => <QuizAttemptsManager /> },
         { pattern: '/instructor/course/:courseId', element: (p) => <CourseBuilder courseId={p.courseId} /> },
         { pattern: '/profile', element: () => <ProfileScreen /> },
         { pattern: '/contact', element: () => <ContactScreen /> },

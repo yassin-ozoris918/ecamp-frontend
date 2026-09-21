@@ -452,6 +452,7 @@ export interface StudentLectureInfo {
 }
 
 export interface StudentQuizAttemptInfo {
+  attemptId: string;
   quizId: string;
   quizTitle: string | null;
   score: number;
@@ -638,4 +639,79 @@ export interface LocalQuestion {
   points: number;
   options: string[];
   correctAnswerIndex: number;
+}
+
+// ─── Instructor / Admin Quiz Review Types ─────────────────────────────────
+
+export interface QuizAttemptListItem {
+  attemptId: string;
+  studentId: string;
+  studentName: string;
+  studentEmail: string;
+  studentProfilePicture: string | null;
+  attemptNumber: number;
+  score: number;
+  earnedPoints: number;
+  totalPoints: number;
+  status: AttemptStatusType;
+  submittedAt: string | null;
+  startedAt: string;
+}
+
+export interface QuizAttemptListResponse {
+  items: QuizAttemptListItem[];
+  total: number;
+  skip: number;
+  take: number;
+}
+
+export interface QuizReviewQuestion {
+  questionNumber: number;
+  questionId: string;
+  questionText: string;
+  questionType: QuestionType;
+  maxPoints: number;
+  earnedPoints: number | null;
+  correctnessStatus: 'CORRECT' | 'INCORRECT' | 'PARTIAL' | 'PENDING' | 'READ_ONLY';
+  responseId: string;
+  studentAnswer: {
+    selectedOptionIndex: number | null;
+    textResponse: string | null;
+    matchAnswer: { left: string; right: string }[] | null;
+    orderAnswer: string[];
+  };
+  // Instructor-only fields (correct answers)
+  correctAnswer: {
+    correctOptionIndex: number;
+    correctOrder: string[];
+    matchOptions: { left: string; right: string }[] | null;
+    referenceAnswer: string | null;
+    options: string[];  // label array for MCQ/TRUE_FALSE
+  };
+  aiScoreGuess: number | null;
+  aiConfidenceScore: number | null;
+  evaluationNote: string | null;
+  instructorOverrideScore: number | null;
+}
+
+export interface QuizAttemptReview {
+  attemptId: string;
+  quizId: string;
+  quizTitle: string;
+  student: {
+    id: string;
+    fullName: string;
+    email: string;
+    profilePictureUrl: string | null;
+  };
+  attemptNumber: number;
+  status: AttemptStatusType;
+  score: number;
+  earnedPoints: number;
+  totalPoints: number;
+  percentage: number;
+  submittedAt: string | null;
+  startedAt: string;
+  passGrade: number;
+  questions: QuizReviewQuestion[];
 }

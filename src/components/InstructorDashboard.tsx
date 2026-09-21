@@ -17,6 +17,7 @@ import {
   Upload,
   FileText,
   X,
+  Shield,
 } from 'lucide-react';
 import { api } from '../lib/api';
 import { useAuth } from '../lib/authContext';
@@ -106,6 +107,23 @@ export function InstructorDashboard() {
           <ChevronRight className="w-5 h-5 text-theme-muted" />
         </Link>
       )}
+
+      {/* Quiz Review Access */}
+      <Link
+        to="/instructor/quiz-review"
+        className="glass rounded-2xl p-5 flex items-center gap-4 border-accent-500/20 hover:border-accent-500/30 transition-colors mb-8"
+      >
+        <div className="w-12 h-12 rounded-xl bg-accent-500/10 flex items-center justify-center text-accent-700 dark:text-accent-300">
+          <Shield className="w-6 h-6" />
+        </div>
+        <div className="flex-1">
+          <p className="font-display font-bold text-theme-text">Quiz Answer Review</p>
+          <p className="text-sm text-theme-muted">
+            Review student quiz submissions and override subjective grades
+          </p>
+        </div>
+        <ChevronRight className="w-5 h-5 text-theme-muted" />
+      </Link>
 
       {/* Courses list */}
       <div>

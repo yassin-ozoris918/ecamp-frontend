@@ -45,6 +45,7 @@ const NAV: Record<UserRole, NavItem[]> = {
     { to: '/instructor', label: 'nav.dashboard', icon: <LayoutGrid className="w-4 h-4" /> },
     { to: '/instructor/courses', label: 'nav.courses', icon: <BookOpen className="w-4 h-4" /> },
     { to: '/instructor/grading', label: 'nav.gradingQueue', icon: <ClipboardList className="w-4 h-4" /> },
+    { to: '/instructor/quiz-review', label: 'Quiz Review', icon: <Shield className="w-4 h-4" /> },
     // { to: '/instructors', label: 'nav.instructors', icon: <GraduationCap className="w-4 h-4" /> }, // Temporarily disabled
     { to: '/contact', label: 'nav.contact', icon: <MessageCircle className="w-4 h-4" /> },
   ],
@@ -53,6 +54,7 @@ const NAV: Record<UserRole, NavItem[]> = {
     { to: '/admin/users', label: 'nav.users', icon: <Users className="w-4 h-4" /> },
     { to: '/admin/courses', label: 'nav.courses', icon: <BookOpen className="w-4 h-4" /> },
     { to: '/admin/codes', label: 'nav.activationCodes', icon: <KeyRound className="w-4 h-4" /> },
+    { to: '/admin/quiz-review', label: 'Quiz Review', icon: <Shield className="w-4 h-4" /> },
     // { to: '/instructors', label: 'nav.instructors', icon: <GraduationCap className="w-4 h-4" /> }, // Temporarily disabled
     { to: '/contact', label: 'nav.contact', icon: <MessageCircle className="w-4 h-4" /> },
   ],

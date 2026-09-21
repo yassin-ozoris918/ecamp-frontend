@@ -149,6 +149,14 @@ export function AdminDashboard() {
           color="text-gold-700 dark:text-gold-300"
           bg="bg-gold-500/10"
         />
+        <QuickActionCard
+          icon={<Shield className="w-5 h-5" />}
+          title="Quiz Answer Review"
+          description="Review student quiz submissions and override subjective grades."
+          to="#/admin/quiz-review"
+          color="text-secondary-700 dark:text-secondary-300"
+          bg="bg-secondary-500/10"
+        />
 
         <QuickActionCard
           icon={<ShieldAlert className="w-5 h-5" />}
