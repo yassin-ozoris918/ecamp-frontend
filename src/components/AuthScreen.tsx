@@ -7,6 +7,7 @@ import { ThemeToggle } from './common/ThemeToggle';
 import { LanguageToggle } from './common/LanguageToggle';
 import { useTranslation } from 'react-i18next';
 import { MaintenanceNotice } from './common/MaintenanceNotice';
+import { AcademicDropdowns } from './AcademicDropdowns';
 import { 
   HighSchoolSystem, 
   StudyMode, 
@@ -54,10 +55,28 @@ export function AuthScreen() {
   const [highSchoolGrade, setHighSchoolGrade] = useState<HighSchoolGrade | ''>('');
   const [traditionalBranch, setTraditionalBranch] = useState<TraditionalBranch | ''>('');
   const [baccalaureatePath, setBaccalaureatePath] = useState<BaccalaureatePath | ''>('');
-  const [university, setUniversity] = useState('');
-  const [faculty, setFaculty] = useState('');
-  const [department, setDepartment] = useState('');
-  const [academicYear, setAcademicYear] = useState('');
+  const [universityId, setUniversityId] = useState<string>();
+  const [facultyId, setFacultyId] = useState<string>();
+  const [departmentId, setDepartmentId] = useState<string>();
+  const [programId, setProgramId] = useState<string>();
+  
+  const [otherUniversityName, setOtherUniversityName] = useState<string>();
+  const [otherFacultyName, setOtherFacultyName] = useState<string>();
+  const [otherDepartmentName, setOtherDepartmentName] = useState<string>();
+  const [otherProgramName, setOtherProgramName] = useState<string>();
+
+  const handleAcademicChange = (field: string, value: string | undefined) => {
+    switch (field) {
+      case 'universityId': setUniversityId(value); break;
+      case 'facultyId': setFacultyId(value); break;
+      case 'departmentId': setDepartmentId(value); break;
+      case 'programId': setProgramId(value); break;
+      case 'otherUniversityName': setOtherUniversityName(value); break;
+      case 'otherFacultyName': setOtherFacultyName(value); break;
+      case 'otherDepartmentName': setOtherDepartmentName(value); break;
+      case 'otherProgramName': setOtherProgramName(value); break;
+    }
+  };
 
   const errMsg = localError ?? error?.message ?? null;
 
@@ -164,10 +183,14 @@ export function AuthScreen() {
           highSchoolGrade: highSchoolGrade || undefined,
           traditionalBranch: traditionalBranch || undefined,
           baccalaureatePath: baccalaureatePath || undefined,
-          university: university.trim() || undefined,
-          faculty: faculty.trim() || undefined,
-          department: department.trim() || undefined,
-          academicYear: academicYear.trim() || undefined,
+          universityId,
+          facultyId,
+          departmentId,
+          programId,
+          otherUniversityName: otherUniversityName?.trim() || undefined,
+          otherFacultyName: otherFacultyName?.trim() || undefined,
+          otherDepartmentName: otherDepartmentName?.trim() || undefined,
+          otherProgramName: otherProgramName?.trim() || undefined,
           phoneNumber: phoneNumber.trim(),
           parentPhoneNumber: educationLevel === 'HIGH_SCHOOL' ? (parentPhoneNumber.trim() || undefined) : undefined,
           profilePictureUrl: profilePictureUrl || undefined,
@@ -463,27 +486,18 @@ export function AuthScreen() {
                 {educationLevel === 'UNIVERSITY' && (
                   <div className="space-y-4 p-4 border border-theme-border rounded-xl bg-theme-bg/50">
                     <h3 className="font-semibold text-theme-text">{t('auth.academicDetails', 'Academic Details')}</h3>
-                    
-                    <div>
-                      <label className="label">{t('auth.universityName', 'University Name')}</label>
-                      <input type="text" className="input" value={university} onChange={(e) => setUniversity(e.target.value)} disabled={busy} placeholder={t('auth.universityPlaceholder', 'e.g. Cairo University')} />
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div>
-                        <label className="label">{t('auth.faculty', 'Faculty')}</label>
-                        <input type="text" className="input" value={faculty} onChange={(e) => setFaculty(e.target.value)} disabled={busy} placeholder={t('auth.facultyPlaceholder', 'e.g. Engineering')} />
-                      </div>
-                      <div>
-                        <label className="label">{t('auth.department', 'Department')}</label>
-                        <input type="text" className="input" value={department} onChange={(e) => setDepartment(e.target.value)} disabled={busy} placeholder={t('auth.departmentPlaceholder', 'e.g. Computer')} />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="label">{t('auth.academicYear', 'Academic Year')}</label>
-                      <input type="text" className="input" value={academicYear} onChange={(e) => setAcademicYear(e.target.value)} disabled={busy} placeholder={t('auth.academicYearPlaceholder', 'e.g. 2026/2027')} />
-                    </div>
+                    <AcademicDropdowns
+                      universityId={universityId}
+                      facultyId={facultyId}
+                      departmentId={departmentId}
+                      programId={programId}
+                      otherUniversityName={otherUniversityName}
+                      otherFacultyName={otherFacultyName}
+                      otherDepartmentName={otherDepartmentName}
+                      otherProgramName={otherProgramName}
+                      onChange={handleAcademicChange}
+                      disabled={busy}
+                    />
                   </div>
                 )}
 

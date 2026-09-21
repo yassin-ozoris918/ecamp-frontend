@@ -20,10 +20,14 @@ interface RegisterInput {
   highSchoolGrade?: string;
   traditionalBranch?: string;
   baccalaureatePath?: string;
-  university?: string;
-  faculty?: string;
-  department?: string;
-  academicYear?: string;
+  universityId?: string;
+  facultyId?: string;
+  departmentId?: string;
+  programId?: string;
+  otherUniversityName?: string;
+  otherFacultyName?: string;
+  otherDepartmentName?: string;
+  otherProgramName?: string;
 }
 
 export function getInitialRole(): UserRole {
