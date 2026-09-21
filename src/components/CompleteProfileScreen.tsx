@@ -11,6 +11,7 @@ import {
   BaccalaureatePath 
 } from '../lib/types';
 import { AlertCircle, Save } from 'lucide-react';
+import { AcademicDropdowns } from './AcademicDropdowns';
 
 export function CompleteProfileScreen() {
   const { profile } = useAuth();
@@ -25,10 +26,14 @@ export function CompleteProfileScreen() {
   const [traditionalBranch, setTraditionalBranch] = useState<TraditionalBranch | ''>('');
   const [baccalaureatePath, setBaccalaureatePath] = useState<BaccalaureatePath | ''>('');
   
-  const [university, setUniversity] = useState('');
-  const [faculty, setFaculty] = useState('');
-  const [department, setDepartment] = useState('');
-  const [academicYear, setAcademicYear] = useState('');
+  const [universityId, setUniversityId] = useState<string | null>(null);
+  const [facultyId, setFacultyId] = useState<string | null>(null);
+  const [departmentId, setDepartmentId] = useState<string | null>(null);
+  const [programId, setProgramId] = useState<string | null>(null);
+  const [otherUniversityName, setOtherUniversityName] = useState<string | null>(null);
+  const [otherFacultyName, setOtherFacultyName] = useState<string | null>(null);
+  const [otherDepartmentName, setOtherDepartmentName] = useState<string | null>(null);
+  const [otherProgramName, setOtherProgramName] = useState<string | null>(null);
 
   const educationLevel = profile?.educationLevel || profile?.education_level;
 
@@ -40,10 +45,14 @@ export function CompleteProfileScreen() {
       setHighSchoolGrade(profile.highSchoolGrade || '');
       setTraditionalBranch(profile.traditionalBranch || '');
       setBaccalaureatePath(profile.baccalaureatePath || '');
-      setUniversity(profile.university || '');
-      setFaculty(profile.faculty || '');
-      setDepartment(profile.department || '');
-      setAcademicYear(profile.academicYear || '');
+      setUniversityId(profile.universityId || null);
+      setFacultyId(profile.facultyId || null);
+      setDepartmentId(profile.departmentId || null);
+      setProgramId(profile.programId || null);
+      setOtherUniversityName(profile.otherUniversityName || null);
+      setOtherFacultyName(profile.otherFacultyName || null);
+      setOtherDepartmentName(profile.otherDepartmentName || null);
+      setOtherProgramName(profile.otherProgramName || null);
     }
   }, [profile]);
 
@@ -65,6 +74,11 @@ export function CompleteProfileScreen() {
         setError(t('auth.errors.missingPath', 'Please select a path.'));
         return;
       }
+    } else if (educationLevel === 'UNIVERSITY') {
+      if (!universityId && !otherUniversityName) {
+        setError(t('auth.errors.missingUniversity', 'Please select or enter a university.'));
+        return;
+      }
     }
 
     setBusy(true);
@@ -76,10 +90,14 @@ export function CompleteProfileScreen() {
         highSchoolGrade: highSchoolGrade || null,
         traditionalBranch: traditionalBranch || null,
         baccalaureatePath: baccalaureatePath || null,
-        university: university || null,
-        faculty: faculty || null,
-        department: department || null,
-        academicYear: academicYear || null,
+        universityId,
+        facultyId,
+        departmentId,
+        programId,
+        otherUniversityName,
+        otherFacultyName,
+        otherDepartmentName,
+        otherProgramName,
       };
 
       const { data } = await api.patch('/users/profile', payload);
@@ -96,10 +114,14 @@ export function CompleteProfileScreen() {
           highSchoolGrade: data.highSchoolGrade,
           traditionalBranch: data.traditionalBranch,
           baccalaureatePath: data.baccalaureatePath,
-          university: data.university,
-          faculty: data.faculty,
-          department: data.department,
-          academicYear: data.academicYear,
+          universityId: data.universityId,
+          facultyId: data.facultyId,
+          departmentId: data.departmentId,
+          programId: data.programId,
+          otherUniversityName: data.otherUniversityName,
+          otherFacultyName: data.otherFacultyName,
+          otherDepartmentName: data.otherDepartmentName,
+          otherProgramName: data.otherProgramName,
           isProfileComplete: true
         };
         localStorage.setItem('user', JSON.stringify(updated));
@@ -207,26 +229,26 @@ export function CompleteProfileScreen() {
 
         {educationLevel === 'UNIVERSITY' && (
           <div className="space-y-5 p-5 border border-theme-border rounded-xl bg-theme-bg/50">
-            <div>
-              <label className="label font-medium">{t('auth.universityName', 'University Name')}</label>
-              <input type="text" className="input" value={university} onChange={(e) => setUniversity(e.target.value)} disabled={busy} placeholder={t('auth.universityPlaceholder', 'e.g. Cairo University')} />
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="label font-medium">{t('auth.faculty', 'Faculty')}</label>
-                <input type="text" className="input" value={faculty} onChange={(e) => setFaculty(e.target.value)} disabled={busy} placeholder={t('auth.facultyPlaceholder', 'e.g. Engineering')} />
-              </div>
-              <div>
-                <label className="label font-medium">{t('auth.department', 'Department')}</label>
-                <input type="text" className="input" value={department} onChange={(e) => setDepartment(e.target.value)} disabled={busy} placeholder={t('auth.departmentPlaceholder', 'e.g. Computer')} />
-              </div>
-            </div>
-
-            <div>
-              <label className="label font-medium">{t('auth.academicYear', 'Academic Year')}</label>
-              <input type="text" className="input" value={academicYear} onChange={(e) => setAcademicYear(e.target.value)} disabled={busy} placeholder={t('auth.academicYearPlaceholder', 'e.g. 2026/2027')} />
-            </div>
+            <AcademicDropdowns
+              universityId={universityId}
+              facultyId={facultyId}
+              departmentId={departmentId}
+              programId={programId}
+              otherUniversityName={otherUniversityName}
+              otherFacultyName={otherFacultyName}
+              otherDepartmentName={otherDepartmentName}
+              otherProgramName={otherProgramName}
+              onChange={(data) => {
+                setUniversityId(data.universityId);
+                setFacultyId(data.facultyId);
+                setDepartmentId(data.departmentId);
+                setProgramId(data.programId);
+                setOtherUniversityName(data.otherUniversityName);
+                setOtherFacultyName(data.otherFacultyName);
+                setOtherDepartmentName(data.otherDepartmentName);
+                setOtherProgramName(data.otherProgramName);
+              }}
+            />
           </div>
         )}
 

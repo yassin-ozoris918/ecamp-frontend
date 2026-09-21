@@ -5,6 +5,7 @@ import { User, Lock, Camera, ShieldAlert, Edit2, GraduationCap, Save } from 'luc
 import type { HighSchoolSystem, StudyMode, StudyLanguage, HighSchoolGrade, TraditionalBranch, BaccalaureatePath } from '../lib/types';
 import { Spinner, Badge } from './ui';
 import { Modal } from './Modal';
+import { AcademicDropdowns } from './AcademicDropdowns';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 
@@ -31,10 +32,14 @@ export function ProfileScreen() {
   const [highSchoolGrade, setHighSchoolGrade] = useState<HighSchoolGrade | ''>('');
   const [traditionalBranch, setTraditionalBranch] = useState<TraditionalBranch | ''>('');
   const [baccalaureatePath, setBaccalaureatePath] = useState<BaccalaureatePath | ''>('');
-  const [university, setUniversity] = useState('');
-  const [faculty, setFaculty] = useState('');
-  const [department, setDepartment] = useState('');
-  const [academicYear, setAcademicYear] = useState('');
+  const [universityId, setUniversityId] = useState<string | null>(null);
+  const [facultyId, setFacultyId] = useState<string | null>(null);
+  const [departmentId, setDepartmentId] = useState<string | null>(null);
+  const [programId, setProgramId] = useState<string | null>(null);
+  const [otherUniversityName, setOtherUniversityName] = useState<string | null>(null);
+  const [otherFacultyName, setOtherFacultyName] = useState<string | null>(null);
+  const [otherDepartmentName, setOtherDepartmentName] = useState<string | null>(null);
+  const [otherProgramName, setOtherProgramName] = useState<string | null>(null);
   const [academicLoading, setAcademicLoading] = useState(false);
   const [academicError, setAcademicError] = useState<string | null>(null);
   const [academicSuccess, setAcademicSuccess] = useState(false);
@@ -51,10 +56,14 @@ export function ProfileScreen() {
       setHighSchoolGrade(profile.highSchoolGrade || '');
       setTraditionalBranch(profile.traditionalBranch || '');
       setBaccalaureatePath(profile.baccalaureatePath || '');
-      setUniversity(profile.university || '');
-      setFaculty(profile.faculty || '');
-      setDepartment(profile.department || '');
-      setAcademicYear(profile.academicYear || '');
+      setUniversityId(profile.universityId || null);
+      setFacultyId(profile.facultyId || null);
+      setDepartmentId(profile.departmentId || null);
+      setProgramId(profile.programId || null);
+      setOtherUniversityName(profile.otherUniversityName || null);
+      setOtherFacultyName(profile.otherFacultyName || null);
+      setOtherDepartmentName(profile.otherDepartmentName || null);
+      setOtherProgramName(profile.otherProgramName || null);
     }
   }, [profile]);
 
@@ -181,15 +190,23 @@ export function ProfileScreen() {
       payload.highSchoolGrade = highSchoolGrade || null;
       payload.traditionalBranch = traditionalBranch || null;
       payload.baccalaureatePath = baccalaureatePath || null;
-      payload.university = null;
-      payload.faculty = null;
-      payload.department = null;
-      payload.academicYear = null;
+      payload.universityId = null;
+      payload.facultyId = null;
+      payload.departmentId = null;
+      payload.programId = null;
+      payload.otherUniversityName = null;
+      payload.otherFacultyName = null;
+      payload.otherDepartmentName = null;
+      payload.otherProgramName = null;
     } else if (educationLevel === 'UNIVERSITY') {
-      payload.university = university || null;
-      payload.faculty = faculty || null;
-      payload.department = department || null;
-      payload.academicYear = academicYear || null;
+      payload.universityId = universityId || null;
+      payload.facultyId = facultyId || null;
+      payload.departmentId = departmentId || null;
+      payload.programId = programId || null;
+      payload.otherUniversityName = otherUniversityName || null;
+      payload.otherFacultyName = otherFacultyName || null;
+      payload.otherDepartmentName = otherDepartmentName || null;
+      payload.otherProgramName = otherProgramName || null;
       payload.highSchoolSystem = null;
       payload.studyMode = null;
       payload.studyLanguage = null;
@@ -441,26 +458,26 @@ export function ProfileScreen() {
 
               {educationLevel === 'UNIVERSITY' && (
                 <div className="space-y-5">
-                  <div>
-                    <label className="block text-sm font-medium text-theme-muted mb-1.5">{t('auth.universityName', 'University Name')}</label>
-                    <input type="text" className="input w-full" value={university} onChange={(e) => setUniversity(e.target.value)} disabled={academicLoading} placeholder={t('auth.universityPlaceholder', 'e.g. Cairo University')} />
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-theme-muted mb-1.5">{t('auth.faculty', 'Faculty')}</label>
-                      <input type="text" className="input w-full" value={faculty} onChange={(e) => setFaculty(e.target.value)} disabled={academicLoading} placeholder={t('auth.facultyPlaceholder', 'e.g. Engineering')} />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-theme-muted mb-1.5">{t('auth.department', 'Department')}</label>
-                      <input type="text" className="input w-full" value={department} onChange={(e) => setDepartment(e.target.value)} disabled={academicLoading} placeholder={t('auth.departmentPlaceholder', 'e.g. Computer')} />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-theme-muted mb-1.5">{t('auth.academicYear', 'Academic Year')}</label>
-                    <input type="text" className="input w-full" value={academicYear} onChange={(e) => setAcademicYear(e.target.value)} disabled={academicLoading} placeholder={t('auth.academicYearPlaceholder', 'e.g. 2026/2027')} />
-                  </div>
+                  <AcademicDropdowns
+                    universityId={universityId}
+                    facultyId={facultyId}
+                    departmentId={departmentId}
+                    programId={programId}
+                    otherUniversityName={otherUniversityName}
+                    otherFacultyName={otherFacultyName}
+                    otherDepartmentName={otherDepartmentName}
+                    otherProgramName={otherProgramName}
+                    onChange={(data) => {
+                      setUniversityId(data.universityId);
+                      setFacultyId(data.facultyId);
+                      setDepartmentId(data.departmentId);
+                      setProgramId(data.programId);
+                      setOtherUniversityName(data.otherUniversityName);
+                      setOtherFacultyName(data.otherFacultyName);
+                      setOtherDepartmentName(data.otherDepartmentName);
+                      setOtherProgramName(data.otherProgramName);
+                    }}
+                  />
                 </div>
               )}
 

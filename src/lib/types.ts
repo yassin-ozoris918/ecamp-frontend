@@ -39,10 +39,14 @@ export interface Profile {
   baccalaureatePath?: BaccalaureatePath | null;
 
   // --- University Dimensions ---
-  university?: string | null;
-  faculty?: string | null;
-  department?: string | null;
-  academicYear?: string | null;
+  universityId?: string | null;
+  facultyId?: string | null;
+  departmentId?: string | null;
+  programId?: string | null;
+  otherUniversityName?: string | null;
+  otherFacultyName?: string | null;
+  otherDepartmentName?: string | null;
+  otherProgramName?: string | null;
 
   // --- Computed ---
   isProfileComplete?: boolean;
@@ -94,10 +98,10 @@ export interface Course {
   targetHighSchoolGrade?: HighSchoolGrade | null;
   targetTraditionalBranch?: TraditionalBranch | null;
   targetBaccalaureatePath?: BaccalaureatePath | null;
-  targetUniversity?: string | null;
-  targetFaculty?: string | null;
-  targetDepartment?: string | null;
-  targetAcademicYear?: string | null;
+  targetUniversityId?: string | null;
+  targetFacultyId?: string | null;
+  targetDepartmentId?: string | null;
+  targetProgramId?: string | null;
 
   validity_days?: number | null;
   isFree?: boolean;
@@ -354,10 +358,14 @@ export interface UserListItem {
   highSchoolGrade?: HighSchoolGrade | null;
   traditionalBranch?: TraditionalBranch | null;
   baccalaureatePath?: BaccalaureatePath | null;
-  university?: string | null;
-  faculty?: string | null;
-  department?: string | null;
-  academicYear?: string | null;
+  universityId?: string | null;
+  facultyId?: string | null;
+  departmentId?: string | null;
+  programId?: string | null;
+  otherUniversityName?: string | null;
+  otherFacultyName?: string | null;
+  otherDepartmentName?: string | null;
+  otherProgramName?: string | null;
 }
 
 export interface AdminUserDetail extends UserListItem {

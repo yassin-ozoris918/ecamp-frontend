@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Modal } from './Modal';
+import { AcademicDropdowns } from './AcademicDropdowns';
 import { api } from '../lib/api';
 import type { Course } from '../lib/types';
 import {
@@ -29,10 +30,10 @@ export function CourseTargetingModal({
   const [targetHighSchoolGrade, setTargetHighSchoolGrade] = useState<HighSchoolGrade | ''>('');
   const [targetTraditionalBranch, setTargetTraditionalBranch] = useState<TraditionalBranch | ''>('');
   const [targetBaccalaureatePath, setTargetBaccalaureatePath] = useState<BaccalaureatePath | ''>('');
-  const [targetUniversity, setTargetUniversity] = useState('');
-  const [targetFaculty, setTargetFaculty] = useState('');
-  const [targetDepartment, setTargetDepartment] = useState('');
-  const [targetAcademicYear, setTargetAcademicYear] = useState('');
+  const [targetUniversityId, setTargetUniversityId] = useState<string | null>(null);
+  const [targetFacultyId, setTargetFacultyId] = useState<string | null>(null);
+  const [targetDepartmentId, setTargetDepartmentId] = useState<string | null>(null);
+  const [targetProgramId, setTargetProgramId] = useState<string | null>(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -42,10 +43,10 @@ export function CourseTargetingModal({
       setTargetHighSchoolGrade(course.targetHighSchoolGrade || '');
       setTargetTraditionalBranch(course.targetTraditionalBranch || '');
       setTargetBaccalaureatePath(course.targetBaccalaureatePath || '');
-      setTargetUniversity(course.targetUniversity || '');
-      setTargetFaculty(course.targetFaculty || '');
-      setTargetDepartment(course.targetDepartment || '');
-      setTargetAcademicYear(course.targetAcademicYear || '');
+      setTargetUniversityId(course.targetUniversityId || null);
+      setTargetFacultyId(course.targetFacultyId || null);
+      setTargetDepartmentId(course.targetDepartmentId || null);
+      setTargetProgramId(course.targetProgramId || null);
     }
   }, [isOpen, course]);
 
@@ -72,10 +73,10 @@ export function CourseTargetingModal({
         targetHighSchoolGrade: targetHighSchoolGrade || null,
         targetTraditionalBranch: branch || null,
         targetBaccalaureatePath: path || null,
-        targetUniversity: targetUniversity || null,
-        targetFaculty: targetFaculty || null,
-        targetDepartment: targetDepartment || null,
-        targetAcademicYear: targetAcademicYear || null,
+        targetUniversityId: targetUniversityId || null,
+        targetFacultyId: targetFacultyId || null,
+        targetDepartmentId: targetDepartmentId || null,
+        targetProgramId: targetProgramId || null,
       });
     },
     onSuccess: () => {
@@ -167,28 +168,20 @@ export function CourseTargetingModal({
             )}
           </>
         ) : (
-          <>
-            <div>
-              <label className="label">University Name</label>
-              <input type="text" className="input" value={targetUniversity} onChange={(e) => setTargetUniversity(e.target.value)} placeholder="Leave blank for any university" />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="label">Faculty</label>
-                <input type="text" className="input" value={targetFaculty} onChange={(e) => setTargetFaculty(e.target.value)} placeholder="Leave blank for any faculty" />
-              </div>
-              <div>
-                <label className="label">Department</label>
-                <input type="text" className="input" value={targetDepartment} onChange={(e) => setTargetDepartment(e.target.value)} placeholder="Leave blank for any department" />
-              </div>
-            </div>
-
-            <div>
-              <label className="label">Academic Year</label>
-              <input type="text" className="input" value={targetAcademicYear} onChange={(e) => setTargetAcademicYear(e.target.value)} placeholder="Leave blank for any year" />
-            </div>
-          </>
+          <div className="bg-theme-bg/50 p-4 rounded-xl border border-theme-border">
+            <AcademicDropdowns
+              universityId={targetUniversityId}
+              facultyId={targetFacultyId}
+              departmentId={targetDepartmentId}
+              programId={targetProgramId}
+              onChange={(data) => {
+                setTargetUniversityId(data.universityId);
+                setTargetFacultyId(data.facultyId);
+                setTargetDepartmentId(data.departmentId);
+                setTargetProgramId(data.programId);
+              }}
+            />
+          </div>
         )}
       </div>
       
