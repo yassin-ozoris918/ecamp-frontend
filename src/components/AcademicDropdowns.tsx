@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../lib/api';
+import { useTranslation } from 'react-i18next';
 
 interface AcademicDropdownsProps {
   universityId: string | null;
@@ -23,6 +24,7 @@ interface AcademicDropdownsProps {
 }
 
 export function AcademicDropdowns({
+
   universityId,
   facultyId,
   departmentId,
@@ -33,6 +35,8 @@ export function AcademicDropdowns({
   otherProgramName,
   onChange,
 }: AcademicDropdownsProps) {
+  const { t } = useTranslation();
+
   const [universities, setUniversities] = useState<any[]>([]);
   const [faculties, setFaculties] = useState<any[]>([]);
   const [departments, setDepartments] = useState<any[]>([]);
@@ -141,7 +145,7 @@ export function AcademicDropdowns({
     <div className="space-y-4">
       {/* University */}
       <div>
-        <label className="block text-sm font-medium text-slate-700 mb-1">University</label>
+        <label className="block text-sm font-medium text-slate-700 mb-1">{t('auth.university', 'University')}</label>
         <select
           className="w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border"
           value={universityId || ''}
@@ -159,7 +163,7 @@ export function AcademicDropdowns({
           }}
           disabled={loadingUniversities}
         >
-          <option value="">Select University...</option>
+          <option value="">{t('auth.selectUniversity', 'Select University...')}</option>
           {universities.map(u => (
             <option key={u.id} value={u.id}>{u.nameAr}</option>
           ))}
@@ -168,7 +172,7 @@ export function AcademicDropdowns({
           <input
             type="text"
             className="mt-2 w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border"
-            placeholder="Enter University Name"
+            placeholder={t('auth.enterUniversityName', 'Enter University Name')}
             value={otherUniversityName || ''}
             onChange={(e) => onChange({
               universityId, facultyId, departmentId, programId,
@@ -182,7 +186,7 @@ export function AcademicDropdowns({
       {/* Faculty */}
       {faculties.length > 0 && !selectedUni?.isOther && (
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">Faculty</label>
+          <label className="block text-sm font-medium text-slate-700 mb-1">{t('auth.faculty', 'Faculty')}</label>
           <select
             className="w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border"
             value={facultyId || ''}
@@ -200,7 +204,7 @@ export function AcademicDropdowns({
             }}
             disabled={loadingFaculties}
           >
-            <option value="">Select Faculty...</option>
+            <option value="">{t('auth.selectFaculty', 'Select Faculty...')}</option>
             {faculties.map(f => (
               <option key={f.id} value={f.id}>{f.nameAr}</option>
             ))}
@@ -209,7 +213,7 @@ export function AcademicDropdowns({
             <input
               type="text"
               className="mt-2 w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border"
-              placeholder="Enter Faculty Name"
+              placeholder={t('auth.enterFacultyName', 'Enter Faculty Name')}
               value={otherFacultyName || ''}
               onChange={(e) => onChange({
                 universityId, facultyId, departmentId, programId,
@@ -227,7 +231,7 @@ export function AcademicDropdowns({
       {/* Department */}
       {departments.length > 0 && !selectedFac?.isOther && !selectedUni?.isOther && (
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">Department</label>
+          <label className="block text-sm font-medium text-slate-700 mb-1">{t('auth.department', 'Department')}</label>
           <select
             className="w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border"
             value={departmentId || ''}
@@ -245,7 +249,7 @@ export function AcademicDropdowns({
             }}
             disabled={loadingDepartments}
           >
-            <option value="">Select Department...</option>
+            <option value="">{t('auth.selectDepartment', 'Select Department...')}</option>
             {departments.map(d => (
               <option key={d.id} value={d.id}>{d.nameAr}</option>
             ))}
@@ -254,7 +258,7 @@ export function AcademicDropdowns({
             <input
               type="text"
               className="mt-2 w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border"
-              placeholder="Enter Department Name"
+              placeholder={t('auth.enterDepartmentName', 'Enter Department Name')}
               value={otherDepartmentName || ''}
               onChange={(e) => onChange({
                 universityId, facultyId, departmentId, programId,
@@ -270,7 +274,7 @@ export function AcademicDropdowns({
       {/* Program */}
       {programs.length > 0 && !selectedDep?.isOther && !selectedFac?.isOther && !selectedUni?.isOther && (
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">Program</label>
+          <label className="block text-sm font-medium text-slate-700 mb-1">{t('auth.program', 'Program')}</label>
           <select
             className="w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border"
             value={programId || ''}
@@ -288,7 +292,7 @@ export function AcademicDropdowns({
             }}
             disabled={loadingPrograms}
           >
-            <option value="">Select Program...</option>
+            <option value="">{t('auth.selectProgram', 'Select Program...')}</option>
             {programs.map(p => (
               <option key={p.id} value={p.id}>{p.nameAr}</option>
             ))}
@@ -297,7 +301,7 @@ export function AcademicDropdowns({
             <input
               type="text"
               className="mt-2 w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border"
-              placeholder="Enter Program Name"
+              placeholder={t('auth.enterProgramName', 'Enter Program Name')}
               value={otherProgramName || ''}
               onChange={(e) => onChange({
                 universityId, facultyId, departmentId, programId,
@@ -313,11 +317,11 @@ export function AcademicDropdowns({
       {selectedUni?.isOther && (
         <>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Faculty Name</label>
+            <label className="block text-sm font-medium text-slate-700 mb-1">{t('auth.facultyName', 'Faculty Name')}</label>
             <input
               type="text"
               className="w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border"
-              placeholder="Enter Faculty Name (Optional)"
+              placeholder={t('auth.optionalFacultyName', 'Enter Faculty Name (Optional)')}
               value={otherFacultyName || ''}
               onChange={(e) => onChange({
                 universityId, facultyId, departmentId, programId,
@@ -328,11 +332,11 @@ export function AcademicDropdowns({
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Department Name</label>
+            <label className="block text-sm font-medium text-slate-700 mb-1">{t('auth.departmentName', 'Department Name')}</label>
             <input
               type="text"
               className="w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border"
-              placeholder="Enter Department Name (Optional)"
+              placeholder={t('auth.optionalDepartmentName', 'Enter Department Name (Optional)')}
               value={otherDepartmentName || ''}
               onChange={(e) => onChange({
                 universityId, facultyId, departmentId, programId,
@@ -343,11 +347,11 @@ export function AcademicDropdowns({
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Program Name</label>
+            <label className="block text-sm font-medium text-slate-700 mb-1">{t('auth.programName', 'Program Name')}</label>
             <input
               type="text"
               className="w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border"
-              placeholder="Enter Program Name (Optional)"
+              placeholder={t('auth.optionalProgramName', 'Enter Program Name (Optional)')}
               value={otherProgramName || ''}
               onChange={(e) => onChange({
                 universityId, facultyId, departmentId, programId,
@@ -363,11 +367,11 @@ export function AcademicDropdowns({
       {!selectedUni?.isOther && selectedFac?.isOther && (
         <>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Department Name</label>
+            <label className="block text-sm font-medium text-slate-700 mb-1">{t('auth.departmentName', 'Department Name')}</label>
             <input
               type="text"
               className="w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border"
-              placeholder="Enter Department Name (Optional)"
+              placeholder={t('auth.optionalDepartmentName', 'Enter Department Name (Optional)')}
               value={otherDepartmentName || ''}
               onChange={(e) => onChange({
                 universityId, facultyId, departmentId, programId,
@@ -378,11 +382,11 @@ export function AcademicDropdowns({
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Program Name</label>
+            <label className="block text-sm font-medium text-slate-700 mb-1">{t('auth.programName', 'Program Name')}</label>
             <input
               type="text"
               className="w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border"
-              placeholder="Enter Program Name (Optional)"
+              placeholder={t('auth.optionalProgramName', 'Enter Program Name (Optional)')}
               value={otherProgramName || ''}
               onChange={(e) => onChange({
                 universityId, facultyId, departmentId, programId,
@@ -397,11 +401,11 @@ export function AcademicDropdowns({
       {/* Free Text cascade for "Other" department under normal faculty */}
       {!selectedUni?.isOther && !selectedFac?.isOther && selectedDep?.isOther && (
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">Program Name</label>
+          <label className="block text-sm font-medium text-slate-700 mb-1">{t('auth.programName', 'Program Name')}</label>
           <input
             type="text"
             className="w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border"
-            placeholder="Enter Program Name (Optional)"
+            placeholder={t('auth.optionalProgramName', 'Enter Program Name (Optional)')}
             value={otherProgramName || ''}
             onChange={(e) => onChange({
               universityId, facultyId, departmentId, programId,
