@@ -345,11 +345,11 @@ export function InteractiveQuizClient({
                   <button onClick={() => setReviewMode(true)} className="btn-secondary px-8">
                     {t('quiz.reviewAnswers')}
                   </button>
-                  {isPassed ? (
+                  {isPassed || isPending ? (
                     <button onClick={onComplete} className="btn-primary px-8">
                       {t('common.continue')} <ArrowRight className="w-4 h-4 ml-2" />
                     </button>
-                  ) : quiz.isExhausted ? (
+                  ) : quiz.isExhausted || result.isExhausted ? (
                     <button onClick={onComplete} className="btn-primary px-8">
                       {t('common.continue')} <ArrowRight className="w-4 h-4 ml-2" />
                     </button>
@@ -386,7 +386,19 @@ export function InteractiveQuizClient({
               {reviewMode && <button onClick={onComplete} className="text-sm font-bold text-cyan-400 hover:text-cyan-300">{t('common.close')}</button>}
             </h3>
             
-            {questions.map((q, idx) => {
+            {/* If backend hasn't provided correctAnswers, it means results are hidden for a pending retry */}
+            {(!result.correctAnswers || Object.keys(result.correctAnswers).length === 0) && result.status === 'FAILED' && !quiz.isExhausted && !result.isExhausted ? (
+               <div className="p-8 text-center border border-neutral-800 rounded-2xl bg-neutral-900/50 flex flex-col items-center gap-3">
+                 <div className="w-12 h-12 rounded-full bg-neutral-800/80 flex items-center justify-center mb-2">
+                   <CheckCircle2 className="w-6 h-6 text-theme-muted" />
+                 </div>
+                 <h4 className="text-xl font-bold text-white">Results Hidden</h4>
+                 <p className="text-theme-muted max-w-lg">
+                   You have remaining attempts. The correct answers and detailed feedback will only be revealed if you pass the quiz, exhaust all attempts, or choose to accept this failing grade.
+                 </p>
+               </div>
+            ) : (
+            questions.map((q, idx) => {
               const stuAns = result.studentAnswers?.[q.id];
               const corAns = result.correctAnswers?.[q.id];
               
@@ -485,7 +497,8 @@ export function InteractiveQuizClient({
                   )}
                 </div>
               );
-            })}
+            })
+            )}
           </div>
         )}
       </div>
