@@ -318,6 +318,8 @@ export function InteractiveQuizClient({
   if (result) {
     const isPassed = result.status === 'PASSED';
     const isPending = result.status === 'PENDING';
+    const resultsHidden = (!result.correctAnswers || Object.keys(result.correctAnswers).length === 0) && 
+                          (isPending || (!isPassed && !quiz.isExhausted && !result.isExhausted));
     
     return (
       <div className="max-w-4xl mx-auto py-8">
@@ -342,9 +344,11 @@ export function InteractiveQuizClient({
                 </p>
                 
                 <div className="flex gap-4 justify-center">
-                  <button onClick={() => setReviewMode(true)} className="btn-secondary px-8">
-                    {t('quiz.reviewAnswers')}
-                  </button>
+                  {!resultsHidden && (
+                    <button onClick={() => setReviewMode(true)} className="btn-secondary px-8">
+                      {t('quiz.reviewAnswers')}
+                    </button>
+                  )}
                   {isPassed || isPending ? (
                     <button onClick={onComplete} className="btn-primary px-8">
                       {t('common.continue')} <ArrowRight className="w-4 h-4 ml-2" />
