@@ -351,11 +351,11 @@ export function InteractiveQuizClient({
                   )}
                   {isPassed || isPending ? (
                     <button onClick={onComplete} className="btn-primary px-8">
-                      {t('common.continue')} <ArrowRight className="w-4 h-4 ml-2" />
+                      {t('common.continue', { defaultValue: 'Continue' })} <ArrowRight className="w-4 h-4 ml-2" />
                     </button>
                   ) : quiz.isExhausted || result.isExhausted ? (
                     <button onClick={onComplete} className="btn-primary px-8">
-                      {t('common.continue')} <ArrowRight className="w-4 h-4 ml-2" />
+                      {t('common.continue', { defaultValue: 'Continue' })} <ArrowRight className="w-4 h-4 ml-2" />
                     </button>
                   ) : (
                     <>
