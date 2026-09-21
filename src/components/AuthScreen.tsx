@@ -65,17 +65,15 @@ export function AuthScreen() {
   const [otherDepartmentName, setOtherDepartmentName] = useState<string>();
   const [otherProgramName, setOtherProgramName] = useState<string>();
 
-  const handleAcademicChange = (field: string, value: string | undefined) => {
-    switch (field) {
-      case 'universityId': setUniversityId(value); break;
-      case 'facultyId': setFacultyId(value); break;
-      case 'departmentId': setDepartmentId(value); break;
-      case 'programId': setProgramId(value); break;
-      case 'otherUniversityName': setOtherUniversityName(value); break;
-      case 'otherFacultyName': setOtherFacultyName(value); break;
-      case 'otherDepartmentName': setOtherDepartmentName(value); break;
-      case 'otherProgramName': setOtherProgramName(value); break;
-    }
+  const handleAcademicChange = (data: any) => {
+    setUniversityId(data.universityId || undefined);
+    setFacultyId(data.facultyId || undefined);
+    setDepartmentId(data.departmentId || undefined);
+    setProgramId(data.programId || undefined);
+    setOtherUniversityName(data.otherUniversityName || undefined);
+    setOtherFacultyName(data.otherFacultyName || undefined);
+    setOtherDepartmentName(data.otherDepartmentName || undefined);
+    setOtherProgramName(data.otherProgramName || undefined);
   };
 
   const errMsg = localError ?? error?.message ?? null;
