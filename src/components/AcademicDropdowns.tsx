@@ -13,6 +13,7 @@ interface AcademicDropdownsProps {
   otherProgramName?: string | null;
   excludeOther?: boolean;
   forceShowAll?: boolean;
+  isTargetingMode?: boolean;
   onChange: (data: {
     universityId: string | null;
     facultyId: string | null;
@@ -38,6 +39,7 @@ export function AcademicDropdowns({
   otherProgramName,
   onChange,
   forceShowAll,
+  isTargetingMode,
 }: AcademicDropdownsProps) {
   const { t, i18n } = useTranslation();
   const lang = i18n.language || 'en';
@@ -178,7 +180,7 @@ export function AcademicDropdowns({
           }}
           disabled={loadingUniversities}
         >
-          <option value="">{t('auth.selectUniversity', 'Select University...')}</option>
+          <option value="">{isTargetingMode ? 'Any University' : t('auth.selectUniversity', 'Select University...')}</option>
           {universities.map(u => (
             <option key={u.id} value={u.id}>{lang === 'en' ? u.nameEn : u.nameAr}</option>
           ))}
@@ -219,7 +221,7 @@ export function AcademicDropdowns({
             }}
             disabled={loadingFaculties}
           >
-            <option value="">{t('auth.selectFaculty', 'Select Faculty...')}</option>
+            <option value="">{isTargetingMode ? 'Any Faculty' : t('auth.selectFaculty', 'Select Faculty...')}</option>
             {faculties.map(f => (
               <option key={f.id} value={f.id}>{lang === 'en' ? f.nameEn : f.nameAr}</option>
             ))}
@@ -264,7 +266,7 @@ export function AcademicDropdowns({
             }}
             disabled={loadingDepartments}
           >
-            <option value="">{t('auth.selectDepartment', 'Select Department...')}</option>
+            <option value="">{isTargetingMode ? 'Any Department' : t('auth.selectDepartment', 'Select Department...')}</option>
             {departments.map(d => (
               <option key={d.id} value={d.id}>{lang === 'en' ? d.nameEn : d.nameAr}</option>
             ))}
@@ -307,7 +309,7 @@ export function AcademicDropdowns({
             }}
             disabled={loadingPrograms}
           >
-            <option value="">{t('auth.selectProgram', 'Select Program...')}</option>
+            <option value="">{isTargetingMode ? 'Any Program' : t('auth.selectProgram', 'Select Program...')}</option>
             {programs.map(p => (
               <option key={p.id} value={p.id}>{lang === 'en' ? p.nameEn : p.nameAr}</option>
             ))}

@@ -205,6 +205,7 @@ export function CourseTargetingModal({
             <AcademicDropdowns
               excludeOther={true}
               forceShowAll={true}
+              isTargetingMode={true}
               universityId={targetUniversityId}
               facultyId={targetFacultyId}
               departmentId={targetDepartmentId}
