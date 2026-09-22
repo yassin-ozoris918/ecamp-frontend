@@ -35,7 +35,8 @@ export function AcademicDropdowns({
   otherProgramName,
   onChange,
 }: AcademicDropdownsProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const lang = i18n.language || 'en';
 
   const [universities, setUniversities] = useState<any[]>([]);
   const [faculties, setFaculties] = useState<any[]>([]);
@@ -165,7 +166,7 @@ export function AcademicDropdowns({
         >
           <option value="">{t('auth.selectUniversity', 'Select University...')}</option>
           {universities.map(u => (
-            <option key={u.id} value={u.id}>{u.nameAr}</option>
+            <option key={u.id} value={u.id}>{lang === 'en' ? u.nameEn : u.nameAr}</option>
           ))}
         </select>
         {selectedUni?.isOther && (
@@ -206,7 +207,7 @@ export function AcademicDropdowns({
           >
             <option value="">{t('auth.selectFaculty', 'Select Faculty...')}</option>
             {faculties.map(f => (
-              <option key={f.id} value={f.id}>{f.nameAr}</option>
+              <option key={f.id} value={f.id}>{lang === 'en' ? f.nameEn : f.nameAr}</option>
             ))}
           </select>
           {selectedFac?.isOther && (
@@ -251,7 +252,7 @@ export function AcademicDropdowns({
           >
             <option value="">{t('auth.selectDepartment', 'Select Department...')}</option>
             {departments.map(d => (
-              <option key={d.id} value={d.id}>{d.nameAr}</option>
+              <option key={d.id} value={d.id}>{lang === 'en' ? d.nameEn : d.nameAr}</option>
             ))}
           </select>
           {selectedDep?.isOther && (
@@ -294,7 +295,7 @@ export function AcademicDropdowns({
           >
             <option value="">{t('auth.selectProgram', 'Select Program...')}</option>
             {programs.map(p => (
-              <option key={p.id} value={p.id}>{p.nameAr}</option>
+              <option key={p.id} value={p.id}>{lang === 'en' ? p.nameEn : p.nameAr}</option>
             ))}
           </select>
           {selectedProg?.isOther && (
