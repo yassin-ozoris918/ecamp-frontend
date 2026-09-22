@@ -103,6 +103,11 @@ export interface Course {
   targetDepartmentId?: string | null;
   targetProgramId?: string | null;
 
+  targetUniversityRel?: { id: string; nameEn: string; nameAr: string } | null;
+  targetFacultyRel?: { id: string; nameEn: string; nameAr: string } | null;
+  targetDepartmentRel?: { id: string; nameEn: string; nameAr: string } | null;
+  targetProgramRel?: { id: string; nameEn: string; nameAr: string } | null;
+
   validity_days?: number | null;
   isFree?: boolean;
   createdAt?: string;

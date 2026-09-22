@@ -10,7 +10,7 @@
  *   - ADMIN can view all quiz attempts.
  *   - INSTRUCTOR can only view quizzes belonging to their own courses.
  */
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Search,
   Eye,
@@ -18,7 +18,6 @@ import {
   ClipboardList,
   ChevronLeft,
   ChevronRight,
-  Loader2,
   BookOpen,
   Filter,
   X,
@@ -136,10 +135,8 @@ const PAGE_SIZE = 25;
 
 function AttemptsTable({
   quizId,
-  quizTitle,
 }: {
   quizId: string;
-  quizTitle: string;
 }) {
   const [data, setData] = useState<QuizAttemptListResponse | null>(null);
   const [loading, setLoading] = useState(false);

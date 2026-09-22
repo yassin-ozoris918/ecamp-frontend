@@ -11,6 +11,7 @@ interface AcademicDropdownsProps {
   otherFacultyName?: string | null;
   otherDepartmentName?: string | null;
   otherProgramName?: string | null;
+  excludeOther?: boolean;
   onChange: (data: {
     universityId: string | null;
     facultyId: string | null;
@@ -24,6 +25,7 @@ interface AcademicDropdownsProps {
 }
 
 export function AcademicDropdowns({
+  excludeOther,
 
   universityId,
   facultyId,
@@ -52,7 +54,9 @@ export function AcademicDropdowns({
     let ignore = false;
     setLoadingUniversities(true);
     api.get('/academic-data/universities').then((res) => {
-      if (!ignore) setUniversities(res.data);
+      let data = res.data;
+      if (excludeOther) data = data.filter((item: any) => !item.isOther);
+      if (!ignore) setUniversities(data);
     }).finally(() => {
       if (!ignore) setLoadingUniversities(false);
     });
@@ -66,7 +70,9 @@ export function AcademicDropdowns({
       if (uni && !uni.isOther) {
         setLoadingFaculties(true);
         api.get(`/academic-data/universities/${universityId}/faculties`).then((res) => {
-          if (!ignore) setFaculties(res.data);
+          let data = res.data;
+          if (excludeOther) data = data.filter((item: any) => !item.isOther);
+          if (!ignore) setFaculties(data);
         }).finally(() => {
           if (!ignore) setLoadingFaculties(false);
         });
@@ -87,12 +93,16 @@ export function AcademicDropdowns({
         setLoadingDepartments(true);
         api.get(`/academic-data/faculties/${facultyId}/departments`).then((res) => {
           if (ignore) return;
-          setDepartments(res.data);
+          let data = res.data;
+          if (excludeOther) data = data.filter((item: any) => !item.isOther);
+          setDepartments(data);
           // If no departments, fetch programs directly
-          if (res.data.length === 0) {
+          if (data.length === 0) {
             setLoadingPrograms(true);
             api.get(`/academic-data/faculties/${facultyId}/programs`).then((pres) => {
-              if (!ignore) setPrograms(pres.data);
+              let pData = pres.data;
+              if (excludeOther) pData = pData.filter((item: any) => !item.isOther);
+              if (!ignore) setPrograms(pData);
             }).finally(() => {
               if (!ignore) setLoadingPrograms(false);
             });
@@ -122,7 +132,9 @@ export function AcademicDropdowns({
       if (dep && !dep.isOther) {
         setLoadingPrograms(true);
         api.get(`/academic-data/departments/${departmentId}/programs`).then((res) => {
-          if (!ignore) setPrograms(res.data);
+          let data = res.data;
+          if (excludeOther) data = data.filter((item: any) => !item.isOther);
+          if (!ignore) setPrograms(data);
         }).finally(() => {
           if (!ignore) setLoadingPrograms(false);
         });

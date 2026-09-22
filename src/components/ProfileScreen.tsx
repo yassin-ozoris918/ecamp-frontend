@@ -468,14 +468,14 @@ export function ProfileScreen() {
                     otherDepartmentName={otherDepartmentName}
                     otherProgramName={otherProgramName}
                     onChange={(data) => {
-                      setUniversityId(data.universityId);
-                      setFacultyId(data.facultyId);
-                      setDepartmentId(data.departmentId);
-                      setProgramId(data.programId);
-                      setOtherUniversityName(data.otherUniversityName);
-                      setOtherFacultyName(data.otherFacultyName);
-                      setOtherDepartmentName(data.otherDepartmentName);
-                      setOtherProgramName(data.otherProgramName);
+                      setUniversityId(data.universityId || null);
+                      setFacultyId(data.facultyId || null);
+                      setDepartmentId(data.departmentId || null);
+                      setProgramId(data.programId || null);
+                      setOtherUniversityName(data.otherUniversityName || null);
+                      setOtherFacultyName(data.otherFacultyName || null);
+                      setOtherDepartmentName(data.otherDepartmentName || null);
+                      setOtherProgramName(data.otherProgramName || null);
                     }}
                   />
                 </div>
