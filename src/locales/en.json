@@ -92,6 +92,7 @@
       "emailRequired": "Email address is required.",
       "invalidEmail": "Please provide a valid email address.",
       "emailAlreadyInUse": "This email is already in use by another account.",
+      "phoneAlreadyInUse": "This phone number is already registered to another account.",
       "passwordRequired": "Password is required.",
       "passwordInvalid": "Password must be a valid string.",
       "passwordTooShort": "Password must be at least 8 characters.",
