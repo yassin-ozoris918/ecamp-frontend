@@ -90,7 +90,7 @@
       transition-colors;
   }
 
-  select.input option {
+  select option, select optgroup {
     @apply bg-theme-bg text-theme-text;
   }
 

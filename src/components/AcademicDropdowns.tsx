@@ -162,9 +162,9 @@ export function AcademicDropdowns({
     <div className="space-y-4">
       {/* University */}
       <div>
-        <label className="block text-sm font-medium text-slate-700 mb-1">{t('auth.university', 'University')}</label>
+        <label className="label">{t('auth.university', 'University')}</label>
         <select
-          className="w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border"
+          className="input"
           value={universityId || ''}
           onChange={(e) => {
             onChange({
@@ -188,7 +188,7 @@ export function AcademicDropdowns({
         {selectedUni?.isOther && (
           <input
             type="text"
-            className="mt-2 w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border"
+            className="input mt-2"
             placeholder={t('auth.enterUniversityName', 'Enter University Name')}
             value={otherUniversityName || ''}
             onChange={(e) => onChange({
@@ -203,9 +203,9 @@ export function AcademicDropdowns({
       {/* Faculty */}
       {(faculties.length > 0 || forceShowAll) && !selectedUni?.isOther && (
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">{t('auth.faculty', 'Faculty')}</label>
+          <label className="label">{t('auth.faculty', 'Faculty')}</label>
           <select
-            className="w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border"
+            className="input"
             value={facultyId || ''}
             onChange={(e) => {
               onChange({
@@ -229,7 +229,7 @@ export function AcademicDropdowns({
           {selectedFac?.isOther && (
             <input
               type="text"
-              className="mt-2 w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border"
+              className="input mt-2"
               placeholder={t('auth.enterFacultyName', 'Enter Faculty Name')}
               value={otherFacultyName || ''}
               onChange={(e) => onChange({
@@ -248,9 +248,9 @@ export function AcademicDropdowns({
       {/* Department */}
       {(departments.length > 0 || forceShowAll) && !selectedFac?.isOther && !selectedUni?.isOther && (
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">{t('auth.department', 'Department')}</label>
+          <label className="label">{t('auth.department', 'Department')}</label>
           <select
-            className="w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border"
+            className="input"
             value={departmentId || ''}
             onChange={(e) => {
               onChange({
@@ -274,7 +274,7 @@ export function AcademicDropdowns({
           {selectedDep?.isOther && (
             <input
               type="text"
-              className="mt-2 w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border"
+              className="input mt-2"
               placeholder={t('auth.enterDepartmentName', 'Enter Department Name')}
               value={otherDepartmentName || ''}
               onChange={(e) => onChange({
@@ -291,9 +291,9 @@ export function AcademicDropdowns({
       {/* Program */}
       {(programs.length > 0 || forceShowAll) && !selectedDep?.isOther && !selectedFac?.isOther && !selectedUni?.isOther && (
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">{t('auth.program', 'Program')}</label>
+          <label className="label">{t('auth.program', 'Program')}</label>
           <select
-            className="w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border"
+            className="input"
             value={programId || ''}
             onChange={(e) => {
               onChange({
@@ -317,7 +317,7 @@ export function AcademicDropdowns({
           {selectedProg?.isOther && (
             <input
               type="text"
-              className="mt-2 w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border"
+              className="input mt-2"
               placeholder={t('auth.enterProgramName', 'Enter Program Name')}
               value={otherProgramName || ''}
               onChange={(e) => onChange({
@@ -334,10 +334,10 @@ export function AcademicDropdowns({
       {selectedUni?.isOther && (
         <>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">{t('auth.facultyName', 'Faculty Name')}</label>
+            <label className="label">{t('auth.facultyName', 'Faculty Name')}</label>
             <input
               type="text"
-              className="w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border"
+              className="input"
               placeholder={t('auth.optionalFacultyName', 'Enter Faculty Name (Optional)')}
               value={otherFacultyName || ''}
               onChange={(e) => onChange({
@@ -349,10 +349,10 @@ export function AcademicDropdowns({
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">{t('auth.departmentName', 'Department Name')}</label>
+            <label className="label">{t('auth.departmentName', 'Department Name')}</label>
             <input
               type="text"
-              className="w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border"
+              className="input"
               placeholder={t('auth.optionalDepartmentName', 'Enter Department Name (Optional)')}
               value={otherDepartmentName || ''}
               onChange={(e) => onChange({
@@ -364,10 +364,10 @@ export function AcademicDropdowns({
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">{t('auth.programName', 'Program Name')}</label>
+            <label className="label">{t('auth.programName', 'Program Name')}</label>
             <input
               type="text"
-              className="w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border"
+              className="input"
               placeholder={t('auth.optionalProgramName', 'Enter Program Name (Optional)')}
               value={otherProgramName || ''}
               onChange={(e) => onChange({
@@ -384,10 +384,10 @@ export function AcademicDropdowns({
       {!selectedUni?.isOther && selectedFac?.isOther && (
         <>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">{t('auth.departmentName', 'Department Name')}</label>
+            <label className="label">{t('auth.departmentName', 'Department Name')}</label>
             <input
               type="text"
-              className="w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border"
+              className="input"
               placeholder={t('auth.optionalDepartmentName', 'Enter Department Name (Optional)')}
               value={otherDepartmentName || ''}
               onChange={(e) => onChange({
@@ -399,10 +399,10 @@ export function AcademicDropdowns({
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">{t('auth.programName', 'Program Name')}</label>
+            <label className="label">{t('auth.programName', 'Program Name')}</label>
             <input
               type="text"
-              className="w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border"
+              className="input"
               placeholder={t('auth.optionalProgramName', 'Enter Program Name (Optional)')}
               value={otherProgramName || ''}
               onChange={(e) => onChange({
@@ -418,10 +418,10 @@ export function AcademicDropdowns({
       {/* Free Text cascade for "Other" department under normal faculty */}
       {!selectedUni?.isOther && !selectedFac?.isOther && selectedDep?.isOther && (
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">{t('auth.programName', 'Program Name')}</label>
+          <label className="label">{t('auth.programName', 'Program Name')}</label>
           <input
             type="text"
-            className="w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border"
+            className="input"
             placeholder={t('auth.optionalProgramName', 'Enter Program Name (Optional)')}
             value={otherProgramName || ''}
             onChange={(e) => onChange({
