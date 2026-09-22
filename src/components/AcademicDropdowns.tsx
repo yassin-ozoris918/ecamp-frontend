@@ -12,6 +12,7 @@ interface AcademicDropdownsProps {
   otherDepartmentName?: string | null;
   otherProgramName?: string | null;
   excludeOther?: boolean;
+  forceShowAll?: boolean;
   onChange: (data: {
     universityId: string | null;
     facultyId: string | null;
@@ -36,6 +37,7 @@ export function AcademicDropdowns({
   otherDepartmentName,
   otherProgramName,
   onChange,
+  forceShowAll,
 }: AcademicDropdownsProps) {
   const { t, i18n } = useTranslation();
   const lang = i18n.language || 'en';
@@ -197,7 +199,7 @@ export function AcademicDropdowns({
       </div>
 
       {/* Faculty */}
-      {faculties.length > 0 && !selectedUni?.isOther && (
+      {(faculties.length > 0 || forceShowAll) && !selectedUni?.isOther && (
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1">{t('auth.faculty', 'Faculty')}</label>
           <select
@@ -242,7 +244,7 @@ export function AcademicDropdowns({
       {/* Faculty is Other means they must type out department/program, so we don't show the DB dropdowns below */}
 
       {/* Department */}
-      {departments.length > 0 && !selectedFac?.isOther && !selectedUni?.isOther && (
+      {(departments.length > 0 || forceShowAll) && !selectedFac?.isOther && !selectedUni?.isOther && (
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1">{t('auth.department', 'Department')}</label>
           <select
@@ -285,7 +287,7 @@ export function AcademicDropdowns({
       )}
 
       {/* Program */}
-      {programs.length > 0 && !selectedDep?.isOther && !selectedFac?.isOther && !selectedUni?.isOther && (
+      {(programs.length > 0 || forceShowAll) && !selectedDep?.isOther && !selectedFac?.isOther && !selectedUni?.isOther && (
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1">{t('auth.program', 'Program')}</label>
           <select

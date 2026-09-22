@@ -204,6 +204,7 @@ export function CourseTargetingModal({
           <div className="bg-theme-bg/50 p-4 rounded-xl border border-theme-border">
             <AcademicDropdowns
               excludeOther={true}
+              forceShowAll={true}
               universityId={targetUniversityId}
               facultyId={targetFacultyId}
               departmentId={targetDepartmentId}
