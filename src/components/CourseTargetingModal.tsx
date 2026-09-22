@@ -10,7 +10,8 @@ import {
   StudyLanguage,
   HighSchoolGrade,
   TraditionalBranch,
-  BaccalaureatePath
+  BaccalaureatePath,
+  EducationLevel
 } from '../lib/types';
 
 export function CourseTargetingModal({ 
@@ -24,6 +25,7 @@ export function CourseTargetingModal({
 }) {
   const queryClient = useQueryClient();
   
+  const [audienceType, setAudienceType] = useState<EducationLevel>(course.audienceType);
   const [targetHighSchoolSystem, setTargetHighSchoolSystem] = useState<HighSchoolSystem | ''>('');
   const [targetStudyMode, setTargetStudyMode] = useState<StudyMode | ''>('');
   const [targetStudyLanguage, setTargetStudyLanguage] = useState<StudyLanguage | ''>('');
@@ -47,6 +49,7 @@ export function CourseTargetingModal({
       setTargetFacultyId(course.targetFacultyId || null);
       setTargetDepartmentId(course.targetDepartmentId || null);
       setTargetProgramId(course.targetProgramId || null);
+      setAudienceType(course.audienceType);
     }
   }, [isOpen, course]);
 
@@ -63,20 +66,22 @@ export function CourseTargetingModal({
         if (targetHighSchoolGrade === 'GRADE_1') path = '';
       }
 
+      const isHighSchool = audienceType === 'HIGH_SCHOOL';
+
       return api.put(`/courses/${course.id}`, {
         title: course.title,
         description: course.description,
-        audienceType: course.audienceType,
-        targetHighSchoolSystem: targetHighSchoolSystem || null,
-        targetStudyMode: targetStudyMode || null,
-        targetStudyLanguage: targetStudyLanguage || null,
-        targetHighSchoolGrade: targetHighSchoolGrade || null,
-        targetTraditionalBranch: branch || null,
-        targetBaccalaureatePath: path || null,
-        targetUniversityId: targetUniversityId || null,
-        targetFacultyId: targetFacultyId || null,
-        targetDepartmentId: targetDepartmentId || null,
-        targetProgramId: targetProgramId || null,
+        audienceType: audienceType,
+        targetHighSchoolSystem: isHighSchool ? (targetHighSchoolSystem || null) : null,
+        targetStudyMode: isHighSchool ? (targetStudyMode || null) : null,
+        targetStudyLanguage: isHighSchool ? (targetStudyLanguage || null) : null,
+        targetHighSchoolGrade: isHighSchool ? (targetHighSchoolGrade || null) : null,
+        targetTraditionalBranch: isHighSchool ? (branch || null) : null,
+        targetBaccalaureatePath: isHighSchool ? (path || null) : null,
+        targetUniversityId: !isHighSchool ? (targetUniversityId || null) : null,
+        targetFacultyId: !isHighSchool ? (targetFacultyId || null) : null,
+        targetDepartmentId: !isHighSchool ? (targetDepartmentId || null) : null,
+        targetProgramId: !isHighSchool ? (targetProgramId || null) : null,
       });
     },
     onSuccess: () => {
@@ -92,10 +97,38 @@ export function CourseTargetingModal({
           Configure the exact student segment that should see this course. Leave a field blank to target all students within that dimension.
         </p>
 
-        {course.audienceType === 'HIGH_SCHOOL' ? (
+        <div>
+          <label className="label">Education Level</label>
+          <select 
+            className="input" 
+            value={audienceType} 
+            onChange={(e) => {
+              const newType = e.target.value as EducationLevel;
+              setAudienceType(newType);
+              if (newType === 'HIGH_SCHOOL') {
+                setTargetUniversityId(null);
+                setTargetFacultyId(null);
+                setTargetDepartmentId(null);
+                setTargetProgramId(null);
+              } else {
+                setTargetHighSchoolSystem('');
+                setTargetStudyMode('');
+                setTargetStudyLanguage('');
+                setTargetHighSchoolGrade('');
+                setTargetTraditionalBranch('');
+                setTargetBaccalaureatePath('');
+              }
+            }}
+          >
+            <option value="HIGH_SCHOOL">High School</option>
+            <option value="UNIVERSITY">University</option>
+          </select>
+        </div>
+
+        {audienceType === 'HIGH_SCHOOL' ? (
           <>
             <div>
-              <label className="label">Educational System</label>
+              <label className="label">School System</label>
               <select className="input" value={targetHighSchoolSystem} onChange={(e) => setTargetHighSchoolSystem(e.target.value as HighSchoolSystem)}>
                 <option value="">Any System</option>
                 <option value="TRADITIONAL">Traditional Secondary</option>

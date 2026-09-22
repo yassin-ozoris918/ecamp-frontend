@@ -110,9 +110,6 @@ export function CourseSettingsPanel({ courseId }: { courseId: string }) {
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <span className="rounded-full bg-cyan-500/10 border border-cyan-400/20 px-3 py-1 text-xs font-bold text-cyan-400 uppercase tracking-wider">
-            {courseDetails?.audienceType === 'HIGH_SCHOOL' ? '🏫 High School Tier' : '🎓 University Tier'}
-          </span>
           <button
             onClick={() => setTargetingModalOpen(true)}
             className="btn-ghost py-1 px-3 text-xs border border-neutral-700 hover:bg-neutral-800"
@@ -126,23 +123,25 @@ export function CourseSettingsPanel({ courseId }: { courseId: string }) {
         <div className="mt-4 rounded-xl bg-neutral-800/30 p-4 border border-neutral-800 text-sm">
           {courseDetails.audienceType === 'HIGH_SCHOOL' ? (
             <div className="grid grid-cols-2 gap-y-3">
-              <div><span className="text-theme-muted">System:</span> <span className="font-medium ml-2">{courseDetails.targetHighSchoolSystem || 'Any'}</span></div>
+              <div className="col-span-2 font-bold text-cyan-400 mb-1">Education Level: High School</div>
+              <div><span className="text-theme-muted">School System:</span> <span className="font-medium ml-2">{courseDetails.targetHighSchoolSystem || 'Any'}</span></div>
               <div><span className="text-theme-muted">Grade:</span> <span className="font-medium ml-2">{courseDetails.targetHighSchoolGrade?.replace('_', ' ') || 'Any'}</span></div>
               <div><span className="text-theme-muted">Study Mode:</span> <span className="font-medium ml-2">{courseDetails.targetStudyMode || 'Any'}</span></div>
-              <div><span className="text-theme-muted">Language:</span> <span className="font-medium ml-2">{courseDetails.targetStudyLanguage || 'Any'}</span></div>
+              <div><span className="text-theme-muted">Study Language:</span> <span className="font-medium ml-2">{courseDetails.targetStudyLanguage || 'Any'}</span></div>
               {courseDetails.targetHighSchoolSystem === 'TRADITIONAL' && (
                 <div><span className="text-theme-muted">Branch:</span> <span className="font-medium ml-2">{courseDetails.targetTraditionalBranch || 'Any'}</span></div>
               )}
               {courseDetails.targetHighSchoolSystem === 'BACCALAUREATE' && (
-                <div className="col-span-2"><span className="text-theme-muted">Path:</span> <span className="font-medium ml-2">{courseDetails.targetBaccalaureatePath || 'Any'}</span></div>
+                <div className="col-span-2"><span className="text-theme-muted">Baccalaureate Path:</span> <span className="font-medium ml-2">{courseDetails.targetBaccalaureatePath || 'Any'}</span></div>
               )}
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-y-3">
+              <div className="col-span-1 md:col-span-2 font-bold text-cyan-400 mb-1">Education Level: University</div>
               <div className="col-span-1 md:col-span-2"><span className="text-theme-muted">University:</span> <span className="font-medium ml-2">{courseDetails.targetUniversityId ? courseDetails.targetUniversityRel?.nameEn || courseDetails.targetUniversityId : 'Any'}</span></div>
-              <div><span className="text-theme-muted">Faculty:</span> <span className="font-medium ml-2">{courseDetails.targetFacultyId ? courseDetails.targetFacultyRel?.nameEn || courseDetails.targetFacultyId : 'Any'}</span></div>
+              <div><span className="text-theme-muted">Faculty / College:</span> <span className="font-medium ml-2">{courseDetails.targetFacultyId ? courseDetails.targetFacultyRel?.nameEn || courseDetails.targetFacultyId : 'Any'}</span></div>
               <div><span className="text-theme-muted">Department:</span> <span className="font-medium ml-2">{courseDetails.targetDepartmentId ? courseDetails.targetDepartmentRel?.nameEn || courseDetails.targetDepartmentId : 'Any'}</span></div>
-              <div className="col-span-1 md:col-span-2"><span className="text-theme-muted">Program:</span> <span className="font-medium ml-2">{courseDetails.targetProgramId ? courseDetails.targetProgramRel?.nameEn || courseDetails.targetProgramId : 'Any'}</span></div>
+              <div className="col-span-1 md:col-span-2"><span className="text-theme-muted">Program / Specialization:</span> <span className="font-medium ml-2">{courseDetails.targetProgramId ? courseDetails.targetProgramRel?.nameEn || courseDetails.targetProgramId : 'Any'}</span></div>
             </div>
           )}
         </div>
