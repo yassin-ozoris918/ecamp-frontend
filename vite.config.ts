@@ -8,6 +8,7 @@ export default defineConfig({
     exclude: ['lucide-react'],
   },
   server: {
+    host: true,
     proxy: {
       '/uploads': {
         target: 'http://localhost:3000',
