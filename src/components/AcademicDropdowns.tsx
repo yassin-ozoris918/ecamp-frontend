@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { api } from '../lib/api';
 import { useTranslation } from 'react-i18next';
 
@@ -7,11 +7,11 @@ interface AcademicDropdownsProps {
   facultyId: string | null;
   departmentId: string | null;
   programId: string | null;
-  otherUniversityName?: string | null;
-  otherFacultyName?: string | null;
-  otherDepartmentName?: string | null;
-  otherProgramName?: string | null;
-  excludeOther?: boolean;
+  otherUniversityName: string | null;
+  otherFacultyName: string | null;
+  otherDepartmentName: string | null;
+  otherProgramName: string | null;
+  excludeOther?: boolean; // Kept for interface compatibility but no longer functional
   forceShowAll?: boolean;
   isTargetingMode?: boolean;
   onChange: (data: {
@@ -19,24 +19,18 @@ interface AcademicDropdownsProps {
     facultyId: string | null;
     departmentId: string | null;
     programId: string | null;
-    otherUniversityName?: string | null;
-    otherFacultyName?: string | null;
-    otherDepartmentName?: string | null;
-    otherProgramName?: string | null;
+    otherUniversityName: string | null;
+    otherFacultyName: string | null;
+    otherDepartmentName: string | null;
+    otherProgramName: string | null;
   }) => void;
 }
 
 export function AcademicDropdowns({
-  excludeOther,
-
   universityId,
   facultyId,
   departmentId,
   programId,
-  otherUniversityName,
-  otherFacultyName,
-  otherDepartmentName,
-  otherProgramName,
   onChange,
   forceShowAll,
   isTargetingMode,
@@ -58,9 +52,7 @@ export function AcademicDropdowns({
     let ignore = false;
     setLoadingUniversities(true);
     api.get('/academic-data/universities').then((res) => {
-      let data = res.data;
-      if (excludeOther) data = data.filter((item: any) => !item.isOther);
-      if (!ignore) setUniversities(data);
+      if (!ignore) setUniversities(res.data);
     }).finally(() => {
       if (!ignore) setLoadingUniversities(false);
     });
@@ -70,56 +62,36 @@ export function AcademicDropdowns({
   useEffect(() => {
     let ignore = false;
     if (universityId) {
-      const uni = universities.find(u => u.id === universityId);
-      if (uni && !uni.isOther) {
-        setLoadingFaculties(true);
-        api.get(`/academic-data/universities/${universityId}/faculties`).then((res) => {
-          let data = res.data;
-          if (excludeOther) data = data.filter((item: any) => !item.isOther);
-          if (!ignore) setFaculties(data);
-        }).finally(() => {
-          if (!ignore) setLoadingFaculties(false);
-        });
-      } else {
-        if (!ignore) setFaculties([]);
-      }
+      setLoadingFaculties(true);
+      api.get(`/academic-data/universities/${universityId}/faculties`).then((res) => {
+        if (!ignore) setFaculties(res.data);
+      }).finally(() => {
+        if (!ignore) setLoadingFaculties(false);
+      });
     } else {
       if (!ignore) setFaculties([]);
     }
     return () => { ignore = true; };
-  }, [universityId, universities]);
+  }, [universityId]);
 
   useEffect(() => {
     let ignore = false;
     if (facultyId) {
-      const fac = faculties.find(f => f.id === facultyId);
-      if (fac && !fac.isOther) {
-        setLoadingDepartments(true);
-        api.get(`/academic-data/faculties/${facultyId}/departments`).then((res) => {
-          if (ignore) return;
-          let data = res.data;
-          if (excludeOther) data = data.filter((item: any) => !item.isOther);
-          setDepartments(data);
-          // If no departments, fetch programs directly
-          if (data.length === 0) {
-            setLoadingPrograms(true);
-            api.get(`/academic-data/faculties/${facultyId}/programs`).then((pres) => {
-              let pData = pres.data;
-              if (excludeOther) pData = pData.filter((item: any) => !item.isOther);
-              if (!ignore) setPrograms(pData);
-            }).finally(() => {
-              if (!ignore) setLoadingPrograms(false);
-            });
-          }
-        }).finally(() => {
-          if (!ignore) setLoadingDepartments(false);
-        });
-      } else {
-        if (!ignore) {
-          setDepartments([]);
-          setPrograms([]);
+      setLoadingDepartments(true);
+      api.get(`/academic-data/faculties/${facultyId}/departments`).then((res) => {
+        if (ignore) return;
+        setDepartments(res.data);
+        if (res.data.length === 0) {
+          setLoadingPrograms(true);
+          api.get(`/academic-data/faculties/${facultyId}/programs`).then((pres) => {
+            if (!ignore) setPrograms(pres.data);
+          }).finally(() => {
+            if (!ignore) setLoadingPrograms(false);
+          });
         }
-      }
+      }).finally(() => {
+        if (!ignore) setLoadingDepartments(false);
+      });
     } else {
       if (!ignore) {
         setDepartments([]);
@@ -127,36 +99,22 @@ export function AcademicDropdowns({
       }
     }
     return () => { ignore = true; };
-  }, [facultyId, faculties]);
+  }, [facultyId]);
 
   useEffect(() => {
     let ignore = false;
     if (departmentId) {
-      const dep = departments.find(d => d.id === departmentId);
-      if (dep && !dep.isOther) {
-        setLoadingPrograms(true);
-        api.get(`/academic-data/departments/${departmentId}/programs`).then((res) => {
-          let data = res.data;
-          if (excludeOther) data = data.filter((item: any) => !item.isOther);
-          if (!ignore) setPrograms(data);
-        }).finally(() => {
-          if (!ignore) setLoadingPrograms(false);
-        });
-      } else {
-        if (!ignore) setPrograms([]);
-      }
+      setLoadingPrograms(true);
+      api.get(`/academic-data/departments/${departmentId}/programs`).then((res) => {
+        if (!ignore) setPrograms(res.data);
+      }).finally(() => {
+        if (!ignore) setLoadingPrograms(false);
+      });
     } else {
-      // User requested changing department must reset program but here we just clear options if it's null. 
-      // The onChange in the dropdown handles resetting programId state in parent.
       if (!ignore) setPrograms([]);
     }
     return () => { ignore = true; };
-  }, [departmentId, departments]);
-
-  const selectedUni = universities.find(u => u.id === universityId);
-  const selectedFac = faculties.find(f => f.id === facultyId);
-  const selectedDep = departments.find(d => d.id === departmentId);
-  const selectedProg = programs.find(p => p.id === programId);
+  }, [departmentId]);
 
   return (
     <div className="space-y-4">
@@ -172,10 +130,10 @@ export function AcademicDropdowns({
               facultyId: null,
               departmentId: null,
               programId: null,
-              otherUniversityName: '',
-              otherFacultyName: '',
-              otherDepartmentName: '',
-              otherProgramName: ''
+              otherUniversityName: null,
+              otherFacultyName: null,
+              otherDepartmentName: null,
+              otherProgramName: null
             });
           }}
           disabled={loadingUniversities}
@@ -185,23 +143,10 @@ export function AcademicDropdowns({
             <option key={u.id} value={u.id}>{lang === 'en' ? u.nameEn : u.nameAr}</option>
           ))}
         </select>
-        {selectedUni?.isOther && (
-          <input
-            type="text"
-            className="input mt-2"
-            placeholder={t('auth.enterUniversityName', 'Enter University Name')}
-            value={otherUniversityName || ''}
-            onChange={(e) => onChange({
-              universityId, facultyId, departmentId, programId,
-              otherUniversityName: e.target.value,
-              otherFacultyName, otherDepartmentName, otherProgramName
-            })}
-          />
-        )}
       </div>
 
       {/* Faculty */}
-      {(faculties.length > 0 || forceShowAll) && !selectedUni?.isOther && (
+      {(faculties.length > 0 || forceShowAll) && (
         <div>
           <label className="label">{t('auth.faculty', 'Faculty')}</label>
           <select
@@ -213,10 +158,10 @@ export function AcademicDropdowns({
                 facultyId: e.target.value || null,
                 departmentId: null,
                 programId: null,
-                otherUniversityName,
-                otherFacultyName: '',
-                otherDepartmentName: '',
-                otherProgramName: ''
+                otherUniversityName: null,
+                otherFacultyName: null,
+                otherDepartmentName: null,
+                otherProgramName: null
               });
             }}
             disabled={loadingFaculties}
@@ -226,27 +171,11 @@ export function AcademicDropdowns({
               <option key={f.id} value={f.id}>{lang === 'en' ? f.nameEn : f.nameAr}</option>
             ))}
           </select>
-          {selectedFac?.isOther && (
-            <input
-              type="text"
-              className="input mt-2"
-              placeholder={t('auth.enterFacultyName', 'Enter Faculty Name')}
-              value={otherFacultyName || ''}
-              onChange={(e) => onChange({
-                universityId, facultyId, departmentId, programId,
-                otherUniversityName,
-                otherFacultyName: e.target.value,
-                otherDepartmentName, otherProgramName
-              })}
-            />
-          )}
         </div>
       )}
 
-      {/* Faculty is Other means they must type out department/program, so we don't show the DB dropdowns below */}
-
       {/* Department */}
-      {(departments.length > 0 || forceShowAll) && !selectedFac?.isOther && !selectedUni?.isOther && (
+      {(departments.length > 0 || forceShowAll) && (
         <div>
           <label className="label">{t('auth.department', 'Department')}</label>
           <select
@@ -258,10 +187,10 @@ export function AcademicDropdowns({
                 facultyId,
                 departmentId: e.target.value || null,
                 programId: null,
-                otherUniversityName,
-                otherFacultyName,
-                otherDepartmentName: '',
-                otherProgramName: ''
+                otherUniversityName: null,
+                otherFacultyName: null,
+                otherDepartmentName: null,
+                otherProgramName: null
               });
             }}
             disabled={loadingDepartments}
@@ -271,25 +200,11 @@ export function AcademicDropdowns({
               <option key={d.id} value={d.id}>{lang === 'en' ? d.nameEn : d.nameAr}</option>
             ))}
           </select>
-          {selectedDep?.isOther && (
-            <input
-              type="text"
-              className="input mt-2"
-              placeholder={t('auth.enterDepartmentName', 'Enter Department Name')}
-              value={otherDepartmentName || ''}
-              onChange={(e) => onChange({
-                universityId, facultyId, departmentId, programId,
-                otherUniversityName, otherFacultyName,
-                otherDepartmentName: e.target.value,
-                otherProgramName
-              })}
-            />
-          )}
         </div>
       )}
 
       {/* Program */}
-      {(programs.length > 0 || forceShowAll) && !selectedDep?.isOther && !selectedFac?.isOther && !selectedUni?.isOther && (
+      {(programs.length > 0 || forceShowAll) && (
         <div>
           <label className="label">{t('auth.program', 'Program')}</label>
           <select
@@ -301,10 +216,10 @@ export function AcademicDropdowns({
                 facultyId,
                 departmentId,
                 programId: e.target.value || null,
-                otherUniversityName,
-                otherFacultyName,
-                otherDepartmentName,
-                otherProgramName: ''
+                otherUniversityName: null,
+                otherFacultyName: null,
+                otherDepartmentName: null,
+                otherProgramName: null
               });
             }}
             disabled={loadingPrograms}
@@ -314,122 +229,6 @@ export function AcademicDropdowns({
               <option key={p.id} value={p.id}>{lang === 'en' ? p.nameEn : p.nameAr}</option>
             ))}
           </select>
-          {selectedProg?.isOther && (
-            <input
-              type="text"
-              className="input mt-2"
-              placeholder={t('auth.enterProgramName', 'Enter Program Name')}
-              value={otherProgramName || ''}
-              onChange={(e) => onChange({
-                universityId, facultyId, departmentId, programId,
-                otherUniversityName, otherFacultyName, otherDepartmentName,
-                otherProgramName: e.target.value
-              })}
-            />
-          )}
-        </div>
-      )}
-
-      {/* Free Text cascade for "Other" university/faculty/etc. */}
-      {selectedUni?.isOther && (
-        <>
-          <div>
-            <label className="label">{t('auth.facultyName', 'Faculty Name')}</label>
-            <input
-              type="text"
-              className="input"
-              placeholder={t('auth.optionalFacultyName', 'Enter Faculty Name (Optional)')}
-              value={otherFacultyName || ''}
-              onChange={(e) => onChange({
-                universityId, facultyId, departmentId, programId,
-                otherUniversityName,
-                otherFacultyName: e.target.value,
-                otherDepartmentName, otherProgramName
-              })}
-            />
-          </div>
-          <div>
-            <label className="label">{t('auth.departmentName', 'Department Name')}</label>
-            <input
-              type="text"
-              className="input"
-              placeholder={t('auth.optionalDepartmentName', 'Enter Department Name (Optional)')}
-              value={otherDepartmentName || ''}
-              onChange={(e) => onChange({
-                universityId, facultyId, departmentId, programId,
-                otherUniversityName, otherFacultyName,
-                otherDepartmentName: e.target.value,
-                otherProgramName
-              })}
-            />
-          </div>
-          <div>
-            <label className="label">{t('auth.programName', 'Program Name')}</label>
-            <input
-              type="text"
-              className="input"
-              placeholder={t('auth.optionalProgramName', 'Enter Program Name (Optional)')}
-              value={otherProgramName || ''}
-              onChange={(e) => onChange({
-                universityId, facultyId, departmentId, programId,
-                otherUniversityName, otherFacultyName, otherDepartmentName,
-                otherProgramName: e.target.value
-              })}
-            />
-          </div>
-        </>
-      )}
-      
-      {/* Free Text cascade for "Other" faculty under normal university */}
-      {!selectedUni?.isOther && selectedFac?.isOther && (
-        <>
-          <div>
-            <label className="label">{t('auth.departmentName', 'Department Name')}</label>
-            <input
-              type="text"
-              className="input"
-              placeholder={t('auth.optionalDepartmentName', 'Enter Department Name (Optional)')}
-              value={otherDepartmentName || ''}
-              onChange={(e) => onChange({
-                universityId, facultyId, departmentId, programId,
-                otherUniversityName, otherFacultyName,
-                otherDepartmentName: e.target.value,
-                otherProgramName
-              })}
-            />
-          </div>
-          <div>
-            <label className="label">{t('auth.programName', 'Program Name')}</label>
-            <input
-              type="text"
-              className="input"
-              placeholder={t('auth.optionalProgramName', 'Enter Program Name (Optional)')}
-              value={otherProgramName || ''}
-              onChange={(e) => onChange({
-                universityId, facultyId, departmentId, programId,
-                otherUniversityName, otherFacultyName, otherDepartmentName,
-                otherProgramName: e.target.value
-              })}
-            />
-          </div>
-        </>
-      )}
-      
-      {/* Free Text cascade for "Other" department under normal faculty */}
-      {!selectedUni?.isOther && !selectedFac?.isOther && selectedDep?.isOther && (
-        <div>
-          <label className="label">{t('auth.programName', 'Program Name')}</label>
-          <input
-            type="text"
-            className="input"
-            placeholder={t('auth.optionalProgramName', 'Enter Program Name (Optional)')}
-            value={otherProgramName || ''}
-            onChange={(e) => onChange({
-              universityId, facultyId, departmentId, programId,
-              otherUniversityName, otherFacultyName, otherDepartmentName,
-              otherProgramName: e.target.value
-            })}
-          />
         </div>
       )}
     </div>

@@ -55,25 +55,25 @@ export function AuthScreen() {
   const [highSchoolGrade, setHighSchoolGrade] = useState<HighSchoolGrade | ''>('');
   const [traditionalBranch, setTraditionalBranch] = useState<TraditionalBranch | ''>('');
   const [baccalaureatePath, setBaccalaureatePath] = useState<BaccalaureatePath | ''>('');
-  const [universityId, setUniversityId] = useState<string>();
-  const [facultyId, setFacultyId] = useState<string>();
-  const [departmentId, setDepartmentId] = useState<string>();
-  const [programId, setProgramId] = useState<string>();
+  const [universityId, setUniversityId] = useState<string | null>(null);
+  const [facultyId, setFacultyId] = useState<string | null>(null);
+  const [departmentId, setDepartmentId] = useState<string | null>(null);
+  const [programId, setProgramId] = useState<string | null>(null);
   
-  const [otherUniversityName, setOtherUniversityName] = useState<string>();
-  const [otherFacultyName, setOtherFacultyName] = useState<string>();
-  const [otherDepartmentName, setOtherDepartmentName] = useState<string>();
-  const [otherProgramName, setOtherProgramName] = useState<string>();
+  const [otherUniversityName, setOtherUniversityName] = useState<string | null>(null);
+  const [otherFacultyName, setOtherFacultyName] = useState<string | null>(null);
+  const [otherDepartmentName, setOtherDepartmentName] = useState<string | null>(null);
+  const [otherProgramName, setOtherProgramName] = useState<string | null>(null);
 
   const handleAcademicChange = (data: any) => {
-    setUniversityId(data.universityId || undefined);
-    setFacultyId(data.facultyId || undefined);
-    setDepartmentId(data.departmentId || undefined);
-    setProgramId(data.programId || undefined);
-    setOtherUniversityName(data.otherUniversityName || undefined);
-    setOtherFacultyName(data.otherFacultyName || undefined);
-    setOtherDepartmentName(data.otherDepartmentName || undefined);
-    setOtherProgramName(data.otherProgramName || undefined);
+    setUniversityId(data.universityId || null);
+    setFacultyId(data.facultyId || null);
+    setDepartmentId(data.departmentId || null);
+    setProgramId(data.programId || null);
+    setOtherUniversityName(data.otherUniversityName || null);
+    setOtherFacultyName(data.otherFacultyName || null);
+    setOtherDepartmentName(data.otherDepartmentName || null);
+    setOtherProgramName(data.otherProgramName || null);
   };
 
   const errMsg = localError ?? error?.message ?? null;
@@ -181,10 +181,10 @@ export function AuthScreen() {
           highSchoolGrade: highSchoolGrade || undefined,
           traditionalBranch: traditionalBranch || undefined,
           baccalaureatePath: baccalaureatePath || undefined,
-          universityId,
-          facultyId,
-          departmentId,
-          programId,
+          universityId: universityId || undefined,
+          facultyId: facultyId || undefined,
+          departmentId: departmentId || undefined,
+          programId: programId || undefined,
           otherUniversityName: otherUniversityName?.trim() || undefined,
           otherFacultyName: otherFacultyName?.trim() || undefined,
           otherDepartmentName: otherDepartmentName?.trim() || undefined,
@@ -494,7 +494,6 @@ export function AuthScreen() {
                       otherDepartmentName={otherDepartmentName}
                       otherProgramName={otherProgramName}
                       onChange={handleAcademicChange}
-                      disabled={busy}
                     />
                   </div>
                 )}
