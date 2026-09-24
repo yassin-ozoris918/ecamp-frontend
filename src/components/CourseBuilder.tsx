@@ -1,4 +1,5 @@
 import toast from 'react-hot-toast';
+import axios from 'axios';
 import { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { useQueryClient, useMutation, useQuery } from '@tanstack/react-query';
 import {
@@ -1049,19 +1050,36 @@ function AddItemModal({
         setUploading(true);
         setUploadProgress(0);
         setUploadStatus('uploading');
-        const formData = new FormData();
-        formData.append('video', videoFile);
-        await api.post(`/sessions/${data.id}/upload-video`, formData, {
-          timeout: 0, // no client timeout – videos can be several GB
+
+        // 1. Initialize Upload
+        const initRes = await api.post(`/sessions/${data.id}/video/upload/init`, {
+          filename: videoFile.name,
+          mimetype: videoFile.type || 'video/mp4',
+          fileSize: videoFile.size,
+        });
+        const { uploadUrl, objectKey, assetUrl } = initRes.data;
+
+        // 2. Direct R2 Upload via presigned URL
+        // We use axios directly (not our API client) to avoid attaching auth headers
+        await axios.put(uploadUrl, videoFile, {
+          headers: {
+            'Content-Type': videoFile.type || 'video/mp4'
+          },
           onUploadProgress: (progressEvent) => {
             if (progressEvent.total) {
               const pct = Math.round((progressEvent.loaded * 100) / progressEvent.total);
               setUploadProgress(pct);
-              // Once bytes are fully transferred, server is processing the video
               if (pct >= 100) setUploadStatus('processing');
             }
           },
         });
+
+        // 3. Finalize Upload
+        await api.post(`/sessions/${data.id}/video/upload/complete`, {
+          objectKey,
+          assetUrl
+        });
+
         setUploadStatus('done');
         setUploadProgress(100);
       }
