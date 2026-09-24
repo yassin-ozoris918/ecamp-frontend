@@ -101,6 +101,8 @@ export function AIQuestionReviewStudio({ examId, initialQuestions, onSaved, onCa
                   <div>
                     <label className="text-xs font-bold text-theme-muted uppercase tracking-wider mb-2 block">Content Text / Prompt</label>
                     <textarea 
+                      dir="auto"
+                      style={{ unicodeBidi: 'plaintext', textAlign: 'start' }}
                       className="input-field min-h-[100px]"
                       value={q.text}
                       onChange={(e) => updateQuestion(idx, { text: e.target.value })}
@@ -120,6 +122,8 @@ export function AIQuestionReviewStudio({ examId, initialQuestions, onSaved, onCa
                             className="w-4 h-4 accent-accent-500"
                           />
                           <input 
+                            dir="auto"
+                            style={{ unicodeBidi: 'plaintext', textAlign: 'start' }}
                             type="text" 
                             className="input-field flex-1 py-2 text-sm"
                             value={opt}
@@ -138,6 +142,8 @@ export function AIQuestionReviewStudio({ examId, initialQuestions, onSaved, onCa
                     <div>
                       <label className="text-xs font-bold text-theme-muted uppercase tracking-wider mb-2 block">Reference Rubric (AI grading baseline)</label>
                       <textarea 
+                        dir="auto"
+                        style={{ unicodeBidi: 'plaintext', textAlign: 'start' }}
                         className="input-field min-h-[80px]"
                         value={q.referenceAnswer || ''}
                         onChange={(e) => updateQuestion(idx, { referenceAnswer: e.target.value })}

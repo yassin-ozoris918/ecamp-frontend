@@ -347,6 +347,8 @@ export function QuizBuilderModal({ isOpen, onClose, targetId, type }: QuizBuilde
                         </select>
                       </div>
                       <textarea
+                        dir="auto"
+                        style={{ unicodeBidi: 'plaintext', textAlign: 'start' }}
                         value={q.text}
                         onChange={(e) => updateQuestion(q.id, { text: e.target.value })}
                         className="w-full rounded-xl border border-neutral-800 bg-neutral-950 p-3 text-sm text-theme-text outline-none focus:border-cyan-500 transition-colors resize-none h-20"
@@ -380,6 +382,8 @@ export function QuizBuilderModal({ isOpen, onClose, targetId, type }: QuizBuilde
                               className="w-4 h-4 accent-cyan-500 cursor-pointer"
                             />
                             <input
+                              dir="auto"
+                              style={{ unicodeBidi: 'plaintext', textAlign: 'start' }}
                               type="text" value={opt} onChange={(e) => updateOption(q.id, optIdx, e.target.value)}
                               className={`flex-1 rounded-lg border ${q.correctOptionIndex === optIdx ? 'border-cyan-500/50 bg-cyan-500/5' : 'border-neutral-800 bg-neutral-950'} p-2 text-sm outline-none focus:border-cyan-500`}
                               placeholder={`${t('quizBuilder.option')} ${optIdx + 1}`}
@@ -399,6 +403,8 @@ export function QuizBuilderModal({ isOpen, onClose, targetId, type }: QuizBuilde
                       <div className="space-y-2">
                         <label className="text-xs font-bold text-cyan-400 uppercase tracking-wider">{t('quizBuilder.aiReferenceAnswer')}</label>
                         <textarea
+                          dir="auto"
+                          style={{ unicodeBidi: 'plaintext', textAlign: 'start' }}
                           value={q.referenceAnswer || ''}
                           onChange={(e) => updateQuestion(q.id, { referenceAnswer: e.target.value })}
                           className="w-full rounded-xl border border-cyan-500/30 bg-cyan-500/5 p-3 text-sm text-theme-text outline-none focus:border-cyan-500 transition-colors resize-none h-24"
@@ -413,9 +419,9 @@ export function QuizBuilderModal({ isOpen, onClose, targetId, type }: QuizBuilde
                         <label className="text-xs font-bold text-accent-400 uppercase tracking-wider">{t('quizBuilder.matchingPairs')}</label>
                         {(q.matchOptions || []).map((match, idx) => (
                           <div key={idx} className="flex items-center gap-3">
-                            <input type="text" value={match.left} onChange={(e) => updateMatchOption(q.id, idx, 'left', e.target.value)} className="flex-1 rounded-lg border border-neutral-800 bg-neutral-950 p-2 text-sm outline-none focus:border-cyan-500" placeholder={t('quizBuilder.matchLeft')} />
+                            <input dir="auto" style={{ unicodeBidi: 'plaintext', textAlign: 'start' }} type="text" value={match.left} onChange={(e) => updateMatchOption(q.id, idx, 'left', e.target.value)} className="flex-1 rounded-lg border border-neutral-800 bg-neutral-950 p-2 text-sm outline-none focus:border-cyan-500" placeholder={t('quizBuilder.matchLeft')} />
                             <span className="text-theme-muted font-bold">→</span>
-                            <input type="text" value={match.right} onChange={(e) => updateMatchOption(q.id, idx, 'right', e.target.value)} className="flex-1 rounded-lg border border-neutral-800 bg-neutral-950 p-2 text-sm outline-none focus:border-cyan-500" placeholder={t('quizBuilder.matchRight')} />
+                            <input dir="auto" style={{ unicodeBidi: 'plaintext', textAlign: 'start' }} type="text" value={match.right} onChange={(e) => updateMatchOption(q.id, idx, 'right', e.target.value)} className="flex-1 rounded-lg border border-neutral-800 bg-neutral-950 p-2 text-sm outline-none focus:border-cyan-500" placeholder={t('quizBuilder.matchRight')} />
                             {(q.matchOptions?.length || 0) > 2 && (
                               <button onClick={() => removeMatchOption(q.id, idx)} className="p-1.5 text-theme-muted hover:text-rose-400 rounded-lg"><Trash2 className="w-3.5 h-3.5" /></button>
                             )}
@@ -433,7 +439,7 @@ export function QuizBuilderModal({ isOpen, onClose, targetId, type }: QuizBuilde
                         {(q.correctOrder || []).map((ord, idx) => (
                           <div key={idx} className="flex items-center gap-3">
                             <span className="w-6 h-6 flex items-center justify-center bg-neutral-800 text-theme-muted rounded-md text-xs font-bold">{idx + 1}</span>
-                            <input type="text" value={ord} onChange={(e) => updateOrderOption(q.id, idx, e.target.value)} className="flex-1 rounded-lg border border-neutral-800 bg-neutral-950 p-2 text-sm outline-none focus:border-cyan-500" placeholder={`${t('quizBuilder.sequenceItem')} ${idx + 1}`} />
+                            <input dir="auto" style={{ unicodeBidi: 'plaintext', textAlign: 'start' }} type="text" value={ord} onChange={(e) => updateOrderOption(q.id, idx, e.target.value)} className="flex-1 rounded-lg border border-neutral-800 bg-neutral-950 p-2 text-sm outline-none focus:border-cyan-500" placeholder={`${t('quizBuilder.sequenceItem')} ${idx + 1}`} />
                             {(q.correctOrder?.length || 0) > 2 && (
                               <button onClick={() => removeOrderOption(q.id, idx)} className="p-1.5 text-theme-muted hover:text-rose-400 rounded-lg"><Trash2 className="w-3.5 h-3.5" /></button>
                             )}

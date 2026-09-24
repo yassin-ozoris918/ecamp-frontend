@@ -2,6 +2,7 @@ import toast from 'react-hot-toast';
 import { useState } from 'react';
 import { api } from '../lib/api';
 import { Loader2, Send } from 'lucide-react';
+import { BiDiText } from './common';
 
 interface ExamQuestion {
   id: string;
@@ -69,7 +70,7 @@ export function SubjectiveExamClient({ examId, attemptId, questions, onComplete 
           </div>
           
           <div className="prose prose-invert max-w-none mb-6">
-            <p className="text-theme-muted text-lg leading-relaxed whitespace-pre-wrap">{q.text}</p>
+            <BiDiText text={q.text} as="p" className="text-theme-muted text-lg leading-relaxed whitespace-pre-wrap" />
           </div>
 
           {q.type === 'READ_ONLY_TEXT' && (
@@ -81,6 +82,8 @@ export function SubjectiveExamClient({ examId, attemptId, questions, onComplete 
           {['SHORT_ANSWER', 'ESSAY'].includes(q.type) && (
             <div>
               <textarea
+                dir="auto"
+                style={{ unicodeBidi: 'plaintext', textAlign: 'start' }}
                 className="input-field min-h-[150px] text-lg p-4"
                 placeholder="Type your answer here..."
                 value={responses[q.id] || ''}

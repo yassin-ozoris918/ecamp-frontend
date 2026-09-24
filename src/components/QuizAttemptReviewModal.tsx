@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import { api } from '../lib/api';
 import type { QuizAttemptReview, QuizReviewQuestion } from '../lib/types';
-import { Badge } from './common';
+import { Badge, BiDiText } from './common';
 import toast from 'react-hot-toast';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -82,7 +82,7 @@ function McqTrueFalseReview({ q }: { q: QuizReviewQuestion }) {
           <p className="text-[10px] font-bold uppercase tracking-wider text-theme-muted mb-2">Student's Answer</p>
           {studentIdx !== null && studentIdx !== undefined && options[studentIdx] !== undefined ? (
             <p className={`text-sm font-semibold ${studentIdx === correctIdx ? 'text-emerald-400' : 'text-rose-400'}`}>
-              {options[studentIdx]}
+              <BiDiText text={options[studentIdx]} />
             </p>
           ) : (
             <p className="text-sm text-theme-muted italic">No answer given</p>
@@ -91,7 +91,7 @@ function McqTrueFalseReview({ q }: { q: QuizReviewQuestion }) {
         <div className="rounded-xl bg-emerald-500/5 border border-emerald-500/20 p-3">
           <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 mb-2">Correct Answer</p>
           <p className="text-sm font-semibold text-emerald-400">
-            {options[correctIdx] ?? `Option ${correctIdx}`}
+            <BiDiText text={options[correctIdx] ?? `Option ${correctIdx}`} />
           </p>
         </div>
       </div>
@@ -137,9 +137,9 @@ function MatchingReview({ q }: { q: QuizReviewQuestion }) {
           <div className="space-y-1">
             {canonicalMappings.map((m, i) => (
               <div key={i} className="flex items-center gap-2 text-xs">
-                <span className="text-theme-text font-medium">{m.left}</span>
+                <BiDiText text={m.left} as="span" className="text-theme-text font-medium" />
                 <span className="text-theme-muted">→</span>
-                <span className="text-emerald-400">{m.right}</span>
+                <BiDiText text={m.right} as="span" className="text-emerald-400" />
               </div>
             ))}
           </div>
@@ -171,7 +171,7 @@ function OrderingReview({ q }: { q: QuizReviewQuestion }) {
                     {correct
                       ? <CheckCircle2 className="w-3 h-3 text-emerald-400 shrink-0" />
                       : <XCircle className="w-3 h-3 text-rose-400 shrink-0" />}
-                    <span className={correct ? 'text-emerald-400' : 'text-rose-400 line-through'}>{item}</span>
+                    <BiDiText text={item} as="span" className={correct ? 'text-emerald-400' : 'text-rose-400 line-through'} />
                   </li>
                 );
               })}
@@ -186,7 +186,7 @@ function OrderingReview({ q }: { q: QuizReviewQuestion }) {
             {correctOrder.map((item, i) => (
               <li key={i} className="flex items-center gap-2 text-xs">
                 <span className="w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center text-[10px] font-bold text-emerald-400">{i + 1}</span>
-                <span className="text-emerald-300">{item}</span>
+                <BiDiText text={item} as="span" className="text-emerald-300" />
               </li>
             ))}
           </ol>
@@ -239,7 +239,7 @@ function SubjectiveReview({
       <div className="rounded-xl bg-white/[0.02] border border-white/[0.06] p-4">
         <p className="text-[10px] font-bold uppercase tracking-wider text-theme-muted mb-2">Student's Answer</p>
         {q.studentAnswer.textResponse ? (
-          <p className="text-sm text-theme-text leading-relaxed whitespace-pre-wrap">{q.studentAnswer.textResponse}</p>
+          <BiDiText text={q.studentAnswer.textResponse} as="p" className="text-sm text-theme-text leading-relaxed whitespace-pre-wrap" />
         ) : (
           <p className="text-sm text-theme-muted italic">No answer given</p>
         )}
@@ -249,7 +249,7 @@ function SubjectiveReview({
       {q.correctAnswer.referenceAnswer && (
         <div className="rounded-xl bg-emerald-500/5 border border-emerald-500/20 p-4">
           <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 mb-2">Reference Answer</p>
-          <p className="text-sm text-emerald-300 leading-relaxed whitespace-pre-wrap">{q.correctAnswer.referenceAnswer}</p>
+          <BiDiText text={q.correctAnswer.referenceAnswer} as="p" className="text-sm text-emerald-300 leading-relaxed whitespace-pre-wrap" />
         </div>
       )}
 
@@ -354,7 +354,7 @@ function QuestionCard({
           {q.questionNumber}
         </span>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-theme-text truncate">{q.questionText}</p>
+          <BiDiText text={q.questionText} as="p" className="text-sm font-semibold text-theme-text truncate" />
           <p className="text-[10px] text-theme-muted uppercase tracking-wider mt-0.5">{q.questionType.replace('_', ' ')}</p>
         </div>
         <div className="flex items-center gap-3 shrink-0">
@@ -373,7 +373,7 @@ function QuestionCard({
           {/* Question text (full) */}
           <div>
             <p className="text-xs font-bold uppercase tracking-wider text-theme-muted mb-1">Question</p>
-            <p className="text-sm text-theme-text leading-relaxed">{q.questionText}</p>
+            <BiDiText text={q.questionText} as="p" className="text-sm text-theme-text leading-relaxed" />
           </div>
 
           {isReadOnly && (

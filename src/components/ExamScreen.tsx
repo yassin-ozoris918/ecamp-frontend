@@ -4,6 +4,7 @@ import { api } from '../lib/api';
 import { Link } from '../lib/router';
 import type { CourseExamItem, ExamQuestion } from '../lib/types';
 import { Spinner, Badge, Modal } from './ui';
+import { BiDiText } from './common';
 import { useTranslation } from 'react-i18next';
 
 type ExamResult = {
@@ -301,7 +302,7 @@ export function ExamScreen({ examId }: { examId: string }) {
                 <div className="flex justify-between items-start mb-6">
                   <h3 className="text-lg sm:text-xl font-medium text-theme-text pr-4 leading-relaxed whitespace-pre-wrap">
                     <span className="text-accent-400 font-bold mr-2">{index + 1}.</span>
-                    {q.text}
+                    <BiDiText text={q.text} as="span" />
                   </h3>
                   {type !== 'READ_ONLY_TEXT' && (
                     <Badge variant="default" className="shrink-0">{q.points} pts</Badge>
@@ -353,7 +354,7 @@ export function ExamScreen({ examId }: { examId: string }) {
                               className="w-4 h-4 text-accent-500 bg-transparent border-neutral-500 focus:ring-accent-500/50"
                             />
                           </div>
-                          <span className="text-base pt-0.5 relative z-10">{opt}</span>
+                          <BiDiText text={opt} as="span" className="text-base pt-0.5 relative z-10" />
                           {reviewMode && result && result.correctAnswers?.[q.id] === oIdx && (
                             <CheckCircle2 className="absolute top-1/2 right-4 -translate-y-1/2 w-5 h-5 text-success-400" />
                           )}
@@ -370,6 +371,8 @@ export function ExamScreen({ examId }: { examId: string }) {
                 {type === 'SHORT_ANSWER' && (
                   <div>
                     <input
+                      dir="auto"
+                      style={{ unicodeBidi: 'plaintext', textAlign: 'start' }}
                       type="text"
                       placeholder={t('exam.typeAnswer')}
                       className={`input w-full text-lg p-4 ${reviewMode ? 'opacity-70 pointer-events-none' : ''}`}
@@ -385,6 +388,8 @@ export function ExamScreen({ examId }: { examId: string }) {
                 {type === 'ESSAY' && (
                   <div>
                     <textarea
+                      dir="auto"
+                      style={{ unicodeBidi: 'plaintext', textAlign: 'start' }}
                       placeholder={t('exam.writeEssay')}
                       className={`input w-full min-h-[200px] resize-y p-4 text-base ${reviewMode ? 'opacity-70 pointer-events-none' : ''}`}
                       value={currentAnswer.textResponse || ''}

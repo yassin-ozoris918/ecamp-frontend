@@ -4,6 +4,7 @@ import { Clock, CheckCircle2, XCircle, ArrowRight, ArrowDownUp } from 'lucide-re
 import { QuizQuestion, PlaylistItem } from '../lib/types';
 import { useTranslation } from 'react-i18next';
 import { useConfirm, ConfirmDialog } from '../hooks/useConfirm';
+import { BiDiText } from './common';
 
 type QuizResult = {
   score: number;
@@ -417,7 +418,7 @@ export function InteractiveQuizClient({
                      <div className={`w-8 h-8 shrink-0 rounded-full flex items-center justify-center font-bold text-sm ${isCorrectMCQ ? 'bg-accent-500/20 text-accent-400' : isWrongMCQ ? 'bg-rose-500/20 text-rose-400' : 'bg-neutral-800 text-theme-muted'}`}>
                        {idx + 1}
                      </div>
-                     <h4 className="text-lg font-medium text-white flex-1">{q.text}</h4>
+                     <BiDiText text={q.text} as="h4" className="text-lg font-medium text-white flex-1" />
                   </div>
                   
                   {/* Type Specific Review Rendering */}
@@ -434,7 +435,7 @@ export function InteractiveQuizClient({
                         
                         return (
                            <div key={optIdx} className={`p-4 rounded-xl border ${stateClass} flex items-center justify-between transition-colors`}>
-                             <span>{opt}</span>
+                             <BiDiText text={opt} as="span" />
                              {isActualCorrect && <CheckCircle2 className="w-5 h-5 text-accent-500" />}
                              {!isActualCorrect && isSelected && <XCircle className="w-5 h-5 text-rose-500" />}
                            </div>
@@ -469,7 +470,7 @@ export function InteractiveQuizClient({
                         const isCorrect = studentRight === pair.right;
                         return (
                           <div key={pIdx} className={`p-4 rounded-xl border flex flex-col sm:flex-row sm:items-center gap-3 ${isCorrect ? 'border-accent-500/40 bg-accent-500/5' : 'border-rose-500/40 bg-rose-500/5'}`}>
-                            <span className="flex-1 font-medium text-white">{pair.left}</span>
+                            <BiDiText text={pair.left} as="span" className="flex-1 font-medium text-white" />
                             <span className="text-theme-muted text-sm hidden sm:block">→</span>
                             <div className="flex flex-col gap-1 flex-1">
                               {studentRight ? (
@@ -481,7 +482,7 @@ export function InteractiveQuizClient({
                               )}
                               {!isCorrect && (
                                 <span className="text-xs text-accent-400 border border-dashed border-accent-500/40 rounded px-2 py-0.5 w-fit">
-                                  Correct: {pair.right}
+                                  Correct: <BiDiText text={pair.right} as="span" />
                                 </span>
                               )}
                             </div>
@@ -558,7 +559,7 @@ export function InteractiveQuizClient({
                  {idx + 1}
                </div>
                <div>
-                 <h4 className="text-xl font-medium text-white leading-relaxed">{q.text}</h4>
+                 <BiDiText text={q.text} as="h4" className="text-xl font-medium text-white leading-relaxed" />
                  <div className="mt-2 text-xs font-bold text-theme-muted uppercase tracking-wider">
                    {q.points} {t('quiz.points')} • {t(`quiz.questionTypes.${q.type}`)}
                  </div>
@@ -579,7 +580,7 @@ export function InteractiveQuizClient({
                       <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${isSelected ? 'border-cyan-500' : 'border-neutral-700 group-hover:border-neutral-500'}`}>
                         {isSelected && <div className="w-2.5 h-2.5 rounded-full bg-cyan-500" />}
                       </div>
-                      <span className={`text-base ${isSelected ? 'text-white font-medium' : 'text-theme-muted group-hover:text-theme-text'}`}>{opt}</span>
+                      <BiDiText text={opt} as="span" className={`text-base ${isSelected ? 'text-white font-medium' : 'text-theme-muted group-hover:text-theme-text'}`} />
                     </button>
                   );
                 })}
@@ -589,6 +590,8 @@ export function InteractiveQuizClient({
             {['ESSAY', 'SHORT_ANSWER'].includes(q.type) && (
               <div className="pl-0 sm:pl-14">
                 <textarea
+                  dir="auto"
+                  style={{ unicodeBidi: 'plaintext', textAlign: 'start' }}
                   value={answers[q.id]?.textResponse || ''}
                   onChange={(e) => handleTextChange(q.id, e.target.value)}
                   className="w-full rounded-2xl border border-neutral-800 bg-neutral-950 p-4 text-white placeholder-neutral-600 outline-none focus:border-cyan-500 transition-colors h-32 resize-none"
@@ -603,7 +606,7 @@ export function InteractiveQuizClient({
                   const selectedRight = answers[q.id]?.matchAnswer?.find((m: any) => m.left === matchPair.left)?.right || '';
                   return (
                     <div key={idx} className="flex flex-col sm:flex-row items-center gap-4 bg-neutral-950 p-4 rounded-2xl border border-neutral-800">
-                      <div className="flex-1 w-full text-center sm:text-right font-medium text-white">{matchPair.left}</div>
+                      <BiDiText text={matchPair.left} className="flex-1 w-full text-center sm:text-start font-medium text-white" />
                       <ArrowRight className="w-5 h-5 text-theme-muted hidden sm:block" />
                       <select 
                         value={selectedRight}
@@ -626,7 +629,7 @@ export function InteractiveQuizClient({
                 {(answers[q.id]?.orderAnswer || q.correctOrder || []).map((item: string, idx: number) => (
                   <div key={idx} className="flex items-center gap-4 bg-neutral-950 p-4 rounded-2xl border border-neutral-800">
                     <span className="w-8 h-8 shrink-0 flex items-center justify-center bg-neutral-900 text-theme-muted rounded-xl font-bold">{idx + 1}</span>
-                    <span className="flex-1 text-white font-medium">{item}</span>
+                    <BiDiText text={item} as="span" className="flex-1 text-white font-medium" />
                     <div className="flex flex-col gap-1">
                       <button disabled={idx === 0} onClick={() => handleOrderChange(q.id, idx, 'up')} className="p-1 rounded bg-neutral-900 text-theme-muted hover:text-white disabled:opacity-30"><ArrowDownUp className="w-4 h-4 rotate-180" /></button>
                       <button disabled={idx === (q.correctOrder?.length || 0) - 1} onClick={() => handleOrderChange(q.id, idx, 'down')} className="p-1 rounded bg-neutral-900 text-theme-muted hover:text-white disabled:opacity-30"><ArrowDownUp className="w-4 h-4" /></button>
