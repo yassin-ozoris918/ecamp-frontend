@@ -384,7 +384,7 @@ export function QuizAttemptsManager() {
 
       {/* Attempts table */}
       {selectedQuiz ? (
-        <AttemptsTable quizId={selectedQuiz.id} quizTitle={selectedQuiz.title} />
+        <AttemptsTable quizId={selectedQuiz.id} />
       ) : (
         <div className="glass rounded-2xl p-12 text-center border border-white/[0.06]">
           <Users className="w-10 h-10 text-theme-muted mx-auto mb-3" />

@@ -843,7 +843,7 @@ function LectureAttachments({ lectureId }: { lectureId: string }) {
         setViewingFile({ url: res.data.url, title });
       }
     } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Failed to open file.');
+      alert(err.response?.data?.message || 'Failed to open file.');
     }
   };
 

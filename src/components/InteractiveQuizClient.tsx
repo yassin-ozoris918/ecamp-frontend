@@ -320,7 +320,7 @@ export function InteractiveQuizClient({
     const isPassed = result.status === 'PASSED';
     const isPending = result.status === 'PENDING';
     const resultsHidden = (!result.correctAnswers || Object.keys(result.correctAnswers).length === 0) && 
-                          (isPending || (!isPassed && !quiz.isExhausted && !result.isExhausted));
+                          (isPending || (!isPassed && !quiz.isExhausted && !(result as any).isExhausted));
     
     return (
       <div className="max-w-4xl mx-auto py-8">
@@ -354,7 +354,7 @@ export function InteractiveQuizClient({
                     <button onClick={onComplete} className="btn-primary px-8">
                       {t('common.continue', { defaultValue: 'Continue' })} <ArrowRight className="w-4 h-4 ml-2" />
                     </button>
-                  ) : quiz.isExhausted || result.isExhausted ? (
+                  ) : quiz.isExhausted || (result as any).isExhausted ? (
                     <button onClick={onComplete} className="btn-primary px-8">
                       {t('common.continue', { defaultValue: 'Continue' })} <ArrowRight className="w-4 h-4 ml-2" />
                     </button>
@@ -392,7 +392,7 @@ export function InteractiveQuizClient({
             </h3>
             
             {/* If backend hasn't provided correctAnswers, it means results are hidden for a pending retry */}
-            {(!result.correctAnswers || Object.keys(result.correctAnswers).length === 0) && result.status === 'FAILED' && !quiz.isExhausted && !result.isExhausted ? (
+            {(!result.correctAnswers || Object.keys(result.correctAnswers).length === 0) && result.status === 'FAILED' && !quiz.isExhausted && !(result as any).isExhausted ? (
                <div className="p-8 text-center border border-neutral-800 rounded-2xl bg-neutral-900/50 flex flex-col items-center gap-3">
                  <div className="w-12 h-12 rounded-full bg-neutral-800/80 flex items-center justify-center mb-2">
                    <CheckCircle2 className="w-6 h-6 text-theme-muted" />

@@ -481,6 +481,14 @@ export function AdminUsers() {
     faculty?: string | null;
     department?: string | null;
     academicYear?: string | null;
+    otherUniversityName?: string | null;
+    otherFacultyName?: string | null;
+    otherDepartmentName?: string | null;
+    otherProgramName?: string | null;
+    academicUniversity?: { nameEn: string; nameAr: string; isOther: boolean } | null;
+    academicFaculty?: { nameEn: string; nameAr: string; isOther: boolean } | null;
+    academicDepartment?: { nameEn: string; nameAr: string; isOther: boolean } | null;
+    academicProgram?: { nameEn: string; nameAr: string; isOther: boolean } | null;
   };
   const filtered = users; // Filtering is now handled securely by the backend
 
@@ -664,28 +672,28 @@ export function AdminUsers() {
                           {u.educationLevel === 'UNIVERSITY' && (
                             <div className="flex flex-wrap gap-1 mt-1">
                               {(u.academicUniversity?.nameEn || u.academicUniversity?.nameAr || u.otherUniversityName) && (
-                                <span title={u.academicUniversity?.nameEn || u.academicUniversity?.nameAr || u.otherUniversityName}>
+                                <span title={(u.academicUniversity?.nameEn || u.academicUniversity?.nameAr || u.otherUniversityName) || undefined}>
                                   <Badge variant="accent" className="truncate max-w-[100px] block">
                                     {u.academicUniversity?.nameEn || u.academicUniversity?.nameAr || u.otherUniversityName}
                                   </Badge>
                                 </span>
                               )}
                               {(u.academicFaculty?.nameEn || u.academicFaculty?.nameAr || u.otherFacultyName) && (
-                                <span title={u.academicFaculty?.nameEn || u.academicFaculty?.nameAr || u.otherFacultyName}>
+                                <span title={(u.academicFaculty?.nameEn || u.academicFaculty?.nameAr || u.otherFacultyName) || undefined}>
                                   <Badge variant="default" className="truncate max-w-[100px] block">
                                     {u.academicFaculty?.nameEn || u.academicFaculty?.nameAr || u.otherFacultyName}
                                   </Badge>
                                 </span>
                               )}
                               {(u.academicDepartment?.nameEn || u.academicDepartment?.nameAr || u.otherDepartmentName) && (
-                                <span title={u.academicDepartment?.nameEn || u.academicDepartment?.nameAr || u.otherDepartmentName}>
+                                <span title={(u.academicDepartment?.nameEn || u.academicDepartment?.nameAr || u.otherDepartmentName) || undefined}>
                                   <Badge variant="info" className="truncate max-w-[100px] block">
                                     {u.academicDepartment?.nameEn || u.academicDepartment?.nameAr || u.otherDepartmentName}
                                   </Badge>
                                 </span>
                               )}
                               {(u.academicProgram?.nameEn || u.academicProgram?.nameAr || u.otherProgramName) && (
-                                <span title={u.academicProgram?.nameEn || u.academicProgram?.nameAr || u.otherProgramName}>
+                                <span title={(u.academicProgram?.nameEn || u.academicProgram?.nameAr || u.otherProgramName) || undefined}>
                                   <Badge variant="warning" className="truncate max-w-[100px] block">
                                     {u.academicProgram?.nameEn || u.academicProgram?.nameAr || u.otherProgramName}
                                   </Badge>

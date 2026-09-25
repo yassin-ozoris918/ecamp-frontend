@@ -25,7 +25,7 @@ export function CourseTargetingModal({
 }) {
   const queryClient = useQueryClient();
   
-  const [audienceType, setAudienceType] = useState<EducationLevel>(course.audienceType);
+  const [audienceType, setAudienceType] = useState<EducationLevel | undefined>(course.audienceType);
   const [targetHighSchoolSystem, setTargetHighSchoolSystem] = useState<HighSchoolSystem | ''>('');
   const [targetStudyMode, setTargetStudyMode] = useState<StudyMode | ''>('');
   const [targetStudyLanguage, setTargetStudyLanguage] = useState<StudyLanguage | ''>('');
@@ -210,6 +210,10 @@ export function CourseTargetingModal({
               facultyId={targetFacultyId}
               departmentId={targetDepartmentId}
               programId={targetProgramId}
+              otherUniversityName={null}
+              otherFacultyName={null}
+              otherDepartmentName={null}
+              otherProgramName={null}
               onChange={(data) => {
                 setTargetUniversityId(data.universityId);
                 setTargetFacultyId(data.facultyId);

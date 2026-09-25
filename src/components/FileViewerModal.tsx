@@ -41,7 +41,7 @@ export function FileViewerModal({ open, onClose, title, url }: FileViewerModalPr
               loading={<div className="text-white animate-pulse">Loading secure document...</div>}
               error={<div className="text-red-500">Failed to load secure document.</div>}
             >
-              {Array.from(new Array(numPages || 0), (el, index) => (
+              {Array.from(new Array(numPages || 0), (_el, index) => (
                 <div key={`page_${index + 1}`} className="mb-4 shadow-2xl relative">
                   <div className="absolute inset-0 z-10" />
                   <Page
