@@ -663,9 +663,34 @@ export function AdminUsers() {
                           )}
                           {u.educationLevel === 'UNIVERSITY' && (
                             <div className="flex flex-wrap gap-1 mt-1">
-                              {u.university && <span title={u.university}><Badge variant="accent" className="truncate max-w-[100px] block">{u.university}</Badge></span>}
-                              {u.faculty && <span title={u.faculty}><Badge variant="default" className="truncate max-w-[100px] block">{u.faculty}</Badge></span>}
-                              {u.department && <span title={u.department}><Badge variant="info" className="truncate max-w-[100px] block">{u.department}</Badge></span>}
+                              {(u.academicUniversity?.nameEn || u.academicUniversity?.nameAr || u.otherUniversityName) && (
+                                <span title={u.academicUniversity?.nameEn || u.academicUniversity?.nameAr || u.otherUniversityName}>
+                                  <Badge variant="accent" className="truncate max-w-[100px] block">
+                                    {u.academicUniversity?.nameEn || u.academicUniversity?.nameAr || u.otherUniversityName}
+                                  </Badge>
+                                </span>
+                              )}
+                              {(u.academicFaculty?.nameEn || u.academicFaculty?.nameAr || u.otherFacultyName) && (
+                                <span title={u.academicFaculty?.nameEn || u.academicFaculty?.nameAr || u.otherFacultyName}>
+                                  <Badge variant="default" className="truncate max-w-[100px] block">
+                                    {u.academicFaculty?.nameEn || u.academicFaculty?.nameAr || u.otherFacultyName}
+                                  </Badge>
+                                </span>
+                              )}
+                              {(u.academicDepartment?.nameEn || u.academicDepartment?.nameAr || u.otherDepartmentName) && (
+                                <span title={u.academicDepartment?.nameEn || u.academicDepartment?.nameAr || u.otherDepartmentName}>
+                                  <Badge variant="info" className="truncate max-w-[100px] block">
+                                    {u.academicDepartment?.nameEn || u.academicDepartment?.nameAr || u.otherDepartmentName}
+                                  </Badge>
+                                </span>
+                              )}
+                              {(u.academicProgram?.nameEn || u.academicProgram?.nameAr || u.otherProgramName) && (
+                                <span title={u.academicProgram?.nameEn || u.academicProgram?.nameAr || u.otherProgramName}>
+                                  <Badge variant="warning" className="truncate max-w-[100px] block">
+                                    {u.academicProgram?.nameEn || u.academicProgram?.nameAr || u.otherProgramName}
+                                  </Badge>
+                                </span>
+                              )}
                             </div>
                           )}
                         </>
