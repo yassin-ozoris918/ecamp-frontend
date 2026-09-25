@@ -4,6 +4,7 @@ import { api } from '../lib/api';
 import { BookOpen, Search, Lock, Unlock, KeyRound, ExternalLink } from 'lucide-react';
 import { useAuth } from '../lib/authContext';
 import { Spinner, Badge, EmptyState, ErrorMessage, Button } from './ui';
+import { FileViewerModal } from './FileViewerModal';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 
@@ -57,11 +58,18 @@ export function FilesTab({ hideHeader = false }: { hideHeader?: boolean }) {
     }
   });
 
-  const handleOpen = async (id: string) => {
+  const [viewingFile, setViewingFile] = useState<{ url: string, title: string, type: string } | null>(null);
+
+  const handleOpen = async (id: string, title: string) => {
     try {
       const res = await api.get(`/attachments/${id}/view`);
       if (res.data.url) {
-        window.open(res.data.url, '_blank', 'noopener,noreferrer');
+        let url = res.data.url;
+        // Native PDF viewer anti-download for Chrome/Edge
+        if (url.includes('.pdf?')) {
+          url = `${url}&#toolbar=0&navpanes=0&scrollbar=0`;
+        }
+        setViewingFile({ url, title, type: 'FILE' });
       }
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Failed to open file.');
@@ -78,6 +86,12 @@ export function FilesTab({ hideHeader = false }: { hideHeader?: boolean }) {
 
   return (
     <div className={`space-y-6 animate-fade-up ${hideHeader ? '' : 'pb-20 max-w-6xl mx-auto'}`}>
+      <FileViewerModal 
+        open={!!viewingFile} 
+        onClose={() => setViewingFile(null)} 
+        title={viewingFile?.title} 
+        url={viewingFile?.url} 
+      />
       {!hideHeader && (
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
@@ -217,7 +231,7 @@ export function FilesTab({ hideHeader = false }: { hideHeader?: boolean }) {
               </div>
 
               {file.accessStatus === 'UNLOCKED' ? (
-                <Button variant="primary" className="w-full" onClick={() => handleOpen(file.id)}>
+                <Button variant="primary" className="w-full" onClick={() => handleOpen(file.id, file.title)}>
                   <ExternalLink className="w-4 h-4 mr-2" />
                   {t('files.open', 'Open File')}
                 </Button>

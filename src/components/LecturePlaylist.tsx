@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { api } from '../lib/api';
 import { useAuth } from '../lib/authContext';
+import { FileViewerModal } from './FileViewerModal';
 import { Link, useRouter } from '../lib/router';
 import type {
   Course,
@@ -832,12 +833,18 @@ function LectureAttachments({ lectureId }: { lectureId: string }) {
     enabled: !!lectureId
   });
 
-  const handleOpen = async (id: string, e: React.MouseEvent) => {
+  const [viewingFile, setViewingFile] = useState<{ url: string, title: string } | null>(null);
+
+  const handleOpen = async (id: string, title: string, e: React.MouseEvent) => {
     e.preventDefault();
     try {
       const res = await api.get(`/attachments/${id}/view`);
       if (res.data.url) {
-        window.open(res.data.url, '_blank', 'noopener,noreferrer');
+        let url = res.data.url;
+        if (url.includes('.pdf?')) {
+          url = `${url}&#toolbar=0&navpanes=0&scrollbar=0`;
+        }
+        setViewingFile({ url, title });
       }
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Failed to open file.');
@@ -848,6 +855,12 @@ function LectureAttachments({ lectureId }: { lectureId: string }) {
 
   return (
     <div className="mt-6 rounded-2xl border border-neutral-800 bg-neutral-900 p-4 text-theme-text">
+      <FileViewerModal 
+        open={!!viewingFile} 
+        onClose={() => setViewingFile(null)} 
+        title={viewingFile?.title} 
+        url={viewingFile?.url} 
+      />
       <h3 className="text-md font-bold flex items-center gap-2 border-b border-neutral-800 pb-2 mb-3">
         <Paperclip className="h-4 w-4 text-cyan-400" />
         <span>Lecture Attachments</span>
@@ -856,7 +869,7 @@ function LectureAttachments({ lectureId }: { lectureId: string }) {
         {attachments.map((file: any) => (
           <button 
             key={file.id} 
-            onClick={(e) => handleOpen(file.id, e)}
+            onClick={(e) => handleOpen(file.id, file.title, e)}
             className="flex items-center justify-between rounded-xl bg-neutral-950 p-3 text-xs border border-neutral-800 hover:border-cyan-500/40 transition group w-full text-left"
           >
             <div className="flex items-center gap-2 overflow-hidden max-w-[65%]">

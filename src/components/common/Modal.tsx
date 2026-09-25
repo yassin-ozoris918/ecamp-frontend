@@ -9,7 +9,7 @@ interface ModalProps {
   description?: string;
   footer?: ReactNode;
   children: ReactNode;
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
 }
 
 export const Modal = memo(function Modal({
@@ -36,7 +36,7 @@ export const Modal = memo(function Modal({
 
   if (!open) return null;
 
-  const widthClass = size === 'sm' ? 'max-w-md' : size === 'lg' ? 'max-w-3xl' : 'max-w-xl';
+  const widthClass = size === 'sm' ? 'max-w-md' : size === 'lg' ? 'max-w-3xl' : size === 'xl' ? 'max-w-5xl' : size === 'full' ? 'max-w-[95vw] w-full' : 'max-w-xl';
 
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
