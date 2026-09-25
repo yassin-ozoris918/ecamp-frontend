@@ -16,7 +16,6 @@ export function FileViewerModal({ open, onClose, title, url }: FileViewerModalPr
             src={url}
             className="w-full h-full border-0 absolute inset-0"
             title={title}
-            sandbox="allow-scripts allow-same-origin"
           />
         </div>
       )}
