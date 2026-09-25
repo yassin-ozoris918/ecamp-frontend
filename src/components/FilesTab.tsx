@@ -7,7 +7,7 @@ import { Spinner, Badge, EmptyState, ErrorMessage, Button } from './ui';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 
-export function FilesTab() {
+export function FilesTab({ hideHeader = false }: { hideHeader?: boolean }) {
   const { profile } = useAuth();
   const { t } = useTranslation();
   const queryClient = useQueryClient();
@@ -77,19 +77,46 @@ export function FilesTab() {
   }
 
   return (
-    <div className="space-y-6 animate-fade-up pb-20 max-w-6xl mx-auto">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h1 className="text-3xl font-display font-bold text-theme-text mb-2">
-            {t('files.title', 'Files')}
-          </h1>
-          <p className="text-theme-muted">
-            Access course materials and unlock premium files.
-          </p>
-        </div>
+    <div className={`space-y-6 animate-fade-up ${hideHeader ? '' : 'pb-20 max-w-6xl mx-auto'}`}>
+      {!hideHeader && (
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div>
+            <h1 className="text-3xl font-display font-bold text-theme-text mb-2">
+              {t('files.title', 'Files')}
+            </h1>
+            <p className="text-theme-muted">
+              Access course materials and unlock premium files.
+            </p>
+          </div>
 
-        {/* Global Course Files Unlock */}
-        {courseId && (
+          {/* Global Course Files Unlock */}
+          {courseId && (
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                placeholder={t('files.enterCode', 'Enter Access Code')}
+                value={redeemingTarget?.type === 'COURSE_FILES' ? redeemCode : ''}
+                onChange={(e) => {
+                  setRedeemCode(e.target.value);
+                  setRedeemingTarget({ id: courseId, type: 'COURSE_FILES' });
+                }}
+                className="bg-base-900 border border-theme-border text-theme-text text-sm rounded-lg focus:ring-accent-500 focus:border-accent-500 block p-2.5 outline-none max-w-[200px]"
+              />
+              <Button
+                variant="primary"
+                disabled={!redeemCode || redeemingTarget?.type !== 'COURSE_FILES' || redeemMutation.isPending}
+                onClick={() => redeemMutation.mutate({ code: redeemCode, targetType: 'COURSE_FILES', targetId: courseId })}
+              >
+                <Unlock className="w-4 h-4 mr-2" />
+                {redeemMutation.isPending ? '...' : 'Unlock Course Files'}
+              </Button>
+            </div>
+          )}
+        </div>
+      )}
+      
+      {hideHeader && courseId && (
+        <div className="flex flex-col md:flex-row justify-end items-start md:items-center gap-4">
           <div className="flex items-center gap-2">
             <input
               type="text"
@@ -110,8 +137,8 @@ export function FilesTab() {
               {redeemMutation.isPending ? '...' : 'Unlock Course Files'}
             </Button>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       <div className="glass p-4 rounded-2xl flex flex-col sm:flex-row gap-4">
         <div className="relative flex-1">

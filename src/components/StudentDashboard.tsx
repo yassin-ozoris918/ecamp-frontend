@@ -17,12 +17,13 @@ import { Badge, EmptyState, ProgressBar, Skeleton } from './ui';
 import { useTranslation } from 'react-i18next';
 
 import { COURSE_COVERS } from '../lib/covers';
+import { FilesTab } from './FilesTab';
 
 export function StudentDashboard() {
   const { profile } = useAuth();
   const [courses, setCourses] = useState<CourseProgressItem[]>([]);
   const [catalogCourses, setCatalogCourses] = useState<Course[]>([]);
-  const [activeTab, setActiveTab] = useState<'my-courses' | 'catalog'>('my-courses');
+  const [activeTab, setActiveTab] = useState<'my-courses' | 'catalog' | 'files'>('my-courses');
   const [stats, setStats] = useState<{ xp: number; streakDays: number; rank: number | null } | null>(null);
   const [loading, setLoading] = useState(true);
   const { t } = useTranslation();
@@ -118,6 +119,13 @@ export function StudentDashboard() {
               {t('dashboard.courseCatalog')}
               {activeTab === 'catalog' && <div className="absolute -bottom-[9px] left-0 right-0 h-[2px] bg-accent-400 rounded-t" />}
             </button>
+            <button
+              onClick={() => setActiveTab('files')}
+              className={`text-lg font-display font-bold pb-2 transition-colors relative ${activeTab === 'files' ? 'text-theme-text' : 'text-theme-muted hover:text-theme-muted'}`}
+            >
+              {t('nav.files', 'Files')}
+              {activeTab === 'files' && <div className="absolute -bottom-[9px] left-0 right-0 h-[2px] bg-accent-400 rounded-t" />}
+            </button>
           </div>
           {courses.length > 0 && activeTab === 'my-courses' && (
             <Link to="/leaderboard" className="text-sm text-accent-700 dark:text-accent-300 hover:text-accent-200">
@@ -211,7 +219,7 @@ export function StudentDashboard() {
               })}
             </div>
           )
-        ) : (
+        ) : activeTab === 'catalog' ? (
           (!Array.isArray(catalogCourses) || catalogCourses.length === 0) ? (
             <EmptyState
               icon={<BookOpen className="w-8 h-8" />}
@@ -327,7 +335,9 @@ export function StudentDashboard() {
               })}
             </div>
           )
-        )}
+        ) : activeTab === 'files' ? (
+          <FilesTab hideHeader />
+        ) : null}
       </div>
 
     </div>
