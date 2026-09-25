@@ -840,11 +840,7 @@ function LectureAttachments({ lectureId }: { lectureId: string }) {
     try {
       const res = await api.get(`/attachments/${id}/view`);
       if (res.data.url) {
-        let url = res.data.url;
-        if (url.includes('.pdf?')) {
-          url = `${url}&#toolbar=0&navpanes=0&scrollbar=0`;
-        }
-        setViewingFile({ url, title });
+        setViewingFile({ url: res.data.url, title });
       }
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Failed to open file.');

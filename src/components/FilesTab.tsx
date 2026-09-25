@@ -64,12 +64,7 @@ export function FilesTab({ hideHeader = false }: { hideHeader?: boolean }) {
     try {
       const res = await api.get(`/attachments/${id}/view`);
       if (res.data.url) {
-        let url = res.data.url;
-        // Native PDF viewer anti-download for Chrome/Edge
-        if (url.includes('.pdf?')) {
-          url = `${url}&#toolbar=0&navpanes=0&scrollbar=0`;
-        }
-        setViewingFile({ url, title, type: 'FILE' });
+        setViewingFile({ url: res.data.url, title, type: 'FILE' });
       }
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Failed to open file.');
