@@ -1275,6 +1275,8 @@ export function AdminCodes() {
             <option value="All">All Types</option>
             <option value="LECTURE">Lecture</option>
             <option value="COURSE">Full Course</option>
+            <option value="FILE">File Attachment</option>
+            <option value="COURSE_FILES">Course Files</option>
           </select>
           <select 
             className="input w-full sm:w-auto text-sm"
@@ -1297,7 +1299,7 @@ export function AdminCodes() {
           </div>
           <button 
             onClick={() => {
-              const headers = ['Code', 'Type', 'Education Level', 'Status', 'Redeemed Course', 'Redeemed Lecture', 'Redeemed By', 'Created At'];
+              const headers = ['Code', 'Type', 'Education Level', 'Status', 'Redeemed Course', 'Redeemed Lecture', 'Redeemed File', 'Redeemed By', 'Created At'];
               const rows = codes.map(c => [
                 c.code || '',
                 c.targetType || '',
@@ -1305,6 +1307,7 @@ export function AdminCodes() {
                 formatCodeStatus(c.status),
                 c.courseTitle || '',
                 c.lectureTitle || '',
+                c.attachmentTitle || '',
                 c.redeemerName || '',
                 new Date(c.createdAt).toLocaleDateString()
               ]);
@@ -1337,6 +1340,7 @@ export function AdminCodes() {
                 <th className="p-4 text-start">Audience</th>
                 <th className="p-4 text-start">Status</th>
                 <th className="p-4 text-start">Redeemed For</th>
+                <th className="p-4 text-start">Redeemed File</th>
                 <th className="p-4 text-start">Redeemed By</th>
                 <th className="p-4 text-start">Created</th>
                 <th className="p-4 text-end">Actions</th>
@@ -1372,8 +1376,11 @@ export function AdminCodes() {
                   </td>
                   <td className="p-4 text-theme-muted">
                     {c.status === 'REDEEMED' 
-                      ? (c.targetType === 'COURSE' ? c.courseTitle : c.lectureTitle) 
+                      ? (c.targetType === 'COURSE' || c.targetType === 'COURSE_FILES' ? c.courseTitle : c.lectureTitle) 
                       : '—'}
+                  </td>
+                  <td className="p-4 text-theme-muted">
+                    {c.status === 'REDEEMED' && c.targetType === 'FILE' ? c.attachmentTitle : '—'}
                   </td>
                   <td className="p-4 text-theme-muted">{c.redeemerName ?? '—'}</td>
                   <td className="p-4 text-theme-muted">{new Date(c.createdAt).toLocaleDateString()}</td>
@@ -1444,7 +1451,7 @@ function AdminGenerateCodesModal({
   onClose: () => void;
   onGenerated: () => void;
 }) {
-  const [targetType, setTargetType] = useState<'LECTURE' | 'COURSE'>('LECTURE');
+  const [targetType, setTargetType] = useState<'LECTURE' | 'COURSE' | 'FILE' | 'COURSE_FILES'>('LECTURE');
   const [educationLevel, setEducationLevel] = useState<'HIGH_SCHOOL' | 'UNIVERSITY'>('UNIVERSITY');
   const [count, setCount] = useState<number>(1);
   const [busy, setBusy] = useState(false);
@@ -1512,10 +1519,12 @@ function AdminGenerateCodesModal({
             <select
               className="input bg-neutral-900"
               value={targetType}
-              onChange={(e) => setTargetType(e.target.value as 'LECTURE' | 'COURSE')}
+              onChange={(e) => setTargetType(e.target.value as 'LECTURE' | 'COURSE' | 'FILE' | 'COURSE_FILES')}
             >
               <option value="LECTURE">Lecture</option>
               <option value="COURSE">Full Course</option>
+              <option value="FILE">File Attachment</option>
+              <option value="COURSE_FILES">Course Files</option>
             </select>
             <p className="text-xs text-theme-muted mt-1">What does this code unlock?</p>
           </div>

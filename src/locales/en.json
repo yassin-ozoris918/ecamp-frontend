@@ -13,7 +13,29 @@
     "instructors": "Instructors",
     "certificates": "Certificates",
     "auditLogs": "Audit Logs",
-    "reports": "Reports"
+    "reports": "Reports",
+    "files": "Files"
+  },
+  "files": {
+    "title": "Files",
+    "search": "Search files...",
+    "allCourses": "All Courses",
+    "myFiles": "MY FILES",
+    "lockedFiles": "LOCKED FILES",
+    "unlocked": "Unlocked",
+    "locked": "Locked",
+    "open": "Open File",
+    "enterCode": "Enter Access Code",
+    "unlock": "Unlock File",
+    "noFilesFound": "No Files Found",
+    "noLockedFiles": "No Locked Files",
+    "noUnlockedFiles": "No Unlocked Files",
+    "accessGranted": "Access Granted",
+    "invalidCode": "Invalid Code",
+    "codeAlreadyUsed": "Code Already Used",
+    "accessDenied": "Access Denied",
+    "fileNotAvailable": "File Not Available",
+    "redeemSuccess": "Code redeemed successfully."
   },
   "auth": {
     "signIn": "Sign In",

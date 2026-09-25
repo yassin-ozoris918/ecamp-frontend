@@ -15,6 +15,7 @@ import { Leaderboard } from './components/Leaderboard';
 import { MyStats } from './components/MyStats';
 import { ContactScreen } from './components/ContactScreen';
 import { InstructorsScreen } from './components/InstructorsScreen';
+import { FilesTab } from './components/FilesTab';
 
 // Helper to auto-refresh on chunk load failures (e.g. after a new deployment)
 const lazyImport = (factory: () => Promise<any>) => {
@@ -227,6 +228,7 @@ function RoleRoutes({ role }: { role: string }) {
           { pattern: '/course/:courseId', element: (p) => <StudentCourseView courseId={p.courseId} /> },
           { pattern: '/lecture/:lectureId', element: (p) => <LecturePlaylist lectureId={p.lectureId} /> },
           { pattern: '/exam/:examId', element: (p) => <ExamScreen examId={p.examId} /> },
+          { pattern: '/files', element: () => <FilesTab /> },
           { pattern: '/leaderboard', element: () => <Leaderboard /> },
           { pattern: '/stats', element: () => <MyStats /> },
           { pattern: '/profile', element: () => <ProfileScreen /> },

@@ -13,7 +13,29 @@
     "instructors": "المحاضرون",
     "certificates": "الشهادات",
     "auditLogs": "سجلات المراجعة",
-    "reports": "التقارير"
+    "reports": "التقارير",
+    "files": "الملفات"
+  },
+  "files": {
+    "title": "الملفات",
+    "search": "البحث في الملفات...",
+    "allCourses": "كل المقررات",
+    "myFiles": "ملفاتي",
+    "lockedFiles": "الملفات المقفلة",
+    "unlocked": "مفتوح",
+    "locked": "مقفل",
+    "open": "فتح الملف",
+    "enterCode": "أدخل كود التفعيل",
+    "unlock": "فتح الملف",
+    "noFilesFound": "لا توجد ملفات",
+    "noLockedFiles": "لا توجد ملفات مقفلة",
+    "noUnlockedFiles": "لا توجد ملفات مفتوحة",
+    "accessGranted": "تم السماح بالوصول",
+    "invalidCode": "الكود غير صالح",
+    "codeAlreadyUsed": "الكود مستخدم من قبل",
+    "accessDenied": "تم رفض الوصول",
+    "fileNotAvailable": "الملف غير متاح",
+    "redeemSuccess": "تم التفعيل بنجاح."
   },
   "auth": {
     "signIn": "تسجيل الدخول",

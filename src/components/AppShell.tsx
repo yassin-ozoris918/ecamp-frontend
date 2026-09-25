@@ -36,9 +36,9 @@ interface NavItem {
 const NAV: Record<UserRole, NavItem[]> = {
   STUDENT: [
     { to: '/dashboard', label: 'nav.dashboard', icon: <LayoutGrid className="w-4 h-4" /> },
+    { to: '/files', label: 'nav.files', icon: <BookOpen className="w-4 h-4" /> },
     { to: '/leaderboard', label: 'nav.leaderboard', icon: <Trophy className="w-4 h-4" /> },
     { to: '/stats', label: 'nav.stats', icon: <BarChart3 className="w-4 h-4" /> },
-    // { to: '/instructors', label: 'nav.instructors', icon: <GraduationCap className="w-4 h-4" /> }, // Temporarily disabled
     { to: '/contact', label: 'nav.contact', icon: <MessageCircle className="w-4 h-4" /> },
   ],
   INSTRUCTOR: [

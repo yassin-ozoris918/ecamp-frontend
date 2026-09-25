@@ -14,6 +14,7 @@ import {
   Maximize,
   Minimize,
   Gauge,
+  ExternalLink,
 } from 'lucide-react';
 import { api } from '../lib/api';
 import { useAuth } from '../lib/authContext';
@@ -831,6 +832,18 @@ function LectureAttachments({ lectureId }: { lectureId: string }) {
     enabled: !!lectureId
   });
 
+  const handleOpen = async (id: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    try {
+      const res = await api.get(`/attachments/${id}/view`);
+      if (res.data.url) {
+        window.open(res.data.url, '_blank', 'noopener,noreferrer');
+      }
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Failed to open file.');
+    }
+  };
+
   if (attachments.length === 0) return null;
 
   return (
@@ -841,12 +854,10 @@ function LectureAttachments({ lectureId }: { lectureId: string }) {
       </h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
         {attachments.map((file: any) => (
-          <a 
+          <button 
             key={file.id} 
-            href={file.fileUrl} 
-            target="_blank" 
-            rel="noreferrer" 
-            className="flex items-center justify-between rounded-xl bg-neutral-950 p-3 text-xs border border-neutral-800 hover:border-cyan-500/40 transition group"
+            onClick={(e) => handleOpen(file.id, e)}
+            className="flex items-center justify-between rounded-xl bg-neutral-950 p-3 text-xs border border-neutral-800 hover:border-cyan-500/40 transition group w-full text-left"
           >
             <div className="flex items-center gap-2 overflow-hidden max-w-[65%]">
               <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-neutral-800 text-cyan-400 border border-neutral-700 shrink-0">
@@ -854,8 +865,10 @@ function LectureAttachments({ lectureId }: { lectureId: string }) {
               </span>
               <span className="font-semibold text-theme-muted group-hover:text-cyan-400 transition truncate">{file.title}</span>
             </div>
-            <span className="text-[10px] bg-neutral-900 px-2 py-1 rounded border border-neutral-800 uppercase tracking-wider text-cyan-400 font-bold shrink-0">Download</span>
-          </a>
+            <span className="text-[10px] bg-neutral-900 px-2 py-1 rounded border border-neutral-800 uppercase tracking-wider text-cyan-400 font-bold shrink-0 flex items-center gap-1">
+              <ExternalLink className="w-3 h-3" /> Open
+            </span>
+          </button>
         ))}
       </div>
     </div>
