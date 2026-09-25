@@ -212,7 +212,7 @@ export interface ActivationCode {
   id: string;
   code: string;
   status: string;
-  targetType: 'LECTURE' | 'COURSE';
+  targetType: 'LECTURE' | 'COURSE' | 'FILE' | 'COURSE_FILES';
   educationLevel: 'HIGH_SCHOOL' | 'UNIVERSITY';
   redeemedAt: string | null;
   studentId: string | null;
@@ -221,6 +221,7 @@ export interface ActivationCode {
   createdAt: string;
   courseTitle?: string;
   lectureTitle?: string;
+  attachmentTitle?: string;
   redeemerName?: string | null;
   isRedeemed?: boolean;
   isCopied: boolean;
