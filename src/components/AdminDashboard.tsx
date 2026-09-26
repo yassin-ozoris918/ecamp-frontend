@@ -2187,6 +2187,59 @@ export function AdminPendingUsers() {
                       <Badge variant="default">
                         {user.educationLevel === 'HIGH_SCHOOL' ? 'High School' : 'University'}
                       </Badge>
+                      {user.educationLevel === 'HIGH_SCHOOL' && (
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {user.highSchoolSystem === 'BACCALAUREATE' && <Badge variant="default">Bacc</Badge>}
+                          {user.highSchoolSystem === 'TRADITIONAL' && <Badge variant="default">Trad</Badge>}
+                          {user.studyMode === 'ONLINE' && <Badge variant="default">Online</Badge>}
+                          {user.studyMode === 'CENTER' && <Badge variant="default">Center</Badge>}
+                          {user.studyLanguage === 'ARABIC' && <Badge variant="default">AR</Badge>}
+                          {user.studyLanguage === 'ENGLISH' && <Badge variant="default">EN</Badge>}
+                          {user.highSchoolGrade === 'GRADE_1' && <Badge variant="warning">G1</Badge>}
+                          {user.highSchoolGrade === 'GRADE_2' && <Badge variant="warning">G2</Badge>}
+                          {user.highSchoolGrade === 'GRADE_3' && <Badge variant="warning">G3</Badge>}
+                          {user.traditionalBranch === 'SCIENCE' && <Badge variant="info">Sci</Badge>}
+                          {user.traditionalBranch === 'SCIENCE_BIOLOGY' && <Badge variant="info">SciBio</Badge>}
+                          {user.traditionalBranch === 'SCIENCE_MATH' && <Badge variant="info">SciMath</Badge>}
+                          {user.traditionalBranch === 'LITERARY' && <Badge variant="info">Lit</Badge>}
+                          {user.baccalaureatePath === 'MEDICINE_AND_LIFE_SCIENCES' && <Badge variant="info">Med</Badge>}
+                          {user.baccalaureatePath === 'ENGINEERING_AND_COMPUTER_SCIENCE' && <Badge variant="info">Eng</Badge>}
+                          {user.baccalaureatePath === 'BUSINESS' && <Badge variant="info">Bus</Badge>}
+                          {user.baccalaureatePath === 'ARTS_AND_HUMANITIES' && <Badge variant="info">Arts</Badge>}
+                        </div>
+                      )}
+                      {user.educationLevel === 'UNIVERSITY' && (
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {(user.academicUniversity?.nameEn || user.academicUniversity?.nameAr || user.otherUniversityName) && (
+                            <span title={(user.academicUniversity?.nameEn || user.academicUniversity?.nameAr || user.otherUniversityName) || undefined}>
+                              <Badge variant="accent">
+                                {getAbbreviation(user.academicUniversity?.nameEn || user.academicUniversity?.nameAr || user.otherUniversityName)}
+                              </Badge>
+                            </span>
+                          )}
+                          {(user.academicFaculty?.nameEn || user.academicFaculty?.nameAr || user.otherFacultyName) && (
+                            <span title={(user.academicFaculty?.nameEn || user.academicFaculty?.nameAr || user.otherFacultyName) || undefined}>
+                              <Badge variant="default">
+                                {getAbbreviation(user.academicFaculty?.nameEn || user.academicFaculty?.nameAr || user.otherFacultyName)}
+                              </Badge>
+                            </span>
+                          )}
+                          {(user.academicDepartment?.nameEn || user.academicDepartment?.nameAr || user.otherDepartmentName) && (
+                            <span title={(user.academicDepartment?.nameEn || user.academicDepartment?.nameAr || user.otherDepartmentName) || undefined}>
+                              <Badge variant="info">
+                                {getAbbreviation(user.academicDepartment?.nameEn || user.academicDepartment?.nameAr || user.otherDepartmentName)}
+                              </Badge>
+                            </span>
+                          )}
+                          {(user.academicProgram?.nameEn || user.academicProgram?.nameAr || user.otherProgramName) && (
+                            <span title={(user.academicProgram?.nameEn || user.academicProgram?.nameAr || user.otherProgramName) || undefined}>
+                              <Badge variant="warning">
+                                {getAbbreviation(user.academicProgram?.nameEn || user.academicProgram?.nameAr || user.otherProgramName)}
+                              </Badge>
+                            </span>
+                          )}
+                        </div>
+                      )}
                     </td>
                     <td className="px-6 py-4">
                       <div className="text-xs text-theme-text">Phone: <span className="font-mono text-theme-muted">{user.phoneNumber || 'N/A'}</span></div>
