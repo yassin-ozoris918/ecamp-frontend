@@ -135,7 +135,9 @@
       "missingUniversity": "Please select a university.",
       "missingOtherUniversity": "Please enter the university name.",
       "missingFaculty": "Please select a faculty.",
-      "missingOtherFaculty": "Please enter the faculty name."
+      "missingOtherFaculty": "Please enter the faculty name.",
+      "missingDepartment": "Please select a department.",
+      "missingProgram": "Please select a program."
     },
     "program": "Program",
     "facultyName": "Faculty Name",

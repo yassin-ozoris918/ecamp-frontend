@@ -135,7 +135,9 @@
       "missingUniversity": "يرجى اختيار الجامعة.",
       "missingOtherUniversity": "يرجى كتابة اسم الجامعة.",
       "missingFaculty": "يرجى اختيار الكلية.",
-      "missingOtherFaculty": "يرجى كتابة اسم الكلية."
+      "missingOtherFaculty": "يرجى كتابة اسم الكلية.",
+      "missingDepartment": "يرجى اختيار القسم.",
+      "missingProgram": "يرجى اختيار البرنامج."
     },
     "program": "البرنامج",
     "facultyName": "اسم الكلية",

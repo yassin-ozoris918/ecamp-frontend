@@ -24,6 +24,7 @@ interface AcademicDropdownsProps {
     otherDepartmentName: string | null;
     otherProgramName: string | null;
   }) => void;
+  onAvailabilityChange?: (hasDepartments: boolean, hasPrograms: boolean) => void;
 }
 
 export function AcademicDropdowns({
@@ -32,6 +33,7 @@ export function AcademicDropdowns({
   departmentId,
   programId,
   onChange,
+  onAvailabilityChange,
   forceShowAll,
   isTargetingMode,
 }: AcademicDropdownsProps) {
@@ -88,12 +90,17 @@ export function AcademicDropdowns({
         if (res.data.length === 0) {
           setLoadingPrograms(true);
           api.get(`/academic-data/faculties/${facultyId}/programs`).then((pres) => {
-            if (!ignore) setPrograms(pres.data);
+            if (!ignore) {
+              setPrograms(pres.data);
+              if (onAvailabilityChange) onAvailabilityChange(false, pres.data.length > 0);
+            }
           }).catch((err) => {
             console.error('Failed to fetch programs for faculty:', err);
           }).finally(() => {
             if (!ignore) setLoadingPrograms(false);
           });
+        } else {
+          if (onAvailabilityChange) onAvailabilityChange(true, programs.length > 0);
         }
       }).catch((err) => {
         console.error('Failed to fetch departments:', err);
@@ -104,6 +111,7 @@ export function AcademicDropdowns({
       if (!ignore) {
         setDepartments([]);
         setPrograms([]);
+        if (onAvailabilityChange) onAvailabilityChange(false, false);
       }
     }
     return () => { ignore = true; };
@@ -114,14 +122,20 @@ export function AcademicDropdowns({
     if (departmentId) {
       setLoadingPrograms(true);
       api.get(`/academic-data/departments/${departmentId}/programs`).then((res) => {
-        if (!ignore) setPrograms(res.data);
+        if (!ignore) {
+          setPrograms(res.data);
+          if (onAvailabilityChange) onAvailabilityChange(departments.length > 0, res.data.length > 0);
+        }
       }).catch((err) => {
         console.error('Failed to fetch programs:', err);
       }).finally(() => {
         if (!ignore) setLoadingPrograms(false);
       });
     } else {
-      if (!ignore) setPrograms([]);
+      if (!ignore) {
+        setPrograms([]);
+        if (onAvailabilityChange) onAvailabilityChange(departments.length > 0, false);
+      }
     }
     return () => { ignore = true; };
   }, [departmentId]);

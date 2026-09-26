@@ -64,6 +64,8 @@ export function AuthScreen() {
   const [otherFacultyName, setOtherFacultyName] = useState<string | null>(null);
   const [otherDepartmentName, setOtherDepartmentName] = useState<string | null>(null);
   const [otherProgramName, setOtherProgramName] = useState<string | null>(null);
+  const [hasDepartments, setHasDepartments] = useState(false);
+  const [hasPrograms, setHasPrograms] = useState(false);
 
   const handleAcademicChange = (data: any) => {
     setUniversityId(data.universityId || null);
@@ -176,6 +178,8 @@ export function AuthScreen() {
           if (universityId === 'other' && (!otherUniversityName || !otherUniversityName.trim())) { setLocalError(t('auth.errors.missingOtherUniversity')); return; }
           if (!facultyId) { setLocalError(t('auth.errors.missingFaculty')); return; }
           if (facultyId === 'other' && (!otherFacultyName || !otherFacultyName.trim())) { setLocalError(t('auth.errors.missingOtherFaculty')); return; }
+          if (hasDepartments && !departmentId) { setLocalError(t('auth.errors.missingDepartment')); return; }
+          if (hasPrograms && !programId) { setLocalError(t('auth.errors.missingProgram')); return; }
         }
 
         if (phoneNumber.trim() && parentPhoneNumber.trim() && phoneNumber.trim() === parentPhoneNumber.trim()) {
@@ -508,6 +512,10 @@ export function AuthScreen() {
                       otherDepartmentName={otherDepartmentName}
                       otherProgramName={otherProgramName}
                       onChange={handleAcademicChange}
+                      onAvailabilityChange={(hd, hp) => {
+                        setHasDepartments(hd);
+                        setHasPrograms(hp);
+                      }}
                     />
                   </div>
                 )}
