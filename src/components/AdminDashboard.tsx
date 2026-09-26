@@ -519,6 +519,7 @@ export function AdminUsers() {
       if (highSchoolSystemFilter !== 'All') query += `highSchoolSystem=${highSchoolSystemFilter}&`;
       if (studyModeFilter !== 'All') query += `studyMode=${studyModeFilter}&`;
       if (studyLanguageFilter !== 'All') query += `studyLanguage=${studyLanguageFilter}&`;
+      query += `take=1000`;
       const { data } = await api.get(query);
       const usersList = data?.items || data || [];
       return (Array.isArray(usersList) ? usersList : []).map((u: UserListItem) => ({
@@ -2037,7 +2038,7 @@ export function AdminPendingUsers() {
   const { data: pendingUsers, isLoading, refetch } = useQuery({
     queryKey: ['adminPendingUsers', educationLevelFilter],
     queryFn: async () => {
-      let url = '/admin/users?isActive=false';
+      let url = '/admin/users?isActive=false&take=1000';
       if (educationLevelFilter !== 'ALL') {
         url += `&educationLevel=${educationLevelFilter}`;
       }
