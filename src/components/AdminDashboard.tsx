@@ -96,6 +96,35 @@ function formatCodeStatus(status: string): string {
   return map[status] || status || '';
 }
 
+function getArabicLabel(val: string | null | undefined): string {
+  if (!val) return '';
+  const map: Record<string, string> = {
+    HIGH_SCHOOL: 'ثانوي',
+    UNIVERSITY: 'جامعي',
+    STUDENT: 'طالب',
+    INSTRUCTOR: 'معلم',
+    ADMIN: 'مدير',
+    TRADITIONAL: 'عام',
+    BACCALAUREATE: 'أزهري/لغات',
+    ONLINE: 'أونلاين',
+    CENTER: 'سنتر',
+    ARABIC: 'عربي',
+    ENGLISH: 'إنجليزي',
+    GRADE_1: 'الصف الأول',
+    GRADE_2: 'الصف الثاني',
+    GRADE_3: 'الصف الثالث',
+    SCIENCE: 'علمي',
+    SCIENCE_BIOLOGY: 'علمي علوم',
+    SCIENCE_MATH: 'علمي رياضة',
+    LITERARY: 'أدبي',
+    MEDICINE_AND_LIFE_SCIENCES: 'طب وعلوم حياة',
+    ENGINEERING_AND_COMPUTER_SCIENCE: 'هندسة وحاسبات',
+    BUSINESS: 'إدارة أعمال',
+    ARTS_AND_HUMANITIES: 'فنون وإنسانيات',
+  };
+  return map[val] || val;
+}
+
 function downloadCsv(headers: string[], rows: any[][], filename: string) {
   const headerLine = headers.map(h => csvEscapeValue(h)).join(',');
   const dataLines = rows.map(row => row.map(v => csvEscapeValue(v)).join(','));
@@ -583,25 +612,29 @@ export function AdminUsers() {
           </div>
           <button 
             onClick={() => {
-              const headers = ['User ID', 'Name', 'Email', 'Role', 'Education Level', 'System', 'Mode', 'Language', 'Grade', 'Branch', 'Path', 'University', 'Faculty', 'Active', 'Device Bound', 'XP', 'Date Joined'];
+              const headers = ['معرف المستخدم', 'الاسم بالكامل', 'البريد الإلكتروني', 'رقم الهاتف', 'رقم هاتف ولي الأمر', 'الدور', 'المرحلة الدراسية', 'النظام', 'نظام الدراسة', 'لغة الدراسة', 'الصف', 'الشعبة', 'المسار', 'الجامعة', 'الكلية', 'القسم', 'البرنامج', 'نشط', 'الجهاز مرتبط', 'نقاط الخبرة', 'تاريخ الانضمام'];
               const rows = filtered.map((u: any) => [
-                u.id,
-                u.full_name || '',
+                u.id || '',
+                u.full_name || u.fullName || '',
                 u.email || '',
-                formatRole(u.role),
-                formatEducationLevel(u.educationLevel || ''),
-                u.highSchoolSystem || '',
-                u.studyMode || '',
-                u.studyLanguage || '',
-                u.highSchoolGrade || '',
-                u.traditionalBranch || '',
-                u.baccalaureatePath || '',
-                u.university || '',
-                u.faculty || '',
-                u.is_active ? 'Yes' : 'No',
-                u.device_id ? 'Yes' : 'No',
-                u.xp,
-                new Date(u.created_at).toLocaleDateString()
+                u.phoneNumber || '',
+                u.parentPhoneNumber || '',
+                getArabicLabel(u.role),
+                getArabicLabel(u.educationLevel),
+                getArabicLabel(u.highSchoolSystem),
+                getArabicLabel(u.studyMode),
+                getArabicLabel(u.studyLanguage),
+                getArabicLabel(u.highSchoolGrade),
+                getArabicLabel(u.traditionalBranch),
+                getArabicLabel(u.baccalaureatePath),
+                u.academicUniversity?.nameAr || u.academicUniversity?.nameEn || u.otherUniversityName || u.university || '',
+                u.academicFaculty?.nameAr || u.academicFaculty?.nameEn || u.otherFacultyName || u.faculty || '',
+                u.academicDepartment?.nameAr || u.academicDepartment?.nameEn || u.otherDepartmentName || u.department || '',
+                u.academicProgram?.nameAr || u.academicProgram?.nameEn || u.otherProgramName || u.program || '',
+                (u.is_active !== undefined ? u.is_active : u.isActive) ? 'نعم' : 'لا',
+                (u.device_id || u.deviceId) ? 'نعم' : 'لا',
+                u.xp || 0,
+                new Date(u.created_at || u.createdAt).toLocaleDateString('ar-EG')
               ]);
               downloadCsv(headers, rows, 'platform_users.csv');
             }} 
@@ -1948,15 +1981,26 @@ export function AdminPendingUsers() {
       toast.error('No pending registrations to export');
       return;
     }
-    const headers = ['Full Name', 'Email', 'Role', 'Education Level', 'Phone Number', 'Parent Phone Number', 'Date Joined'];
+    const headers = ['معرف المستخدم', 'الاسم بالكامل', 'البريد الإلكتروني', 'رقم الهاتف', 'رقم هاتف ولي الأمر', 'الدور', 'المرحلة الدراسية', 'النظام', 'نظام الدراسة', 'لغة الدراسة', 'الصف', 'الشعبة', 'المسار', 'الجامعة', 'الكلية', 'القسم', 'البرنامج', 'تاريخ الانضمام'];
     const rows = pendingUsers.map((u: any) => [
-      u.fullName || '',
+      u.id || '',
+      u.full_name || u.fullName || '',
       u.email || '',
-      formatRole(u.role),
-      formatEducationLevel(u.educationLevel),
       u.phoneNumber || '',
       u.parentPhoneNumber || '',
-      new Date(u.createdAt).toLocaleDateString()
+      getArabicLabel(u.role),
+      getArabicLabel(u.educationLevel),
+      getArabicLabel(u.highSchoolSystem),
+      getArabicLabel(u.studyMode),
+      getArabicLabel(u.studyLanguage),
+      getArabicLabel(u.highSchoolGrade),
+      getArabicLabel(u.traditionalBranch),
+      getArabicLabel(u.baccalaureatePath),
+      u.academicUniversity?.nameAr || u.academicUniversity?.nameEn || u.otherUniversityName || u.university || '',
+      u.academicFaculty?.nameAr || u.academicFaculty?.nameEn || u.otherFacultyName || u.faculty || '',
+      u.academicDepartment?.nameAr || u.academicDepartment?.nameEn || u.otherDepartmentName || u.department || '',
+      u.academicProgram?.nameAr || u.academicProgram?.nameEn || u.otherProgramName || u.program || '',
+      new Date(u.createdAt || u.created_at).toLocaleDateString('ar-EG')
     ]);
     downloadCsv(headers, rows, 'pending_registrations.csv');
   };
