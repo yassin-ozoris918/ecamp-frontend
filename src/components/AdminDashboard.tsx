@@ -25,6 +25,7 @@ import {
   Plus,
   Download,
   Settings,
+  Printer,
 } from 'lucide-react';
 import { api } from '../lib/api';
 import type { Profile, UserListItem, ActivationCode, Course, CourseInstructor } from '../lib/types';
@@ -136,6 +137,47 @@ function downloadCsv(headers: string[], rows: any[][], filename: string) {
   a.download = filename;
   a.click();
   window.URL.revokeObjectURL(url);
+}
+
+function printTable(headers: string[], rows: any[][], title: string) {
+  const win = window.open('', '_blank');
+  if (!win) {
+    alert('Please allow popups to print');
+    return;
+  }
+  const html = `
+    <html dir="rtl" lang="ar">
+      <head>
+        <title>${title}</title>
+        <style>
+          body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; }
+          h1 { text-align: center; color: #333; }
+          table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 12px; }
+          th, td { border: 1px solid #ddd; padding: 8px; text-align: right; }
+          th { background-color: #f4f4f4; color: #333; font-weight: bold; }
+          @media print {
+            @page { size: landscape; margin: 1cm; }
+          }
+        </style>
+      </head>
+      <body>
+        <h1>${title}</h1>
+        <table>
+          <thead>
+            <tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr>
+          </thead>
+          <tbody>
+            ${rows.map(row => `<tr>${row.map(cell => `<td>${cell || ''}</td>`).join('')}</tr>`).join('')}
+          </tbody>
+        </table>
+        <script>
+          window.onload = () => { window.print(); };
+        </script>
+      </body>
+    </html>
+  `;
+  win.document.write(html);
+  win.document.close();
 }
 
 export function AdminDashboard() {
@@ -610,38 +652,73 @@ export function AdminUsers() {
           <div className="w-full sm:w-64">
             <SearchBox value={search} onChange={setSearch} placeholder="Search by name, email or phone..." />
           </div>
-          <button 
-            onClick={() => {
-              const headers = ['معرف المستخدم', 'الاسم بالكامل', 'البريد الإلكتروني', 'رقم الهاتف', 'رقم هاتف ولي الأمر', 'الدور', 'المرحلة الدراسية', 'النظام', 'نظام الدراسة', 'لغة الدراسة', 'الصف', 'الشعبة', 'المسار', 'الجامعة', 'الكلية', 'القسم', 'البرنامج', 'نشط', 'الجهاز مرتبط', 'نقاط الخبرة', 'تاريخ الانضمام'];
-              const rows = filtered.map((u: any) => [
-                u.id || '',
-                u.full_name || u.fullName || '',
-                u.email || '',
-                u.phoneNumber || '',
-                u.parentPhoneNumber || '',
-                getArabicLabel(u.role),
-                getArabicLabel(u.educationLevel),
-                getArabicLabel(u.highSchoolSystem),
-                getArabicLabel(u.studyMode),
-                getArabicLabel(u.studyLanguage),
-                getArabicLabel(u.highSchoolGrade),
-                getArabicLabel(u.traditionalBranch),
-                getArabicLabel(u.baccalaureatePath),
-                u.academicUniversity?.nameAr || u.academicUniversity?.nameEn || u.otherUniversityName || u.university || '',
-                u.academicFaculty?.nameAr || u.academicFaculty?.nameEn || u.otherFacultyName || u.faculty || '',
-                u.academicDepartment?.nameAr || u.academicDepartment?.nameEn || u.otherDepartmentName || u.department || '',
-                u.academicProgram?.nameAr || u.academicProgram?.nameEn || u.otherProgramName || u.program || '',
-                (u.is_active !== undefined ? u.is_active : u.isActive) ? 'نعم' : 'لا',
-                (u.device_id || u.deviceId) ? 'نعم' : 'لا',
-                u.xp || 0,
-                new Date(u.created_at || u.createdAt).toLocaleDateString('ar-EG')
-              ]);
-              downloadCsv(headers, rows, 'platform_users.csv');
-            }} 
-            className="btn-secondary whitespace-nowrap"
-          >
-            Export CSV
-          </button>
+          <div className="flex gap-2">
+            <button 
+              onClick={() => {
+                const headers = ['معرف المستخدم', 'الاسم بالكامل', 'البريد الإلكتروني', 'رقم الهاتف', 'رقم هاتف ولي الأمر', 'الدور', 'المرحلة الدراسية', 'النظام', 'نظام الدراسة', 'لغة الدراسة', 'الصف', 'الشعبة', 'المسار', 'الجامعة', 'الكلية', 'القسم', 'البرنامج', 'نشط', 'الجهاز مرتبط', 'نقاط الخبرة', 'تاريخ الانضمام'];
+                const rows = filtered.map((u: any) => [
+                  u.id || '',
+                  u.full_name || u.fullName || '',
+                  u.email || '',
+                  u.phoneNumber || '',
+                  u.parentPhoneNumber || '',
+                  getArabicLabel(u.role),
+                  getArabicLabel(u.educationLevel),
+                  getArabicLabel(u.highSchoolSystem),
+                  getArabicLabel(u.studyMode),
+                  getArabicLabel(u.studyLanguage),
+                  getArabicLabel(u.highSchoolGrade),
+                  getArabicLabel(u.traditionalBranch),
+                  getArabicLabel(u.baccalaureatePath),
+                  u.academicUniversity?.nameAr || u.academicUniversity?.nameEn || u.otherUniversityName || u.university || '',
+                  u.academicFaculty?.nameAr || u.academicFaculty?.nameEn || u.otherFacultyName || u.faculty || '',
+                  u.academicDepartment?.nameAr || u.academicDepartment?.nameEn || u.otherDepartmentName || u.department || '',
+                  u.academicProgram?.nameAr || u.academicProgram?.nameEn || u.otherProgramName || u.program || '',
+                  (u.is_active !== undefined ? u.is_active : u.isActive) ? 'نعم' : 'لا',
+                  (u.device_id || u.deviceId) ? 'نعم' : 'لا',
+                  u.xp || 0,
+                  new Date(u.created_at || u.createdAt).toLocaleDateString('ar-EG')
+                ]);
+                downloadCsv(headers, rows, 'platform_users.csv');
+              }} 
+              className="btn-secondary whitespace-nowrap"
+            >
+              Export CSV
+            </button>
+            <button 
+              onClick={() => {
+                const headers = ['معرف المستخدم', 'الاسم بالكامل', 'البريد الإلكتروني', 'رقم الهاتف', 'رقم هاتف ولي الأمر', 'الدور', 'المرحلة الدراسية', 'النظام', 'نظام الدراسة', 'لغة الدراسة', 'الصف', 'الشعبة', 'المسار', 'الجامعة', 'الكلية', 'القسم', 'البرنامج', 'نشط', 'الجهاز مرتبط', 'نقاط الخبرة', 'تاريخ الانضمام'];
+                const rows = filtered.map((u: any) => [
+                  u.id || '',
+                  u.full_name || u.fullName || '',
+                  u.email || '',
+                  u.phoneNumber || '',
+                  u.parentPhoneNumber || '',
+                  getArabicLabel(u.role),
+                  getArabicLabel(u.educationLevel),
+                  getArabicLabel(u.highSchoolSystem),
+                  getArabicLabel(u.studyMode),
+                  getArabicLabel(u.studyLanguage),
+                  getArabicLabel(u.highSchoolGrade),
+                  getArabicLabel(u.traditionalBranch),
+                  getArabicLabel(u.baccalaureatePath),
+                  u.academicUniversity?.nameAr || u.academicUniversity?.nameEn || u.otherUniversityName || u.university || '',
+                  u.academicFaculty?.nameAr || u.academicFaculty?.nameEn || u.otherFacultyName || u.faculty || '',
+                  u.academicDepartment?.nameAr || u.academicDepartment?.nameEn || u.otherDepartmentName || u.department || '',
+                  u.academicProgram?.nameAr || u.academicProgram?.nameEn || u.otherProgramName || u.program || '',
+                  (u.is_active !== undefined ? u.is_active : u.isActive) ? 'نعم' : 'لا',
+                  (u.device_id || u.deviceId) ? 'نعم' : 'لا',
+                  u.xp || 0,
+                  new Date(u.created_at || u.createdAt).toLocaleDateString('ar-EG')
+                ]);
+                printTable(headers, rows, 'تقرير إدارة المستخدمين');
+              }} 
+              className="btn-secondary whitespace-nowrap"
+            >
+              <Printer className="w-4 h-4 mr-2" />
+              Print / PDF
+            </button>
+          </div>
         </div>
       </div>
 
@@ -1976,7 +2053,7 @@ export function AdminPendingUsers() {
     }
   };
 
-  const handleExportCsv = () => {
+  const handleExport = (type: 'csv' | 'pdf') => {
     if (!pendingUsers || pendingUsers.length === 0) {
       toast.error('No pending registrations to export');
       return;
@@ -2002,7 +2079,8 @@ export function AdminPendingUsers() {
       u.academicProgram?.nameAr || u.academicProgram?.nameEn || u.otherProgramName || u.program || '',
       new Date(u.createdAt || u.created_at).toLocaleDateString('ar-EG')
     ]);
-    downloadCsv(headers, rows, 'pending_registrations.csv');
+    if (type === 'csv') downloadCsv(headers, rows, 'pending_registrations.csv');
+    else printTable(headers, rows, 'تقرير الطلبات المعلقة');
   };
 
   return (
@@ -2026,10 +2104,16 @@ export function AdminPendingUsers() {
             <option value="HIGH_SCHOOL">High School</option>
             <option value="UNIVERSITY">University</option>
           </select>
-          <button onClick={handleExportCsv} className="btn-secondary whitespace-nowrap">
-            <Download className="w-4 h-4 mr-2" />
-            Export CSV
-          </button>
+          <div className="flex gap-2">
+            <button onClick={() => handleExport('csv')} className="btn-secondary whitespace-nowrap">
+              <Download className="w-4 h-4 mr-2" />
+              Export CSV
+            </button>
+            <button onClick={() => handleExport('pdf')} className="btn-secondary whitespace-nowrap">
+              <Printer className="w-4 h-4 mr-2" />
+              Print / PDF
+            </button>
+          </div>
         </div>
       </div>
 
