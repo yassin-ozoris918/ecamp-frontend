@@ -59,6 +59,25 @@ function formatEducationLevel(level: string): string {
   return map[level] || level || '';
 }
 
+function getAbbreviation(text: string | null | undefined): string {
+  if (!text) return '';
+  const isArabic = /[\u0600-\u06FF]/.test(text);
+  if (isArabic) {
+    const words = text.trim().split(/\s+/);
+    if (['كلية', 'جامعة', 'قسم', 'برنامج', 'معهد', 'أكاديمية'].includes(words[0])) {
+      return words.slice(1, 3).join(' ');
+    }
+    return words.slice(0, 2).join(' ');
+  }
+  
+  const ignore = ['of', 'and', 'the', 'for', 'in', '&'];
+  const words = text.trim().split(/\s+/).filter(w => !ignore.includes(w.toLowerCase()));
+  if (words.length === 1) {
+    return text.substring(0, 3).toUpperCase() + (text.length > 3 ? '.' : '');
+  }
+  return words.map(w => w[0].toUpperCase()).join('');
+}
+
 function formatRole(role: string): string {
   const map: Record<string, string> = {
     STUDENT: 'Student',
@@ -673,29 +692,29 @@ export function AdminUsers() {
                             <div className="flex flex-wrap gap-1 mt-1">
                               {(u.academicUniversity?.nameEn || u.academicUniversity?.nameAr || u.otherUniversityName) && (
                                 <span title={(u.academicUniversity?.nameEn || u.academicUniversity?.nameAr || u.otherUniversityName) || undefined}>
-                                  <Badge variant="accent" className="truncate max-w-[100px] block">
-                                    {u.academicUniversity?.nameEn || u.academicUniversity?.nameAr || u.otherUniversityName}
+                                  <Badge variant="accent">
+                                    {getAbbreviation(u.academicUniversity?.nameEn || u.academicUniversity?.nameAr || u.otherUniversityName)}
                                   </Badge>
                                 </span>
                               )}
                               {(u.academicFaculty?.nameEn || u.academicFaculty?.nameAr || u.otherFacultyName) && (
                                 <span title={(u.academicFaculty?.nameEn || u.academicFaculty?.nameAr || u.otherFacultyName) || undefined}>
-                                  <Badge variant="default" className="truncate max-w-[100px] block">
-                                    {u.academicFaculty?.nameEn || u.academicFaculty?.nameAr || u.otherFacultyName}
+                                  <Badge variant="default">
+                                    {getAbbreviation(u.academicFaculty?.nameEn || u.academicFaculty?.nameAr || u.otherFacultyName)}
                                   </Badge>
                                 </span>
                               )}
                               {(u.academicDepartment?.nameEn || u.academicDepartment?.nameAr || u.otherDepartmentName) && (
                                 <span title={(u.academicDepartment?.nameEn || u.academicDepartment?.nameAr || u.otherDepartmentName) || undefined}>
-                                  <Badge variant="info" className="truncate max-w-[100px] block">
-                                    {u.academicDepartment?.nameEn || u.academicDepartment?.nameAr || u.otherDepartmentName}
+                                  <Badge variant="info">
+                                    {getAbbreviation(u.academicDepartment?.nameEn || u.academicDepartment?.nameAr || u.otherDepartmentName)}
                                   </Badge>
                                 </span>
                               )}
                               {(u.academicProgram?.nameEn || u.academicProgram?.nameAr || u.otherProgramName) && (
                                 <span title={(u.academicProgram?.nameEn || u.academicProgram?.nameAr || u.otherProgramName) || undefined}>
-                                  <Badge variant="warning" className="truncate max-w-[100px] block">
-                                    {u.academicProgram?.nameEn || u.academicProgram?.nameAr || u.otherProgramName}
+                                  <Badge variant="warning">
+                                    {getAbbreviation(u.academicProgram?.nameEn || u.academicProgram?.nameAr || u.otherProgramName)}
                                   </Badge>
                                 </span>
                               )}

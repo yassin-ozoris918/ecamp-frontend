@@ -53,6 +53,8 @@ export function AcademicDropdowns({
     setLoadingUniversities(true);
     api.get('/academic-data/universities').then((res) => {
       if (!ignore) setUniversities(res.data);
+    }).catch((err) => {
+      console.error('Failed to fetch universities:', err);
     }).finally(() => {
       if (!ignore) setLoadingUniversities(false);
     });
@@ -65,6 +67,8 @@ export function AcademicDropdowns({
       setLoadingFaculties(true);
       api.get(`/academic-data/universities/${universityId}/faculties`).then((res) => {
         if (!ignore) setFaculties(res.data);
+      }).catch((err) => {
+        console.error('Failed to fetch faculties:', err);
       }).finally(() => {
         if (!ignore) setLoadingFaculties(false);
       });
@@ -85,10 +89,14 @@ export function AcademicDropdowns({
           setLoadingPrograms(true);
           api.get(`/academic-data/faculties/${facultyId}/programs`).then((pres) => {
             if (!ignore) setPrograms(pres.data);
+          }).catch((err) => {
+            console.error('Failed to fetch programs for faculty:', err);
           }).finally(() => {
             if (!ignore) setLoadingPrograms(false);
           });
         }
+      }).catch((err) => {
+        console.error('Failed to fetch departments:', err);
       }).finally(() => {
         if (!ignore) setLoadingDepartments(false);
       });
@@ -107,6 +115,8 @@ export function AcademicDropdowns({
       setLoadingPrograms(true);
       api.get(`/academic-data/departments/${departmentId}/programs`).then((res) => {
         if (!ignore) setPrograms(res.data);
+      }).catch((err) => {
+        console.error('Failed to fetch programs:', err);
       }).finally(() => {
         if (!ignore) setLoadingPrograms(false);
       });
