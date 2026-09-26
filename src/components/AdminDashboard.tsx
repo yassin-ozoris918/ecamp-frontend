@@ -139,24 +139,38 @@ function downloadCsv(headers: string[], rows: any[][], filename: string) {
   window.URL.revokeObjectURL(url);
 }
 
-function printTable(headers: string[], rows: any[][], title: string) {
+function printTable(allHeaders: string[], allRows: any[][], title: string) {
   const win = window.open('', '_blank');
   if (!win) {
     alert('Please allow popups to print');
     return;
   }
+  
+  // Smart filtering: only keep columns that have at least one non-empty value
+  const colHasData = allHeaders.map((_, colIndex) => {
+    return allRows.some(row => {
+      const val = row[colIndex];
+      return val !== null && val !== undefined && val !== '';
+    });
+  });
+
+  const headers = allHeaders.filter((_, i) => colHasData[i]);
+  const rows = allRows.map(row => row.filter((_, i) => colHasData[i]));
+
   const html = `
     <html dir="rtl" lang="ar">
       <head>
         <title>${title}</title>
         <style>
-          body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; }
-          h1 { text-align: center; color: #333; }
-          table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 12px; }
-          th, td { border: 1px solid #ddd; padding: 8px; text-align: right; }
-          th { background-color: #f4f4f4; color: #333; font-weight: bold; }
+          body { font-family: Tahoma, Geneva, Verdana, sans-serif; padding: 20px; }
+          h1 { text-align: center; color: #333; margin-bottom: 20px; }
+          table { width: 100%; border-collapse: collapse; font-size: 11px; }
+          th, td { border: 1px solid #777; padding: 6px 4px; text-align: right; }
+          th { background-color: #eee; color: #000; font-weight: bold; }
+          tr { page-break-inside: avoid; }
           @media print {
             @page { size: landscape; margin: 1cm; }
+            body { padding: 0; }
           }
         </style>
       </head>
@@ -171,7 +185,7 @@ function printTable(headers: string[], rows: any[][], title: string) {
           </tbody>
         </table>
         <script>
-          window.onload = () => { window.print(); };
+          window.onload = () => { setTimeout(() => window.print(), 200); };
         </script>
       </body>
     </html>
