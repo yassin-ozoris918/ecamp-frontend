@@ -154,14 +154,28 @@ export function AuthScreen() {
           return;
         }
         
-        if (educationLevel === 'HIGH_SCHOOL' && !parentPhoneNumber.trim()) {
-          setLocalError(t('auth.errors.parentPhoneRequired'));
-          return;
-        }
-
-        if (educationLevel === 'HIGH_SCHOOL' && !egyptPhoneRegex.test(parentPhoneNumber.trim())) {
-          setLocalError(t('auth.errors.invalidParentPhone'));
-          return;
+        if (educationLevel === 'HIGH_SCHOOL') {
+          if (!highSchoolSystem) { setLocalError(t('auth.errors.missingSystem')); return; }
+          if (!studyMode) { setLocalError(t('auth.errors.missingMode')); return; }
+          if (!studyLanguage) { setLocalError(t('auth.errors.missingLanguage')); return; }
+          if (!highSchoolGrade) { setLocalError(t('auth.errors.missingGrade')); return; }
+          if (highSchoolSystem === 'TRADITIONAL' && (highSchoolGrade === 'GRADE_2' || highSchoolGrade === 'GRADE_3') && !traditionalBranch) {
+            setLocalError(t('auth.errors.missingBranch')); return;
+          }
+          if (highSchoolSystem === 'BACCALAUREATE' && (highSchoolGrade === 'GRADE_2' || highSchoolGrade === 'GRADE_3') && !baccalaureatePath) {
+            setLocalError(t('auth.errors.missingPath')); return;
+          }
+          if (!parentPhoneNumber.trim()) {
+            setLocalError(t('auth.errors.parentPhoneRequired')); return;
+          }
+          if (!egyptPhoneRegex.test(parentPhoneNumber.trim())) {
+            setLocalError(t('auth.errors.invalidParentPhone')); return;
+          }
+        } else if (educationLevel === 'UNIVERSITY') {
+          if (!universityId) { setLocalError(t('auth.errors.missingUniversity')); return; }
+          if (universityId === 'other' && (!otherUniversityName || !otherUniversityName.trim())) { setLocalError(t('auth.errors.missingOtherUniversity')); return; }
+          if (!facultyId) { setLocalError(t('auth.errors.missingFaculty')); return; }
+          if (facultyId === 'other' && (!otherFacultyName || !otherFacultyName.trim())) { setLocalError(t('auth.errors.missingOtherFaculty')); return; }
         }
 
         if (phoneNumber.trim() && parentPhoneNumber.trim() && phoneNumber.trim() === parentPhoneNumber.trim()) {

@@ -127,7 +127,15 @@
       "unrecognizedDevice": "جهاز غير مسجل. يمكنك تسجيل الدخول فقط من جهازك المسجل مسبقاً. يرجى التواصل مع الدعم الفني لطلب إعادة ضبط الجهاز.",
       "missingFields": "يرجى ملء جميع الحقول المطلوبة.",
       "missingBranch": "يرجى اختيار الشعبة.",
-      "missingPath": "يرجى اختيار المسار."
+      "missingPath": "يرجى اختيار المسار.",
+      "missingSystem": "يرجى اختيار النظام التعليمي.",
+      "missingMode": "يرجى اختيار نظام الدراسة.",
+      "missingLanguage": "يرجى اختيار لغة الدراسة.",
+      "missingGrade": "يرجى اختيار الصف الدراسي.",
+      "missingUniversity": "يرجى اختيار الجامعة.",
+      "missingOtherUniversity": "يرجى كتابة اسم الجامعة.",
+      "missingFaculty": "يرجى اختيار الكلية.",
+      "missingOtherFaculty": "يرجى كتابة اسم الكلية."
     },
     "program": "البرنامج",
     "facultyName": "اسم الكلية",

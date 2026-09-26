@@ -127,7 +127,15 @@
       "unrecognizedDevice": "Unrecognized Device. You can only log in from your registered device. Please contact technical support to request a device reset.",
       "missingFields": "Please fill in all required fields.",
       "missingBranch": "Please select a branch.",
-      "missingPath": "Please select a path."
+      "missingPath": "Please select a path.",
+      "missingSystem": "Please select the educational system.",
+      "missingMode": "Please select the study mode.",
+      "missingLanguage": "Please select the study language.",
+      "missingGrade": "Please select the grade.",
+      "missingUniversity": "Please select a university.",
+      "missingOtherUniversity": "Please enter the university name.",
+      "missingFaculty": "Please select a faculty.",
+      "missingOtherFaculty": "Please enter the faculty name."
     },
     "program": "Program",
     "facultyName": "Faculty Name",
