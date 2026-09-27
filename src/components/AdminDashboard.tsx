@@ -2243,7 +2243,9 @@ export function AdminPendingUsers() {
                     </td>
                     <td className="px-6 py-4">
                       <div className="text-xs text-theme-text">Phone: <span className="font-mono text-theme-muted">{user.phoneNumber || 'N/A'}</span></div>
-                      <div className="text-xs text-theme-text mt-1">Parent: <span className="font-mono text-theme-muted">{user.parentPhoneNumber || 'N/A'}</span></div>
+                      {user.educationLevel === 'HIGH_SCHOOL' && (
+                        <div className="text-xs text-theme-text mt-1">Parent: <span className="font-mono text-theme-muted">{user.parentPhoneNumber || 'N/A'}</span></div>
+                      )}
                     </td>
                     <td className="px-6 py-4 text-sm text-theme-muted whitespace-nowrap">
                       {new Date(user.createdAt).toLocaleDateString()}
