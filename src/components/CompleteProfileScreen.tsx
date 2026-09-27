@@ -84,20 +84,20 @@ export function CompleteProfileScreen() {
     setBusy(true);
     try {
       const payload = {
-        highSchoolSystem: highSchoolSystem || null,
-        studyMode: studyMode || null,
-        studyLanguage: studyLanguage || null,
-        highSchoolGrade: highSchoolGrade || null,
-        traditionalBranch: traditionalBranch || null,
-        baccalaureatePath: baccalaureatePath || null,
-        universityId,
-        facultyId,
-        departmentId,
-        programId,
-        otherUniversityName,
-        otherFacultyName,
-        otherDepartmentName,
-        otherProgramName,
+        highSchoolSystem: educationLevel === 'HIGH_SCHOOL' ? (highSchoolSystem || null) : null,
+        studyMode: educationLevel === 'HIGH_SCHOOL' ? (studyMode || null) : null,
+        studyLanguage: educationLevel === 'HIGH_SCHOOL' ? (studyLanguage || null) : null,
+        highSchoolGrade: educationLevel === 'HIGH_SCHOOL' ? (highSchoolGrade || null) : null,
+        traditionalBranch: educationLevel === 'HIGH_SCHOOL' ? (traditionalBranch || null) : null,
+        baccalaureatePath: educationLevel === 'HIGH_SCHOOL' ? (baccalaureatePath || null) : null,
+        universityId: educationLevel === 'UNIVERSITY' ? universityId : null,
+        facultyId: educationLevel === 'UNIVERSITY' ? facultyId : null,
+        departmentId: educationLevel === 'UNIVERSITY' ? departmentId : null,
+        programId: educationLevel === 'UNIVERSITY' ? programId : null,
+        otherUniversityName: educationLevel === 'UNIVERSITY' ? otherUniversityName : null,
+        otherFacultyName: educationLevel === 'UNIVERSITY' ? otherFacultyName : null,
+        otherDepartmentName: educationLevel === 'UNIVERSITY' ? otherDepartmentName : null,
+        otherProgramName: educationLevel === 'UNIVERSITY' ? otherProgramName : null,
       };
 
       const { data } = await api.patch('/users/profile', payload);
