@@ -163,14 +163,15 @@ function printTable(allHeaders: string[], allRows: any[][], title: string) {
         <title>${title}</title>
         <style>
           body { font-family: Tahoma, Geneva, Verdana, sans-serif; padding: 20px; }
-          h1 { text-align: center; color: #333; margin-bottom: 20px; }
-          table { width: 100%; border-collapse: collapse; font-size: 11px; }
-          th, td { border: 1px solid #777; padding: 6px 4px; text-align: right; }
+          h1 { text-align: center; color: #333; margin-bottom: 15px; font-size: 16px; }
+          table { width: 100%; border-collapse: collapse; font-size: 9px; }
+          th, td { border: 1px solid #777; padding: 4px 2px; text-align: right; word-break: break-word; }
           th { background-color: #eee; color: #000; font-weight: bold; }
           tr { page-break-inside: avoid; }
           @media print {
-            @page { size: landscape; margin: 1cm; }
+            @page { size: A4 landscape; margin: 0.5cm; }
             body { padding: 0; }
+            table { font-size: 8px; }
           }
         </style>
       </head>
