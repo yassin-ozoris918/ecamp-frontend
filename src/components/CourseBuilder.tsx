@@ -17,6 +17,8 @@ import {
   GraduationCap,
   Pencil,
   Settings,
+  ArrowUp,
+  ArrowDown,
 } from 'lucide-react';
 import { api } from '../lib/api';
 import { useAuth } from '../lib/authContext';
@@ -1539,9 +1541,59 @@ export function LectureList({ lectures, items, expandedLecs, toggleLec, load, se
   onAddQuestion: (id: string, type: 'EXAM' | 'QUIZ') => void;
   onEditQuizSettings?: (quiz: any) => void;
 }) {
+  const [localLectures, setLocalLectures] = useState(() => {
+    return [...lectures].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+  });
+
+  useEffect(() => {
+    setLocalLectures([...lectures].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0)));
+  }, [lectures]);
+
+  const reorderMutation = useMutation({
+    mutationFn: async (newItems: any[]) => {
+      const payload = newItems.map((item, index) => ({
+        id: item.id,
+        orderIndex: index,
+      }));
+      const isUnassigned = newItems.length > 0 && newItems[0].chapterId === null;
+      const entityType = isUnassigned ? 'unassigned-lecture' : 'lecture';
+      const parentId = isUnassigned ? newItems[0].courseId : newItems[0].chapterId;
+      await api.post(`/reorder`, {
+        entityType,
+        parentId,
+        items: payload
+      });
+    },
+    onSuccess: () => {
+      load();
+    }
+  });
+
+  function moveItem(index: number, direction: 'up' | 'down') {
+    const newItems = [...localLectures];
+    if (direction === 'up' && index > 0) {
+      const temp = newItems[index];
+      newItems[index] = newItems[index - 1];
+      newItems[index - 1] = temp;
+    } else if (direction === 'down' && index < newItems.length - 1) {
+      const temp = newItems[index];
+      newItems[index] = newItems[index + 1];
+      newItems[index + 1] = temp;
+    } else {
+      return;
+    }
+    const withUpdatedOrder = newItems.map((item, i) => ({ ...item, sortOrder: i }));
+    setLocalLectures(withUpdatedOrder);
+    reorderMutation.mutate(withUpdatedOrder);
+  }
   return (
-    <div className="space-y-3">
-      {lectures.map((lec: BuilderLecture, idx: number) => {
+    <div className="space-y-3 relative">
+      {reorderMutation.isPending && (
+        <div className="absolute inset-0 bg-theme-bg/50 backdrop-blur-[1px] z-10 flex items-center justify-center rounded-xl">
+          <div className="animate-spin rounded-full h-6 w-6 border-2 border-accent-400 border-t-transparent" />
+        </div>
+      )}
+      {localLectures.map((lec: BuilderLecture, idx: number) => {
         const lecItems = items[lec.id] ?? [];
         const expanded = expandedLecs.has(lec.id);
         return (
@@ -1550,6 +1602,22 @@ export function LectureList({ lectures, items, expandedLecs, toggleLec, load, se
               onClick={() => toggleLec(lec.id)}
               className="w-full p-4 flex items-center gap-3 hover:bg-white/[0.02] transition-colors"
             >
+              <div className="flex flex-col gap-1 mr-1" onClick={(e) => e.stopPropagation()}>
+                <button 
+                  onClick={(e) => { e.stopPropagation(); moveItem(idx, 'up'); }}
+                  disabled={idx === 0}
+                  className="text-theme-muted hover:text-accent-700 dark:text-accent-300 disabled:opacity-30 disabled:hover:text-theme-muted transition-colors"
+                >
+                  <ArrowUp className="w-3.5 h-3.5" />
+                </button>
+                <button 
+                  onClick={(e) => { e.stopPropagation(); moveItem(idx, 'down'); }}
+                  disabled={idx === localLectures.length - 1}
+                  className="text-theme-muted hover:text-accent-700 dark:text-accent-300 disabled:opacity-30 disabled:hover:text-theme-muted transition-colors"
+                >
+                  <ArrowDown className="w-3.5 h-3.5" />
+                </button>
+              </div>
               {expanded ? <ChevronDown className="w-4 h-4 text-theme-muted" /> : <ChevronRight className="w-4 h-4 text-theme-muted" />}
               <div className="w-8 h-8 rounded-lg bg-accent-500/10 flex items-center justify-center text-accent-700 dark:text-accent-300 text-sm font-bold">
                 {idx + 1}
