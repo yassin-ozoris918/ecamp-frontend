@@ -396,7 +396,7 @@ export function AuthScreen() {
 
                 <div>
                   <label className="label">{t('auth.fullName')}</label>
-                  <input
+                  <input dir="auto"
                     type="text"
                     required
                     className="input"
@@ -523,7 +523,7 @@ export function AuthScreen() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="label">{t('auth.phoneNumber')}</label>
-                    <input
+                    <input dir="auto"
                       className="input"
                       value={phoneNumber}
                       onChange={(e) => setPhoneNumber(e.target.value)}
@@ -535,7 +535,7 @@ export function AuthScreen() {
                   {educationLevel === 'HIGH_SCHOOL' && (
                     <div>
                       <label className="label">{t('auth.parentPhoneNumber')}</label>
-                      <input
+                      <input dir="auto"
                         className="input"
                         value={parentPhoneNumber}
                         onChange={(e) => setParentPhoneNumber(e.target.value)}
@@ -552,7 +552,7 @@ export function AuthScreen() {
 
             <div>
               <label className="label">{t('auth.email')}</label>
-              <input
+              <input dir="auto"
                 type="email"
                 className="input"
                 value={email}
@@ -565,7 +565,7 @@ export function AuthScreen() {
             <div>
               <label className="label">{t('auth.password')}</label>
               <div className="relative">
-                <input
+                <input dir="auto"
                   type={showPassword ? "text" : "password"}
                   className="input pe-12"
                   value={password}

@@ -13,7 +13,7 @@ function PointsInput({ value, onChange }: { value: number; onChange: (v: number)
   const [raw, setRaw] = useState(String(value));
   useEffect(() => { setRaw(String(value)); }, [value]);
   return (
-    <input
+    <input dir="auto"
       type="number" min="0.5" step="0.5"
       value={raw}
       onChange={(e) => setRaw(e.target.value)}
@@ -285,7 +285,7 @@ export function QuizBuilderModal({ isOpen, onClose, targetId, type }: QuizBuilde
             <label className="text-xs font-bold uppercase tracking-wider text-accent-400">
               {type === 'QUIZ' ? t('quizBuilder.quizTitleLabel') : t('quizBuilder.examTitleLabel')}
             </label>
-            <input
+            <input dir="auto"
               className="input font-bold text-base w-full bg-neutral-900"
               value={quizTitle}
               onChange={(e) => setQuizTitle(e.target.value)}

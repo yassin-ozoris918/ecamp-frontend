@@ -386,8 +386,8 @@ export function CourseBuilder({ courseId }: { courseId: string }) {
                 <Badge variant={course.status === 'PUBLISHED' ? 'success' : 'warning'}>{course.status}</Badge>
                 {isEditingTitle ? (
                   <div className="mt-2 space-y-2">
-                    <input className="input text-xl font-display font-bold bg-theme-card border-theme-border text-theme-text" value={editTitle} onChange={(e) => setEditTitle(e.target.value)} />
-                    <textarea className="input text-sm text-theme-muted min-h-[80px]" value={editDesc} onChange={(e) => setEditDesc(e.target.value)} />
+                    <input dir="auto" className="input text-xl font-display font-bold bg-theme-card border-theme-border text-theme-text" value={editTitle} onChange={(e) => setEditTitle(e.target.value)} />
+                    <textarea dir="auto" className="input text-sm text-theme-muted min-h-[80px]" value={editDesc} onChange={(e) => setEditDesc(e.target.value)} />
                     <div className="flex gap-2">
                       <button onClick={async () => {
                         try {
@@ -459,7 +459,7 @@ export function CourseBuilder({ courseId }: { courseId: string }) {
               <div>
                 <label className="label">Introductory Video URL</label>
                 <div className="flex gap-2">
-                  <input className="input" placeholder="e.g. https://youtube.com/..." defaultValue={course.introductoryVideoUrl || ''} id="introVideoUrl" />
+                  <input dir="auto" className="input" placeholder="e.g. https://youtube.com/..." defaultValue={course.introductoryVideoUrl || ''} id="introVideoUrl" />
                   <button onClick={async () => {
                     const val = (document.getElementById('introVideoUrl') as HTMLInputElement).value;
                     await api.post(`/courses/${course.id}/intro`, { url: val });
@@ -1051,37 +1051,61 @@ function AddItemModal({
         setUploadProgress(0);
         setUploadStatus('uploading');
 
-        // 1. Initialize Upload
-        const initRes = await api.post(`/sessions/${data.id}/video/upload/init`, {
-          filename: videoFile.name,
-          mimetype: videoFile.type || 'video/mp4',
-          fileSize: videoFile.size,
-        });
-        const { uploadUrl, objectKey, assetUrl } = initRes.data;
+        let directUploadSuccessful = false;
+        try {
+          // 1. Initialize Upload
+          const initRes = await api.post(`/sessions/${data.id}/video/upload/init`, {
+            filename: videoFile.name,
+            mimetype: videoFile.type || 'video/mp4',
+            fileSize: videoFile.size,
+          });
+          const { uploadUrl, objectKey, assetUrl } = initRes.data;
 
-        // 2. Direct R2 Upload via presigned URL
-        // We use axios directly (not our API client) to avoid attaching auth headers
-        await axios.put(uploadUrl, videoFile, {
-          headers: {
-            'Content-Type': videoFile.type || 'video/mp4'
-          },
-          onUploadProgress: (progressEvent) => {
-            if (progressEvent.total) {
-              const pct = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-              setUploadProgress(pct);
-              if (pct >= 100) setUploadStatus('processing');
-            }
-          },
-        });
+          // 2. Direct R2 Upload via presigned URL
+          await axios.put(uploadUrl, videoFile, {
+            headers: {
+              'Content-Type': videoFile.type || 'video/mp4'
+            },
+            onUploadProgress: (progressEvent) => {
+              if (progressEvent.total) {
+                const pct = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+                setUploadProgress(pct);
+                if (pct >= 100) setUploadStatus('processing');
+              }
+            },
+          });
 
-        // 3. Finalize Upload
-        await api.post(`/sessions/${data.id}/video/upload/complete`, {
-          objectKey,
-          assetUrl
-        });
+          // 3. Finalize Upload
+          await api.post(`/sessions/${data.id}/video/upload/complete`, {
+            objectKey,
+            assetUrl
+          });
 
-        setUploadStatus('done');
-        setUploadProgress(100);
+          directUploadSuccessful = true;
+        } catch (directUploadError) {
+          console.warn('Direct upload failed (possibly due to CORS), falling back to backend upload:', directUploadError);
+          // Fallback to Phase 13 backend upload
+          setUploadProgress(0);
+          setUploadStatus('uploading');
+          const formData = new FormData();
+          formData.append('video', videoFile);
+          
+          await api.post(`/sessions/${data.id}/upload-video`, formData, {
+            onUploadProgress: (progressEvent) => {
+              if (progressEvent.total) {
+                const pct = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+                setUploadProgress(pct);
+                if (pct >= 100) setUploadStatus('processing');
+              }
+            },
+          });
+          directUploadSuccessful = true;
+        }
+
+        if (directUploadSuccessful) {
+          setUploadStatus('done');
+          setUploadProgress(100);
+        }
       }
 
       setTitle('');
@@ -1105,7 +1129,7 @@ function AddItemModal({
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="label">Title</label>
-          <input className="input" value={title} onChange={(e) => setTitle(e.target.value)} required autoFocus />
+          <input dir="auto" className="input" value={title} onChange={(e) => setTitle(e.target.value)} required autoFocus />
         </div>
         {type === 'SESSION' && (
           <div>
@@ -1172,21 +1196,21 @@ function AddItemModal({
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="label">Passing Score (%)</label>
-              <input type="number" min={0} max={100} className="input" value={passingScore} onChange={(e) => setPassingScore(e.target.value)} />
+              <input dir="auto" type="number" min={0} max={100} className="input" value={passingScore} onChange={(e) => setPassingScore(e.target.value)} />
             </div>
             <div>
               <label className="label">Time Limit (min)</label>
-              <input type="number" min={1} className="input" value={timeLimit} onChange={(e) => setTimeLimit(e.target.value)} placeholder="Optional" />
+              <input dir="auto" type="number" min={1} className="input" value={timeLimit} onChange={(e) => setTimeLimit(e.target.value)} placeholder="Optional" />
             </div>
             <div>
               <label className="label">Max Attempts</label>
-              <input type="number" min={1} className="input" value={maxAttempts} onChange={(e) => setMaxAttempts(e.target.value)} placeholder="e.g. 3" />
+              <input dir="auto" type="number" min={1} className="input" value={maxAttempts} onChange={(e) => setMaxAttempts(e.target.value)} placeholder="e.g. 3" />
             </div>
           </div>
         )}
         <div>
           <label className="label">Description (optional)</label>
-          <textarea className="input min-h-[80px]" value={description} onChange={(e) => setDescription(e.target.value)} />
+          <textarea dir="auto" className="input min-h-[80px]" value={description} onChange={(e) => setDescription(e.target.value)} />
         </div>
         {error && <p className="text-sm text-error-300 bg-error-500/10 p-3 rounded-lg">{error}</p>}
         <div className="flex justify-end gap-2">
@@ -1264,34 +1288,34 @@ function CreateLectureModal({
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="label">Lecture Title</label>
-          <input className="input" value={title} onChange={(e) => setTitle(e.target.value)} required autoFocus />
+          <input dir="auto" className="input" value={title} onChange={(e) => setTitle(e.target.value)} required autoFocus />
         </div>
         <div>
           <label className="label">Description (optional)</label>
-          <textarea className="input min-h-[80px]" value={description} onChange={(e) => setDescription(e.target.value)} />
+          <textarea dir="auto" className="input min-h-[80px]" value={description} onChange={(e) => setDescription(e.target.value)} />
         </div>
         <div className="grid grid-cols-3 gap-4">
           <div>
             <label className="label">Days</label>
-            <input type="number" min="0" className="input" value={durationDays} onChange={(e) => setDurationDays(parseInt(e.target.value) || 0)} />
+            <input dir="auto" type="number" min="0" className="input" value={durationDays} onChange={(e) => setDurationDays(parseInt(e.target.value) || 0)} />
           </div>
           <div>
             <label className="label">Hours</label>
-            <input type="number" min="0" className="input" value={durationHours} onChange={(e) => setDurationHours(parseInt(e.target.value) || 0)} />
+            <input dir="auto" type="number" min="0" className="input" value={durationHours} onChange={(e) => setDurationHours(parseInt(e.target.value) || 0)} />
           </div>
           <div>
             <label className="label">Minutes</label>
-            <input type="number" min="0" className="input" value={durationMinutes} onChange={(e) => setDurationMinutes(parseInt(e.target.value) || 0)} />
+            <input dir="auto" type="number" min="0" className="input" value={durationMinutes} onChange={(e) => setDurationMinutes(parseInt(e.target.value) || 0)} />
           </div>
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="label">Warning Hours</label>
-            <input type="number" min="0" className="input" value={warningHours} onChange={(e) => setWarningHours(parseInt(e.target.value) || 0)} />
+            <input dir="auto" type="number" min="0" className="input" value={warningHours} onChange={(e) => setWarningHours(parseInt(e.target.value) || 0)} />
           </div>
           <div>
             <label className="label">Warning Minutes</label>
-            <input type="number" min="0" className="input" value={warningMinutes} onChange={(e) => setWarningMinutes(parseInt(e.target.value) || 0)} />
+            <input dir="auto" type="number" min="0" className="input" value={warningMinutes} onChange={(e) => setWarningMinutes(parseInt(e.target.value) || 0)} />
           </div>
         </div>
         <div className="flex justify-end gap-2">
@@ -1356,25 +1380,25 @@ function CreateExamModal({
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="label">Exam Title</label>
-          <input className="input" value={title} onChange={(e) => setTitle(e.target.value)} required autoFocus />
+          <input dir="auto" className="input" value={title} onChange={(e) => setTitle(e.target.value)} required autoFocus />
         </div>
         <div>
           <label className="label">Description</label>
-          <textarea className="input min-h-[80px]" value={description} onChange={(e) => setDescription(e.target.value)} />
+          <textarea dir="auto" className="input min-h-[80px]" value={description} onChange={(e) => setDescription(e.target.value)} />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="label">Passing Score (%)</label>
-            <input type="number" min={0} max={100} className="input" value={passingScore} onChange={(e) => setPassingScore(e.target.value)} required />
+            <input dir="auto" type="number" min={0} max={100} className="input" value={passingScore} onChange={(e) => setPassingScore(e.target.value)} required />
           </div>
           <div>
             <label className="label">Time Limit (mins)</label>
-            <input type="number" min={1} className="input" value={timeLimit} onChange={(e) => setTimeLimit(e.target.value)} placeholder="Optional" />
+            <input dir="auto" type="number" min={1} className="input" value={timeLimit} onChange={(e) => setTimeLimit(e.target.value)} placeholder="Optional" />
           </div>
         </div>
         <div>
           <label className="label">Max Attempts Allowed</label>
-          <input type="number" min={1} className="input" value={maxAttempts} onChange={(e) => setMaxAttempts(e.target.value)} required />
+          <input dir="auto" type="number" min={1} className="input" value={maxAttempts} onChange={(e) => setMaxAttempts(e.target.value)} required />
         </div>
         <div className="flex justify-end gap-2">
           {onAIGenerate && (
@@ -1454,7 +1478,7 @@ function IssueCertificateModal({
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="label">Student Email</label>
-          <input type="email" className="input" value={email} onChange={(e) => setEmail(e.target.value)} required autoFocus placeholder="student@example.com" />
+          <input dir="auto" type="email" className="input" value={email} onChange={(e) => setEmail(e.target.value)} required autoFocus placeholder="student@example.com" />
           <p className="text-xs text-theme-muted mt-2">Enter the email of the student who successfully completed the course.</p>
         </div>
         
@@ -1605,11 +1629,11 @@ export function CreateChapterModal({ open, courseId, sortOrder, onClose, onCreat
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="label">Chapter Title</label>
-          <input className="input" value={title} onChange={(e) => setTitle(e.target.value)} required autoFocus />
+          <input dir="auto" className="input" value={title} onChange={(e) => setTitle(e.target.value)} required autoFocus />
         </div>
         <div>
           <label className="label">Description (optional)</label>
-          <textarea className="input min-h-[80px]" value={description} onChange={(e) => setDescription(e.target.value)} />
+          <textarea dir="auto" className="input min-h-[80px]" value={description} onChange={(e) => setDescription(e.target.value)} />
         </div>
         <div className="flex justify-end gap-2">
           <button type="button" onClick={onClose} className="btn-ghost">Cancel</button>
@@ -1669,16 +1693,16 @@ function EditExamSettingsModal({
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="label">Passing Score (%)</label>
-            <input type="number" min={0} max={100} className="input" value={passingScore} onChange={(e) => setPassingScore(e.target.value)} required />
+            <input dir="auto" type="number" min={0} max={100} className="input" value={passingScore} onChange={(e) => setPassingScore(e.target.value)} required />
           </div>
           <div>
             <label className="label">Time Limit (mins)</label>
-            <input type="number" min={1} className="input" value={timeLimit} onChange={(e) => setTimeLimit(e.target.value)} placeholder="Optional" />
+            <input dir="auto" type="number" min={1} className="input" value={timeLimit} onChange={(e) => setTimeLimit(e.target.value)} placeholder="Optional" />
           </div>
         </div>
         <div>
           <label className="label">Max Attempts Allowed</label>
-          <input type="number" min={1} className="input" value={maxAttempts} onChange={(e) => setMaxAttempts(e.target.value)} required />
+          <input dir="auto" type="number" min={1} className="input" value={maxAttempts} onChange={(e) => setMaxAttempts(e.target.value)} required />
         </div>
         <div className="flex justify-end gap-2">
           <button type="button" onClick={onClose} className="btn-ghost" disabled={busy}>Cancel</button>
@@ -1738,16 +1762,16 @@ function EditQuizSettingsModal({
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="label">Passing Score (%)</label>
-            <input type="number" min={0} max={100} className="input" value={passingScore} onChange={(e) => setPassingScore(e.target.value)} required />
+            <input dir="auto" type="number" min={0} max={100} className="input" value={passingScore} onChange={(e) => setPassingScore(e.target.value)} required />
           </div>
           <div>
             <label className="label">Time Limit (mins)</label>
-            <input type="number" min={1} className="input" value={timeLimit} onChange={(e) => setTimeLimit(e.target.value)} placeholder="Optional" />
+            <input dir="auto" type="number" min={1} className="input" value={timeLimit} onChange={(e) => setTimeLimit(e.target.value)} placeholder="Optional" />
           </div>
         </div>
         <div>
           <label className="label">Max Attempts Allowed</label>
-          <input type="number" min={1} className="input" value={maxAttempts} onChange={(e) => setMaxAttempts(e.target.value)} required />
+          <input dir="auto" type="number" min={1} className="input" value={maxAttempts} onChange={(e) => setMaxAttempts(e.target.value)} required />
         </div>
         <div className="flex justify-end gap-2">
           <button type="button" onClick={onClose} className="btn-ghost" disabled={busy}>Cancel</button>

@@ -306,7 +306,7 @@ export function ProfileScreen() {
                   {t('profile.fullName')}
                   <Lock className="w-3 h-3 text-theme-muted" />
                 </label>
-                <input
+                <input dir="auto"
                   type="text"
                   value={fullName}
                   placeholder={t('profile.notProvided')}
@@ -321,7 +321,7 @@ export function ProfileScreen() {
                     {t('profile.phoneNumber')}
                     <Lock className="w-3 h-3 text-theme-muted" />
                   </label>
-                  <input
+                  <input dir="auto"
                     type="text"
                     value={phoneNumber}
                     placeholder={t('profile.notProvided')}
@@ -334,7 +334,7 @@ export function ProfileScreen() {
                     {t('profile.parentPhoneNumber')}
                     <Lock className="w-3 h-3 text-theme-muted" />
                   </label>
-                  <input
+                  <input dir="auto"
                     type="text"
                     value={parentPhoneNumber}
                     placeholder={t('profile.notProvided')}
@@ -513,7 +513,7 @@ export function ProfileScreen() {
 
               <div>
                 <label className="block text-sm font-medium text-theme-muted mb-1.5">{t('profile.currentPassword')}</label>
-                <input
+                <input dir="auto"
                   type="password"
                   required
                   value={currentPassword}
@@ -525,7 +525,7 @@ export function ProfileScreen() {
 
               <div>
                 <label className="block text-sm font-medium text-theme-muted mb-1.5">{t('profile.newPassword')}</label>
-                <input
+                <input dir="auto"
                   type="password"
                   required
                   value={newPassword}
@@ -538,7 +538,7 @@ export function ProfileScreen() {
 
               <div>
                 <label className="block text-sm font-medium text-theme-muted mb-1.5">{t('profile.confirmNewPassword')}</label>
-                <input
+                <input dir="auto"
                   type="password"
                   required
                   value={confirmPassword}
@@ -580,7 +580,7 @@ export function ProfileScreen() {
 
           <div>
             <label className="block text-sm font-medium text-theme-muted mb-1.5">{t('profile.reqFullName')}</label>
-            <input
+            <input dir="auto"
               type="text"
               value={reqFullName}
               onChange={e => setReqFullName(e.target.value)}
@@ -591,7 +591,7 @@ export function ProfileScreen() {
 
           <div>
             <label className="block text-sm font-medium text-theme-muted mb-1.5">{t('profile.reqPhoneNumber')}</label>
-            <input
+            <input dir="auto"
               type="text"
               value={reqPhoneNumber}
               onChange={e => setReqPhoneNumber(e.target.value)}
@@ -602,7 +602,7 @@ export function ProfileScreen() {
 
           <div>
             <label className="block text-sm font-medium text-theme-muted mb-1.5">{t('profile.reqParentPhone')}</label>
-            <input
+            <input dir="auto"
               type="text"
               value={reqParentPhone}
               onChange={e => setReqParentPhone(e.target.value)}

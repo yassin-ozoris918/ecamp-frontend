@@ -281,7 +281,7 @@ function SubjectiveReview({
             </p>
           )}
           <div className="flex gap-2 items-center">
-            <input
+            <input dir="auto"
               type="number"
               min={0}
               max={q.maxPoints}

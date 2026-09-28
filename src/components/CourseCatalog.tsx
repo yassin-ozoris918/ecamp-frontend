@@ -60,7 +60,7 @@ export function CourseCatalog() {
               <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
                 <Search className="w-5 h-5 text-theme-muted group-focus-within:text-accent-400 transition-colors" />
               </div>
-              <input
+              <input dir="auto"
                 type="text"
                 placeholder={t('dashboard.searchPlaceholder')}
                 className="w-full bg-theme-card border border-white/[0.1] rounded-2xl py-4 pl-12 pr-4 text-theme-text placeholder-neutral-500 focus:outline-none focus:border-accent-500/50 focus:ring-1 focus:ring-accent-500/50 transition-all shadow-xl"

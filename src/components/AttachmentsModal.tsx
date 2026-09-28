@@ -149,7 +149,7 @@ export function AttachmentsModal({ isOpen, onClose, targetId, targetType, title 
                     <option value="ASSIGNMENT">ASSIGNMENT</option>
                     <option value="OTHER">OTHER</option>
                   </select>
-                  <input
+                  <input dir="auto"
                     type="text"
                     value={fileTitle}
                     onChange={(e) => setFileTitle(e.target.value)}

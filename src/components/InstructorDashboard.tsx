@@ -281,11 +281,11 @@ export function CreateCourseModal({
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="label">Course Title</label>
-          <input className="input" value={title} onChange={(e) => setTitle(e.target.value)} required autoFocus />
+          <input dir="auto" className="input" value={title} onChange={(e) => setTitle(e.target.value)} required autoFocus />
         </div>
         <div>
           <label className="label">Description</label>
-          <textarea className="input min-h-[88px]" value={description} onChange={(e) => setDescription(e.target.value)} required />
+          <textarea dir="auto" className="input min-h-[88px]" value={description} onChange={(e) => setDescription(e.target.value)} required />
         </div>
         <div>
           <label className="label">Target Level</label>
@@ -685,7 +685,7 @@ export function AIQuizModal({
           ) : (
             <div>
               <label className="label">Source Text</label>
-              <textarea
+              <textarea dir="auto"
                 className="input min-h-[250px] font-mono text-sm resize-y"
                 value={text}
                 onChange={(e) => setText(e.target.value)}
@@ -743,7 +743,7 @@ export function AIQuizModal({
                 </div>
 
                 <div>
-                  <input
+                  <input dir="auto"
                     className="input text-sm font-medium w-full"
                     value={q.question}
                     onChange={(e) => {
@@ -776,7 +776,7 @@ export function AIQuizModal({
                         className="w-4 h-4 accent-emerald-500 cursor-pointer shrink-0"
                         title="Mark as correct answer"
                       />
-                      <input
+                      <input dir="auto"
                         className={`input text-xs flex-1 ${a.is_correct ? 'border-emerald-500/40 bg-emerald-500/5 text-theme-text' : ''}`}
                         value={a.text}
                         onChange={(e) => {
@@ -879,7 +879,7 @@ export function SearchBox({
   return (
     <div className="relative">
       <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-theme-muted" />
-      <input
+      <input dir="auto"
         className="input ps-10"
         value={value}
         onChange={(e) => onChange(e.target.value)}

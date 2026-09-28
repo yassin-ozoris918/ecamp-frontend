@@ -67,7 +67,7 @@ export function AcademicRiskDashboard() {
             </Button>
             <div className="relative">
               <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-theme-muted" />
-              <input
+              <input dir="auto"
                 type="text"
                 placeholder="Search at-risk students..."
                 value={search}

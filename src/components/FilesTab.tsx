@@ -101,7 +101,7 @@ export function FilesTab({ hideHeader = false }: { hideHeader?: boolean }) {
           {/* Global Course Files Unlock */}
           {courseId && (
             <div className="flex items-center gap-2">
-              <input
+              <input dir="auto"
                 type="text"
                 placeholder={t('files.enterCode', 'Enter Access Code')}
                 value={redeemingTarget?.type === 'COURSE_FILES' ? redeemCode : ''}
@@ -127,7 +127,7 @@ export function FilesTab({ hideHeader = false }: { hideHeader?: boolean }) {
       {hideHeader && courseId && (
         <div className="flex flex-col md:flex-row justify-end items-start md:items-center gap-4">
           <div className="flex items-center gap-2">
-            <input
+            <input dir="auto"
               type="text"
               placeholder={t('files.enterCode', 'Enter Access Code')}
               value={redeemingTarget?.type === 'COURSE_FILES' ? redeemCode : ''}
@@ -152,7 +152,7 @@ export function FilesTab({ hideHeader = false }: { hideHeader?: boolean }) {
       <div className="glass p-4 rounded-2xl flex flex-col sm:flex-row gap-4">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-theme-muted" />
-          <input
+          <input dir="auto"
             type="text"
             placeholder={t('files.search', 'Search files...')}
             className="bg-base-900 border border-theme-border text-theme-text text-sm rounded-lg focus:ring-accent-500 focus:border-accent-500 block p-2.5 outline-none w-full pl-10"
@@ -234,7 +234,7 @@ export function FilesTab({ hideHeader = false }: { hideHeader?: boolean }) {
                 <div className="flex flex-col gap-2 mt-auto">
                   {redeemingTarget?.id === file.id && redeemingTarget?.type === 'FILE' ? (
                     <div className="flex gap-2">
-                      <input
+                      <input dir="auto"
                         type="text"
                         autoFocus
                         placeholder={t('files.enterCode', 'Enter Code')}

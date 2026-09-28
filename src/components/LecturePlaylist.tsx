@@ -254,7 +254,7 @@ export function LecturePlaylist({ lectureId }: { lectureId: string }) {
               
               <form onSubmit={handleRedeem} className="max-w-sm mx-auto">
                 <div className="flex flex-col gap-3">
-                  <input
+                  <input dir="auto"
                     type="text"
                     value={code}
                     onChange={e => setCode(e.target.value)}

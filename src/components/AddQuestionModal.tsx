@@ -72,7 +72,7 @@ export function AddQuestionModal({ isOpen, onClose, targetId, type }: AddQuestio
         <form onSubmit={handleSubmit} className="mt-4 space-y-4">
           <div>
             <label className="block text-xs text-theme-muted mb-1">{t('quizBuilder.questionText')}</label>
-            <input type="text" value={text} onChange={(e) => setText(e.target.value)} className="w-full rounded-xl border border-neutral-800 bg-neutral-950 p-3 text-sm outline-none focus:border-cyan-500" placeholder={t('quizBuilder.typeQuestionHere')} />
+            <input dir="auto" type="text" value={text} onChange={(e) => setText(e.target.value)} className="w-full rounded-xl border border-neutral-800 bg-neutral-950 p-3 text-sm outline-none focus:border-cyan-500" placeholder={t('quizBuilder.typeQuestionHere')} />
           </div>
 
           <div className="space-y-2">
@@ -80,7 +80,7 @@ export function AddQuestionModal({ isOpen, onClose, targetId, type }: AddQuestio
             {options.map((opt, idx) => (
               <div key={idx} className="flex items-center gap-2">
                 <input type="radio" checked={correctIndex === idx} onChange={() => setCorrectIndex(idx)} className="accent-cyan-500" />
-                <input type="text" value={opt} onChange={(e) => handleOptionChange(idx, e.target.value)} className="flex-1 rounded-lg border border-neutral-800 bg-neutral-950 p-2 text-xs outline-none" placeholder={`${t('quizBuilder.option')} ${idx + 1}`} />
+                <input dir="auto" type="text" value={opt} onChange={(e) => handleOptionChange(idx, e.target.value)} className="flex-1 rounded-lg border border-neutral-800 bg-neutral-950 p-2 text-xs outline-none" placeholder={`${t('quizBuilder.option')} ${idx + 1}`} />
                 {options.length > 2 && (
                   <button type="button" onClick={() => removeOptionRow(idx)} className="text-xs text-theme-muted hover:text-red-400">&times;</button>
                 )}
@@ -91,7 +91,7 @@ export function AddQuestionModal({ isOpen, onClose, targetId, type }: AddQuestio
 
           <div>
             <label className="block text-xs text-theme-muted mb-1">{t('quizBuilder.pointsAllocated')}</label>
-            <input
+            <input dir="auto"
               type="number" min="0.5" step="0.5"
               value={pointsRaw}
               onChange={(e) => setPointsRaw(e.target.value)}

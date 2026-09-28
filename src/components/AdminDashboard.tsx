@@ -1068,7 +1068,7 @@ function ResetPasswordModal({
         
         <div>
           <label className="block text-sm font-medium text-theme-text mb-1">New Password</label>
-          <input
+          <input dir="auto"
             type="password"
             className="input w-full"
             value={newPassword}
@@ -1081,7 +1081,7 @@ function ResetPasswordModal({
         </div>
         <div>
           <label className="block text-sm font-medium text-theme-text mb-1">Confirm Password</label>
-          <input
+          <input dir="auto"
             type="password"
             className="input w-full"
             value={confirmPassword}
@@ -1278,7 +1278,7 @@ function GrantAccessModal({
             <SearchBox value={search} onChange={setSearch} placeholder="Search courses and lectures..." />
           </div>
           <div className="w-full sm:w-40 shrink-0">
-            <input type="number" placeholder="Days (Opt)" value={validityDays} onChange={e => setValidityDays(e.target.value)} className="w-full bg-transparent border border-white/[0.08] text-theme-text rounded-lg px-4 py-2.5 focus:outline-none focus:border-accent-500" title="Leave blank for lifetime access" />
+            <input dir="auto" type="number" placeholder="Days (Opt)" value={validityDays} onChange={e => setValidityDays(e.target.value)} className="w-full bg-transparent border border-white/[0.08] text-theme-text rounded-lg px-4 py-2.5 focus:outline-none focus:border-accent-500" title="Leave blank for lifetime access" />
           </div>
         </div>
         {loading ? (
@@ -1466,7 +1466,7 @@ export function AdminCodes() {
             <option value="UNIVERSITY">University</option>
           </select>
           <div className="flex-1 w-full sm:w-auto min-w-[200px] relative">
-            <input
+            <input dir="auto"
               type="text"
               className="input w-full pl-10"
               placeholder="Search code..."
@@ -1722,7 +1722,7 @@ function AdminGenerateCodesModal({
 
           <div>
             <label className="label">Number of Codes to Generate</label>
-            <input
+            <input dir="auto"
               type="number"
               min={1}
               max={100}

@@ -355,7 +355,7 @@ export function StudentCourseView({ courseId }: { courseId: string }) {
               <label className="label">{t('courseView.redeemModalTitle')}</label>
               <div className="relative">
                 <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-theme-muted" />
-                <input
+                <input dir="auto"
                   type="text"
                   required
                   className="input pl-10 font-mono tracking-wider uppercase text-lg"

@@ -113,7 +113,7 @@ export function LectureFilesSection({ lectureId }: LectureFilesSectionProps) {
           <option value="ASSIGNMENT">ASSIGNMENT</option>
           <option value="OTHER">OTHER</option>
         </select>
-        <input type="text" placeholder="Custom File Title" value={fileTitle} onChange={(e) => setFileTitle(e.target.value)} className="flex-1 rounded-lg border border-neutral-800 bg-neutral-900 p-2 text-xs outline-none focus:border-cyan-500 text-theme-muted" />
+        <input dir="auto" type="text" placeholder="Custom File Title" value={fileTitle} onChange={(e) => setFileTitle(e.target.value)} className="flex-1 rounded-lg border border-neutral-800 bg-neutral-900 p-2 text-xs outline-none focus:border-cyan-500 text-theme-muted" />
         <div className="relative flex items-center justify-center rounded-lg border border-dashed border-neutral-800 bg-neutral-900 p-2 hover:bg-neutral-800 transition cursor-pointer">
           <input type="file" onChange={handleFileChange} className="absolute inset-0 opacity-0 cursor-pointer" />
           <UploadCloud className="h-4 w-4 mr-1 text-theme-muted" />

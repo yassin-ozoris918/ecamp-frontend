@@ -8,7 +8,7 @@ function PointsInput({ value, onChange, className }: { value: number; onChange: 
   const [raw, setRaw] = useState(String(value));
   useEffect(() => { setRaw(String(value)); }, [value]);
   return (
-    <input
+    <input dir="auto"
       type="number" min="0.5" step="0.5"
       value={raw}
       onChange={(e) => setRaw(e.target.value)}

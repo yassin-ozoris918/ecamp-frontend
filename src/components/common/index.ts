@@ -7,3 +7,4 @@ export { ErrorMessage } from './ErrorMessage';
 export { Badge } from './Badge';
 export { SectionHeader } from './SectionHeader';
 export * from './BiDiText';
+export * from './AutoDirectionInput';
