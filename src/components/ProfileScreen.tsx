@@ -188,8 +188,8 @@ export function ProfileScreen() {
       payload.studyMode = studyMode || null;
       payload.studyLanguage = studyLanguage || null;
       payload.highSchoolGrade = highSchoolGrade || null;
-      payload.traditionalBranch = traditionalBranch || null;
-      payload.baccalaureatePath = baccalaureatePath || null;
+      payload.traditionalBranch = highSchoolSystem === 'TRADITIONAL' ? (traditionalBranch || null) : null;
+      payload.baccalaureatePath = highSchoolSystem === 'BACCALAUREATE' ? (baccalaureatePath || null) : null;
       payload.universityId = null;
       payload.facultyId = null;
       payload.departmentId = null;
