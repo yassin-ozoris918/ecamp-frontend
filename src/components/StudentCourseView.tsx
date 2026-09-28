@@ -156,7 +156,7 @@ export function StudentCourseView({ courseId }: { courseId: string }) {
             <h1 className="text-3xl md:text-4xl font-display font-bold text-theme-text tracking-tight mb-3">
               {course.title}
             </h1>
-            <p className="text-theme-muted text-lg leading-relaxed max-w-3xl mb-6 whitespace-pre-wrap">
+            <p className="text-theme-muted text-lg leading-relaxed max-w-3xl mb-6 whitespace-pre-wrap" dir="auto">
               {course.description || t('courseView.noDesc')}
             </p>
             {!course.isFree && (
