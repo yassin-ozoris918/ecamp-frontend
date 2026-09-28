@@ -108,6 +108,20 @@ export interface Course {
   targetDepartmentRel?: { id: string; nameEn: string; nameAr: string } | null;
   targetProgramRel?: { id: string; nameEn: string; nameAr: string } | null;
 
+  targetGroups?: {
+    id?: string;
+    targetUniversityId?: string | null;
+    targetFacultyId?: string | null;
+    targetDepartmentId?: string | null;
+    targetProgramId?: string | null;
+    targetHighSchoolSystem?: HighSchoolSystem | null;
+    targetStudyMode?: StudyMode | null;
+    targetStudyLanguage?: StudyLanguage | null;
+    targetHighSchoolGrade?: HighSchoolGrade | null;
+    targetTraditionalBranch?: TraditionalBranch | null;
+    targetBaccalaureatePath?: BaccalaureatePath | null;
+  }[];
+
   validity_days?: number | null;
   isFree?: boolean;
   createdAt?: string;

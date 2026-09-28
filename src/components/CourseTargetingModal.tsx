@@ -32,10 +32,13 @@ export function CourseTargetingModal({
   const [targetHighSchoolGrade, setTargetHighSchoolGrade] = useState<HighSchoolGrade | ''>('');
   const [targetTraditionalBranch, setTargetTraditionalBranch] = useState<TraditionalBranch | ''>('');
   const [targetBaccalaureatePath, setTargetBaccalaureatePath] = useState<BaccalaureatePath | ''>('');
-  const [targetUniversityId, setTargetUniversityId] = useState<string | null>(null);
-  const [targetFacultyId, setTargetFacultyId] = useState<string | null>(null);
-  const [targetDepartmentId, setTargetDepartmentId] = useState<string | null>(null);
-  const [targetProgramId, setTargetProgramId] = useState<string | null>(null);
+  
+  const [uniTargetGroups, setUniTargetGroups] = useState<{
+    targetUniversityId: string | null;
+    targetFacultyId: string | null;
+    targetDepartmentId: string | null;
+    targetProgramId: string | null;
+  }[]>([]);
 
   useEffect(() => {
     if (isOpen) {
@@ -45,10 +48,23 @@ export function CourseTargetingModal({
       setTargetHighSchoolGrade(course.targetHighSchoolGrade || '');
       setTargetTraditionalBranch(course.targetTraditionalBranch || '');
       setTargetBaccalaureatePath(course.targetBaccalaureatePath || '');
-      setTargetUniversityId(course.targetUniversityId || null);
-      setTargetFacultyId(course.targetFacultyId || null);
-      setTargetDepartmentId(course.targetDepartmentId || null);
-      setTargetProgramId(course.targetProgramId || null);
+      
+      if (course.targetGroups && course.targetGroups.length > 0) {
+        setUniTargetGroups(course.targetGroups.map(g => ({
+          targetUniversityId: g.targetUniversityId || null,
+          targetFacultyId: g.targetFacultyId || null,
+          targetDepartmentId: g.targetDepartmentId || null,
+          targetProgramId: g.targetProgramId || null,
+        })));
+      } else {
+        setUniTargetGroups([{
+          targetUniversityId: course.targetUniversityId || null,
+          targetFacultyId: course.targetFacultyId || null,
+          targetDepartmentId: course.targetDepartmentId || null,
+          targetProgramId: course.targetProgramId || null,
+        }]);
+      }
+      
       setAudienceType(course.audienceType);
     }
   }, [isOpen, course]);
@@ -78,10 +94,11 @@ export function CourseTargetingModal({
         targetHighSchoolGrade: isHighSchool ? (targetHighSchoolGrade || null) : null,
         targetTraditionalBranch: isHighSchool ? (branch || null) : null,
         targetBaccalaureatePath: isHighSchool ? (path || null) : null,
-        targetUniversityId: !isHighSchool ? (targetUniversityId || null) : null,
-        targetFacultyId: !isHighSchool ? (targetFacultyId || null) : null,
-        targetDepartmentId: !isHighSchool ? (targetDepartmentId || null) : null,
-        targetProgramId: !isHighSchool ? (targetProgramId || null) : null,
+        targetUniversityId: !isHighSchool ? (uniTargetGroups[0]?.targetUniversityId || null) : null,
+        targetFacultyId: !isHighSchool ? (uniTargetGroups[0]?.targetFacultyId || null) : null,
+        targetDepartmentId: !isHighSchool ? (uniTargetGroups[0]?.targetDepartmentId || null) : null,
+        targetProgramId: !isHighSchool ? (uniTargetGroups[0]?.targetProgramId || null) : null,
+        targetGroups: !isHighSchool ? uniTargetGroups : undefined,
       });
     },
     onSuccess: () => {
@@ -106,10 +123,12 @@ export function CourseTargetingModal({
               const newType = e.target.value as EducationLevel;
               setAudienceType(newType);
               if (newType === 'HIGH_SCHOOL') {
-                setTargetUniversityId(null);
-                setTargetFacultyId(null);
-                setTargetDepartmentId(null);
-                setTargetProgramId(null);
+                setUniTargetGroups([{
+                  targetUniversityId: null,
+                  targetFacultyId: null,
+                  targetDepartmentId: null,
+                  targetProgramId: null
+                }]);
               } else {
                 setTargetHighSchoolSystem('');
                 setTargetStudyMode('');
@@ -201,26 +220,69 @@ export function CourseTargetingModal({
             )}
           </>
         ) : (
-          <div className="bg-theme-bg/50 p-4 rounded-xl border border-theme-border">
-            <AcademicDropdowns
-              excludeOther={true}
-              forceShowAll={true}
-              isTargetingMode={true}
-              universityId={targetUniversityId}
-              facultyId={targetFacultyId}
-              departmentId={targetDepartmentId}
-              programId={targetProgramId}
-              otherUniversityName={null}
-              otherFacultyName={null}
-              otherDepartmentName={null}
-              otherProgramName={null}
-              onChange={(data) => {
-                setTargetUniversityId(data.universityId);
-                setTargetFacultyId(data.facultyId);
-                setTargetDepartmentId(data.departmentId);
-                setTargetProgramId(data.programId);
+          <div className="space-y-4">
+            {uniTargetGroups.map((group, index) => (
+              <div key={index} className="bg-theme-bg/50 p-4 rounded-xl border border-theme-border relative">
+                {uniTargetGroups.length > 1 && (
+                  <button 
+                    type="button" 
+                    className="absolute top-2 right-2 p-1 text-theme-muted hover:text-red-500 rounded-md hover:bg-theme-bg/50 transition-colors"
+                    onClick={() => {
+                      const newGroups = [...uniTargetGroups];
+                      newGroups.splice(index, 1);
+                      setUniTargetGroups(newGroups);
+                    }}
+                  >
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                  </button>
+                )}
+                <div className="mb-4 font-semibold text-sm text-theme-text flex items-center gap-2">
+                  <div className="w-6 h-6 rounded-full bg-theme-primary/10 text-theme-primary flex items-center justify-center text-xs">
+                    {index + 1}
+                  </div>
+                  Target Group
+                </div>
+                <AcademicDropdowns
+                  excludeOther={true}
+                  forceShowAll={true}
+                  isTargetingMode={true}
+                  universityId={group.targetUniversityId}
+                  facultyId={group.targetFacultyId}
+                  departmentId={group.targetDepartmentId}
+                  programId={group.targetProgramId}
+                  otherUniversityName={null}
+                  otherFacultyName={null}
+                  otherDepartmentName={null}
+                  otherProgramName={null}
+                  onChange={(data) => {
+                    const newGroups = [...uniTargetGroups];
+                    newGroups[index] = {
+                      targetUniversityId: data.universityId,
+                      targetFacultyId: data.facultyId,
+                      targetDepartmentId: data.departmentId,
+                      targetProgramId: data.programId,
+                    };
+                    setUniTargetGroups(newGroups);
+                  }}
+                />
+              </div>
+            ))}
+            
+            <button 
+              type="button" 
+              className="btn-secondary w-full py-3 flex items-center justify-center gap-2 border-dashed border-2 hover:border-theme-primary/50 transition-all text-theme-muted hover:text-theme-primary"
+              onClick={() => {
+                setUniTargetGroups([...uniTargetGroups, {
+                  targetUniversityId: null,
+                  targetFacultyId: null,
+                  targetDepartmentId: null,
+                  targetProgramId: null
+                }]);
               }}
-            />
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+              Add Another OR Target Group
+            </button>
           </div>
         )}
       </div>
