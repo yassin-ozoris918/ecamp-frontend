@@ -532,5 +532,17 @@
     "redeeming": "Redeeming...",
     "redeem": "Redeem Code",
     "redeemSuccess": "Code redeemed successfully! Content unlocked."
+  },
+  "viewLimit": {
+    "exhaustedTitle": "View Limit Reached",
+    "exhaustedDesc_one": "You have used all {{count}} allowed view for this session.",
+    "exhaustedDesc_other": "You have used all {{count}} allowed views for this session.",
+    "exhaustedHint": "This limit applies per video session. Other sessions in this lecture may still be available.",
+    "views": "{{used}}/{{max}} views",
+    "unlimited": "Unlimited",
+    "limitViews": "Limit views",
+    "maxViewsLabel": "Maximum views per session",
+    "viewLimitSection": "Video Session View Limit",
+    "viewLimitHint": "Each video session inside this lecture independently inherits this limit. Quizzes and exams are never affected."
   }
 }

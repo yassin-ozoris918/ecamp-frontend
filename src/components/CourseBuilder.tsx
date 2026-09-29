@@ -1256,27 +1256,54 @@ function CreateLectureModal({
   const [durationMinutes, setDurationMinutes] = useState(0);
   const [warningHours, setWarningHours] = useState(0);
   const [warningMinutes, setWarningMinutes] = useState(0);
+  // View limit config
+  const [viewLimitMode, setViewLimitMode] = useState<'unlimited' | 'limited'>('unlimited');
+  const [maxViewsInput, setMaxViewsInput] = useState('3');
   const [busy, setBusy] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+
+  function validateMaxViews(): number | null {
+    if (viewLimitMode === 'unlimited') return null;
+    const parsed = parseInt(maxViewsInput, 10);
+    if (!maxViewsInput || isNaN(parsed) || parsed < 1 || String(parsed) !== maxViewsInput) return undefined as any;
+    return parsed;
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setFormError(null);
+
+    // Validate maxViews
+    let maxViews: number | null = null;
+    if (viewLimitMode === 'limited') {
+      const parsed = parseInt(maxViewsInput, 10);
+      if (!maxViewsInput || isNaN(parsed) || parsed < 1 || String(parsed) !== maxViewsInput) {
+        setFormError('Maximum views must be a positive whole number (e.g. 3).');
+        return;
+      }
+      maxViews = parsed;
+    }
+
     setBusy(true);
     try {
-      const payload = {
+      const payload: Record<string, any> = {
         courseId,
         chapterId: chapterId || undefined,
         sortOrder,
         title: title.trim(),
-        description: description ? description.trim() : "",
+        description: description ? description.trim() : '',
         durationDays: parseInt(String(durationDays), 10) || 0,
         durationHours: parseInt(String(durationHours), 10) || 0,
         durationMinutes: parseInt(String(durationMinutes), 10) || 0,
         warningHours: parseInt(String(warningHours), 10) || 0,
         warningMinutes: parseInt(String(warningMinutes), 10) || 0,
       };
+      if (maxViews !== null) payload.maxViews = maxViews;
       await api.post('/lectures', payload);
       setTitle('');
       setDescription('');
+      setViewLimitMode('unlimited');
+      setMaxViewsInput('3');
       onCreated();
     } catch(err) {
       console.error(err);
@@ -1320,6 +1347,59 @@ function CreateLectureModal({
             <input dir="auto" type="number" min="0" className="input" value={warningMinutes} onChange={(e) => setWarningMinutes(parseInt(e.target.value) || 0)} />
           </div>
         </div>
+
+        {/* ── Video Session View Limit ─────────────────────────────────── */}
+        <div className="rounded-xl border border-theme-border bg-theme-card/50 p-4 space-y-3">
+          <p className="text-sm font-semibold text-theme-text">Video Session View Limit</p>
+          <p className="text-xs text-theme-muted">
+            Each video session inside this lecture independently inherits this limit.
+            Quizzes and exams are never affected.
+          </p>
+          <div className="space-y-2">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="radio"
+                name="viewLimitMode"
+                value="unlimited"
+                checked={viewLimitMode === 'unlimited'}
+                onChange={() => setViewLimitMode('unlimited')}
+                className="accent-accent-500"
+              />
+              <span className="text-sm text-theme-text">Unlimited</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="radio"
+                name="viewLimitMode"
+                value="limited"
+                checked={viewLimitMode === 'limited'}
+                onChange={() => setViewLimitMode('limited')}
+                className="accent-accent-500"
+              />
+              <span className="text-sm text-theme-text">Limit views</span>
+            </label>
+          </div>
+          {viewLimitMode === 'limited' && (
+            <div className="flex items-center gap-3 pl-6">
+              <label className="text-sm text-theme-muted whitespace-nowrap">Maximum views per session:</label>
+              <input
+                dir="auto"
+                type="number"
+                min="1"
+                step="1"
+                className="input w-24"
+                value={maxViewsInput}
+                onChange={(e) => setMaxViewsInput(e.target.value)}
+                placeholder="e.g. 3"
+              />
+            </div>
+          )}
+          {formError && (
+            <p className="text-xs text-error-400">{formError}</p>
+          )}
+        </div>
+        {/* ─────────────────────────────────────────────────────────────── */}
+
         <div className="flex justify-end gap-2">
           <button type="button" onClick={onClose} className="btn-ghost">Cancel</button>
           <button type="submit" disabled={busy} className="btn-primary">{busy ? 'Adding…' : 'Add Lecture'}</button>

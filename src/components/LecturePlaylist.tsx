@@ -15,6 +15,8 @@ import {
   Minimize,
   Gauge,
   ExternalLink,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 import { api } from '../lib/api';
 import { useAuth } from '../lib/authContext';
@@ -97,7 +99,7 @@ export function LecturePlaylist({ lectureId }: { lectureId: string }) {
       }
       setCompletedIds(compIds);
 
-      const firstUnlocked = playlistData.find((p: PlaylistItem) => !p.isLocked && !p.isCompleted && !p.isExhausted);
+      const firstUnlocked = playlistData.find((p: PlaylistItem) => !p.isLocked && !p.isCompleted && !p.isExhausted && !p.isViewExhausted);
       setActiveItemId(firstUnlocked?.id ?? playlistData[0]?.id ?? null);
 
       const expiration = data.expiresAt || data.access_expires_at;
@@ -285,12 +287,31 @@ export function LecturePlaylist({ lectureId }: { lectureId: string }) {
             </div>
           ) : activeItem ? (
             activeItem.type === 'SESSION' ? (
-              <VideoPlayer
-                key={activeItem.id}
-                item={activeItem}
-                onComplete={() => markSessionComplete(activeItem.id)}
-                isCompleted={activeItem.isCompleted}
-              />
+              activeItem.isViewExhausted ? (
+                // View limit reached for this session
+                <div className="glass rounded-2xl p-8 sm:p-12 text-center animate-scale-in border-error-500/20">
+                  <div className="w-20 h-20 mx-auto rounded-full bg-error-500/10 flex items-center justify-center text-error-400 mb-6">
+                    <EyeOff className="w-10 h-10" />
+                  </div>
+                  <h2 className="text-2xl font-display font-bold text-theme-text mb-2">
+                    View Limit Reached
+                  </h2>
+                  <p className="text-theme-muted mb-2 max-w-md mx-auto">
+                    You have used all {activeItem.maxViews} allowed {activeItem.maxViews === 1 ? 'view' : 'views'} for <strong>{activeItem.title}</strong>.
+                  </p>
+                  <p className="text-xs text-theme-muted max-w-md mx-auto">
+                    This limit applies per video session. Other sessions in this lecture may still be available.
+                  </p>
+                </div>
+              ) : (
+                <VideoPlayer
+                  key={activeItem.id}
+                  item={activeItem}
+                  onComplete={() => markSessionComplete(activeItem.id)}
+                  isCompleted={activeItem.isCompleted}
+                  onViewConsumed={loadData}
+                />
+              )
             ) : activeItem.type === 'QUIZ' ? (
               <InteractiveQuizClient
                 lectureId={lectureId}
@@ -366,9 +387,11 @@ export function LecturePlaylist({ lectureId }: { lectureId: string }) {
                   className={`w-full text-start p-4 flex items-start gap-3 transition-colors ${
                     entry.isLocked
                       ? 'opacity-50 cursor-not-allowed'
-                      : activeItemId === entry.id
-                        ? 'bg-accent-500/10'
-                        : 'hover:bg-theme-card'
+                      : entry.isViewExhausted
+                        ? 'opacity-60 cursor-pointer hover:bg-theme-card'
+                        : activeItemId === entry.id
+                          ? 'bg-accent-500/10'
+                          : 'hover:bg-theme-card'
                   }`}
                 >
                   <div className="shrink-0 mt-0.5">
@@ -379,6 +402,10 @@ export function LecturePlaylist({ lectureId }: { lectureId: string }) {
                     ) : entry.isCompleted ? (
                       <div className="w-8 h-8 rounded-lg bg-secondary-500/15 flex items-center justify-center text-secondary-700 dark:text-secondary-300">
                         <CheckCircle2 className="w-4 h-4" />
+                      </div>
+                    ) : entry.isViewExhausted ? (
+                      <div className="w-8 h-8 rounded-lg bg-error-500/15 flex items-center justify-center text-error-400">
+                        <EyeOff className="w-4 h-4" />
                       </div>
                     ) : (
                       <div className="w-8 h-8 rounded-lg bg-accent-500/10 flex items-center justify-center text-accent-700 dark:text-accent-300">
@@ -398,6 +425,14 @@ export function LecturePlaylist({ lectureId }: { lectureId: string }) {
                     }`}>
                       {entry.title}
                     </p>
+                    {entry.type === 'SESSION' && entry.maxViews != null && (
+                      <p className={`text-xs mt-0.5 flex items-center gap-1 ${
+                        entry.isViewExhausted ? 'text-error-400' : 'text-theme-muted'
+                      }`}>
+                        <Eye className="w-3 h-3" />
+                        {entry.usedViews ?? 0}/{entry.maxViews} views
+                      </p>
+                    )}
                     {!!entry.duration && (
                       <p className="text-xs text-theme-muted mt-0.5 flex items-center gap-1">
                         <Clock className="w-3 h-3" />
@@ -528,10 +563,13 @@ function VideoPlayer({
   item,
   onComplete,
   isCompleted,
+  onViewConsumed,
 }: {
   item: LectureItem;
   onComplete: () => void | Promise<void>;
   isCompleted: boolean;
+  /** Called after a view is successfully consumed (to reload playlist state) */
+  onViewConsumed?: () => void;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -547,6 +585,13 @@ function VideoPlayer({
   const [amaanError, setAmaanError] = useState<string | null>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const playerInstanceRef = useRef<any>(null);
+
+  // View-limit tracking
+  const playbackSessionIdRef = useRef<string | null>(null);
+  const accumulatedPlaySecondsRef = useRef(0);
+  const viewConsumedRef = useRef(false);
+  const lastTimeRef = useRef<number | null>(null);
+  const VIEW_THRESHOLD_SECONDS = 10;
 
   const [isCompleting, setIsCompleting] = useState(false);
 
@@ -606,6 +651,12 @@ function VideoPlayer({
       .then((res) => {
         if (!mounted) return;
         const data = res.data;
+        // Reset view tracking for this new stream session
+        accumulatedPlaySecondsRef.current = 0;
+        viewConsumedRef.current = false;
+        lastTimeRef.current = null;
+        playbackSessionIdRef.current = data.playbackSessionId ?? null;
+
         if (data.provider === 'AMAAN') {
           setStreamData({
             provider: 'AMAAN',
@@ -726,6 +777,54 @@ function VideoPlayer({
     }
   }
 
+  /**
+   * Consumes one view idempotently when the 10-second threshold is reached.
+   * Safe to call multiple times — the backend enforces exactly-once semantics
+   * per playbackSessionId.
+   */
+  async function handleConsumeView() {
+    if (viewConsumedRef.current) return; // already consumed for this stream session
+    const psId = playbackSessionIdRef.current;
+    if (!psId) return; // unlimited (no token issued) or no video
+    viewConsumedRef.current = true; // optimistic — prevent race from rapid calls
+    try {
+      await api.post(`/lectures/sessions/${item.id}/consume-view`, { playbackSessionId: psId });
+      onViewConsumed?.();
+    } catch (e) {
+      // If it fails (e.g. network blip), reset so it can retry next tick
+      viewConsumedRef.current = false;
+      console.warn('Failed to record view, will retry:', e);
+    }
+  }
+
+  /**
+   * Called on every `timeupdate` event from the native <video> element.
+   * Accumulates actual playback time (skips seeks / pauses).
+   * Fires view consumption at VIEW_THRESHOLD_SECONDS of cumulative play.
+   */
+  function handleTimeUpdate() {
+    const video = videoRef.current;
+    if (!video || video.paused || video.ended) return;
+
+    const now = video.currentTime;
+    const prev = lastTimeRef.current;
+    lastTimeRef.current = now;
+
+    if (prev !== null) {
+      const delta = now - prev;
+      // Only count forward progress ≤ 2s (ignores large seeks)
+      if (delta > 0 && delta <= 2) {
+        accumulatedPlaySecondsRef.current += delta;
+        if (
+          !viewConsumedRef.current &&
+          accumulatedPlaySecondsRef.current >= VIEW_THRESHOLD_SECONDS
+        ) {
+          handleConsumeView();
+        }
+      }
+    }
+  }
+
   if (!item.video_url) {
     return (
       <div className="glass rounded-2xl p-10 text-center">
@@ -786,6 +885,7 @@ function VideoPlayer({
               controls
               controlsList="nofullscreen nodownload"
               onEnded={handleMarkComplete}
+              onTimeUpdate={handleTimeUpdate}
               onLoadedMetadata={() => {
                 if (videoRef.current) {
                   videoRef.current.playbackRate = playbackSpeed;

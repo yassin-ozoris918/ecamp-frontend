@@ -159,6 +159,8 @@ export interface Lecture {
   isPublished?: boolean;
   warningHours?: number;
   warningMinutes?: number;
+  /** null = unlimited; positive integer = max views per video session */
+  maxViews?: number | null;
   sessions?: Session[];
   quizzes?: Quiz[];
   items?: LectureItem[];
@@ -220,6 +222,12 @@ export interface PlaylistItem {
   attachmentType: string;
   passing_score?: number;
   time_limit_minutes?: number;
+  /** Inherited from Lecture.maxViews — applies only to SESSION items */
+  maxViews?: number | null;
+  /** How many times this student has watched this session */
+  usedViews?: number;
+  /** true when usedViews >= maxViews (and maxViews is not null) */
+  isViewExhausted?: boolean;
 }
 
 export interface ActivationCode {
