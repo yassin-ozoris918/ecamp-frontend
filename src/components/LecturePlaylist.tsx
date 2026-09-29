@@ -453,7 +453,37 @@ function CountdownPill({ ms, warningHours, warningMinutes }: { ms: number, warni
   );
 }
 
+/**
+ * Wrapper that holds the tamper-key so React truly remounts FloatingWatermarkInner
+ * when tampering is detected (deleting/hiding the element via DevTools).
+ */
 function FloatingWatermark() {
+  const [tamperKey, setTamperKey] = useState(0);
+
+  useEffect(() => {
+    const checkTamper = setInterval(() => {
+      const el = document.getElementById('floating-watermark');
+      if (!el || !document.body.contains(el)) {
+        setTamperKey(k => k + 1);
+        return;
+      }
+      const style = window.getComputedStyle(el);
+      if (
+        style.display === 'none' ||
+        style.visibility === 'hidden' ||
+        parseFloat(style.opacity) < 0.05
+      ) {
+        setTamperKey(k => k + 1);
+      }
+    }, 800);
+    return () => clearInterval(checkTamper);
+  }, []);
+
+  // The key on FloatingWatermarkInner forces React to fully unmount+remount it.
+  return <FloatingWatermarkInner key={tamperKey} />;
+}
+
+function FloatingWatermarkInner() {
   const { profile } = useAuth();
   const [pos, setPos] = useState({ top: 20, left: 20 });
 
@@ -475,6 +505,7 @@ function FloatingWatermark() {
 
   return (
     <div
+      id="floating-watermark"
       className="absolute text-white/70 text-xl sm:text-2xl md:text-3xl font-extrabold pointer-events-none select-none z-[99999] whitespace-nowrap"
       style={{
         top: `${pos.top}%`,

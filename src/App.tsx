@@ -1,4 +1,5 @@
 import { lazy, Suspense, useEffect } from 'react';
+import { useAntiInspect } from './hooks/useAntiInspect';
 import { useQuery } from '@tanstack/react-query';
 import { api } from './lib/api';
 import { RouterProvider, Routes, useRouter } from './lib/router';
@@ -83,6 +84,9 @@ export default function App() {
 function Root() {
   const { session, profile, loading } = useAuth();
   const { path, navigate } = useRouter();
+
+  // Apply anti-inspect globally. ADMIN/INSTRUCTOR skip the debugger loop.
+  useAntiInspect(profile?.role);
 
   const { data: serverProfile, error: profileError, isLoading: isServerLoading } = useQuery({
     queryKey: ['me'],
