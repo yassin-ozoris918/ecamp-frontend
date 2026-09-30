@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { GraduationCap, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { api } from '../lib/api';
 import { useAuth } from '../lib/authContext';
@@ -29,29 +29,26 @@ export function AuthScreen() {
   const [registrationPending, setRegistrationPending] = useState(false);
   const [maintenanceInterrupted, setMaintenanceInterrupted] = useState(() => sessionStorage.getItem('maintenance_interruption') === 'true');
 
-  // ── Character animation system ──────────────────────────────────────────
-  const char = useCharacterState('idle');
-  // Track whether the register form has been "opened" yet
-  const [formOpened, setFormOpened] = useState(false);
-  const formRef = useRef<HTMLDivElement>(null);
+  // ── Character animation system (Yassin) ───────────────────────────────
+  const char = useCharacterState('waving');
+  // formSlid: true once Yassin has pushed the form into place
+  const [formSlid, setFormSlid] = useState(false);
 
   function handleRegisterTabClick() {
     setMode('register');
     setLocalError(null);
-    if (!formOpened) {
-      // Trigger pull → open sequence
-      char.onPulling();
+    if (!formSlid) {
+      // 400ms delay so the register tab switches first, then Yassin pushes
       setTimeout(() => {
-        char.onOpening();
-        setFormOpened(true);
-      }, 600);
+        char.onPushing(() => setFormSlid(true));
+      }, 250);
     }
   }
 
   function handleLoginTabClick() {
     setMode('login');
     setLocalError(null);
-    char.setState('idle');
+    char.setState('waving');
   }
 
   const isMaintenanceActive = maintenanceInterrupted || error?.code === 'MAINTENANCE_MODE';
@@ -304,38 +301,63 @@ export function AuthScreen() {
       </div>
 
       {/* Right form panel */}
-      <div className="lg:w-1/2 flex items-center justify-center p-6 lg:p-12">
-        <div className="w-full max-w-md animate-fade-up">
-          {isMaintenanceActive ? (
-            <MaintenanceNotice onCheckStatus={clearMaintenance} />
-          ) : registrationPending ? (
-            <div className="text-center">
-              <div className="w-24 h-24 bg-accent-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                <GraduationCap className="w-12 h-12 text-accent-500" />
-              </div>
-              <h3 className="text-2xl font-display font-bold text-theme-text mb-4">
-                {t('auth.registrationPendingTitle', 'Registration Successful!')}
-              </h3>
-              <p className="text-theme-muted mb-8 leading-relaxed">
-                {t('auth.registrationPendingMessage', 'Your account is currently under review by our administration team. You will be granted access once your details have been verified.')}
-              </p>
-              <button
-                onClick={() => { setRegistrationPending(false); setMode('login'); }}
-                className="btn-primary w-full"
-              >
-                {t('auth.backToLogin', 'Back to Login')}
-              </button>
-            </div>
-          ) : (
-            <>
-              {/* ── Character companion (register mode only) ── */}
-              {mode === 'register' && (
-                <div className="flex justify-center mb-4 animate-fade-up" style={{ animationDuration: '0.4s' }}>
-                  <EcampCharacter state={char.charState} size="lg" />
-                </div>
-              )}
+      <div className="lg:w-1/2 flex items-center justify-center p-4 lg:p-8 overflow-hidden">
 
-              <div className="mb-8">
+        {/* ── Maintenance / pending screens (centered, no character) ── */}
+        {isMaintenanceActive ? (
+          <div className="w-full max-w-md animate-fade-up">
+            <MaintenanceNotice onCheckStatus={clearMaintenance} />
+          </div>
+        ) : registrationPending ? (
+          <div className="w-full max-w-md animate-fade-up text-center">
+            <div className="w-24 h-24 bg-accent-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
+              <GraduationCap className="w-12 h-12 text-accent-500" />
+            </div>
+            <h3 className="text-2xl font-display font-bold text-theme-text mb-4">
+              {t('auth.registrationPendingTitle', 'Registration Successful!')}
+            </h3>
+            <p className="text-theme-muted mb-8 leading-relaxed">
+              {t('auth.registrationPendingMessage', 'Your account is currently under review by our administration team. You will be granted access once your details have been verified.')}
+            </p>
+            <button
+              onClick={() => { setRegistrationPending(false); setMode('login'); }}
+              className="btn-primary w-full"
+            >
+              {t('auth.backToLogin', 'Back to Login')}
+            </button>
+          </div>
+        ) : (
+          /*
+           * ── MAIN LAYOUT ──
+           * register mode → side-by-side: [Yassin | form slides in from right]
+           * login mode    → centered form (Yassin peeks on the side)
+           */
+          <div className={`w-full flex items-end gap-4 transition-all duration-500 ${
+            mode === 'register'
+              ? 'justify-start max-w-3xl'
+              : 'justify-center max-w-md'
+          }`}>
+
+            {/* ── Yassin Character column ── */}
+            <div className={`flex-shrink-0 flex flex-col items-center self-end pb-2 transition-all duration-500 ${
+              mode === 'register' ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-6 pointer-events-none w-0 overflow-hidden'
+            }`}>
+              <EcampCharacter
+                state={char.charState}
+                size="xl"
+                showName
+                className="drop-shadow-lg"
+              />
+            </div>
+
+            {/* ── Form column ── */}
+            <div className={`flex-1 min-w-0 ${
+              mode === 'register'
+                ? (formSlid ? 'ecamp-form-slide-in' : 'ecamp-form-waiting')
+                : 'animate-fade-up'
+            }`}>
+              <>
+              <div className="mb-6">
                 <div className="flex gap-1 p-1 rounded-xl bg-theme-card border border-theme-border">
               <button
                 type="button"
@@ -406,12 +428,9 @@ export function AuthScreen() {
           )
           */}
 
-          {/* Form wrapper with open/close animation */}
-          <div
-            ref={formRef}
-            className={mode === 'register' ? (formOpened ? 'ecamp-form-open' : 'ecamp-form-closed') : ''}
-          >
+
           <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+
             {mode === 'register' && (
               <>
                 <div className="flex justify-center mb-6">
@@ -654,24 +673,25 @@ export function AuthScreen() {
                 t('auth.createAccount')
               )}
             </button>
-          </form>
-          </div>{/* end ecamp-form wrapper */}
+            </form>
 
-          {mode === 'register' && (
-            <p className="mt-5 text-xs text-theme-muted leading-relaxed text-center">
-              {t('auth.deviceBinding')}
-            </p>
-          )}
-          </>
-          )}
+            {mode === 'register' && (
+              <p className="mt-4 text-xs text-theme-muted leading-relaxed text-center">
+                {t('auth.deviceBinding')}
+              </p>
+            )}
 
-          <div className="mt-8 pt-4 border-t border-theme-border/40 text-center">
-            <p className="text-xs font-semibold text-accent-700 dark:text-accent-300">
-              ⚡ {t('common.developedBy')}
-            </p>
+            <div className="mt-6 pt-4 border-t border-theme-border/40 text-center">
+              <p className="text-xs font-semibold text-accent-700 dark:text-accent-300">
+                ⚡ {t('common.developedBy')}
+              </p>
+            </div>
+            </>
+            </div>
           </div>
-        </div>
+        )}
       </div>
+
 
       {/* [ON HOLD: Full-Screen Video Modal]
       showTutorial && (

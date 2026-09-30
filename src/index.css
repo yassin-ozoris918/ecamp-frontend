@@ -200,7 +200,7 @@
 }
 
 /* ════════════════════════════════════════════════════════════════════════════
-   EcampCharacter Animation System
+   EcampCharacter "Yassin" Animation System
    ────────────────────────────────────────────────────────────────────────────
    All character states are driven by CSS classes applied to the wrapper div.
    The SVG renders synchronously — animation runs entirely in CSS.
@@ -209,237 +209,279 @@
 
 /* ── Idle: gentle breathing float ── */
 @keyframes ec-idle {
-  0%, 100% { transform: translateY(0px); }
-  50%       { transform: translateY(-4px); }
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  30%       { transform: translateY(-5px) rotate(0.5deg); }
+  70%       { transform: translateY(-3px) rotate(-0.5deg); }
 }
 .ecamp-char-idle {
-  animation: ec-idle 3.6s ease-in-out infinite;
+  animation: ec-idle 3.8s ease-in-out infinite;
 }
 
-/* ── Looking: slight lean toward the form ── */
+/* ── Looking: lean toward the form (slight right tilt) ── */
 @keyframes ec-looking {
-  0%, 100% { transform: translateY(-2px) rotate(-1.5deg); }
-  50%       { transform: translateY(-5px) rotate(-2.5deg); }
+  0%, 100% { transform: translateY(-2px) translateX(2px) rotate(-1deg); }
+  50%       { transform: translateY(-6px) translateX(4px) rotate(-2deg); }
 }
 .ecamp-char-looking {
-  animation: ec-looking 2.8s ease-in-out infinite;
+  animation: ec-looking 2.6s ease-in-out infinite;
 }
 
-/* ── Typing: quick nod / attention ── */
+/* ── PUSHING: full-body lean forward + strain ── */
+@keyframes ec-pushing {
+  0%   { transform: translateX(0)    rotate(0deg)   scaleX(1); }
+  15%  { transform: translateX(6px)  rotate(4deg)   scaleX(0.98); }
+  40%  { transform: translateX(14px) rotate(8deg)   scaleX(0.96); }
+  60%  { transform: translateX(16px) rotate(9deg)   scaleX(0.95); }
+  75%  { transform: translateX(14px) rotate(8deg)   scaleX(0.96); }
+  88%  { transform: translateX(8px)  rotate(4deg)   scaleX(0.98); }
+  100% { transform: translateX(0)    rotate(0deg)   scaleX(1); }
+}
+.ecamp-char-pushing {
+  animation: ec-pushing 1.1s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* ── Push arm (right arm extends right) ── */
+@keyframes ec-arm-push {
+  0%   { transform: rotate(0deg); }
+  40%  { transform: rotate(35deg) translateX(4px); }
+  60%  { transform: rotate(38deg) translateX(5px); }
+  100% { transform: rotate(0deg); }
+}
+.ecamp-char-arm-push {
+  animation: ec-arm-push 1.1s cubic-bezier(0.16, 1, 0.3, 1) both;
+  transform-origin: 79px 78px;
+}
+
+/* ── Typing: quick nod ── */
 @keyframes ec-typing {
   0%, 100% { transform: translateY(0) rotate(0deg); }
-  25%       { transform: translateY(-2px) rotate(-1deg); }
-  75%       { transform: translateY(2px) rotate(1deg); }
+  25%       { transform: translateY(-2px) rotate(-1.5deg); }
+  75%       { transform: translateY(1px) rotate(1deg); }
 }
 .ecamp-char-typing {
-  animation: ec-typing 0.45s ease-in-out infinite;
+  animation: ec-typing 0.5s ease-in-out infinite;
 }
 
-/* ── Thinking: slow head tilt ── */
+/* ── Thinking: slow head tilt + slight lean ── */
 @keyframes ec-thinking {
   0%, 100% { transform: translateY(0) rotate(0deg); }
-  40%       { transform: translateY(-3px) rotate(4deg); }
-  80%       { transform: translateY(-3px) rotate(4deg); }
+  40%       { transform: translateY(-4px) rotate(5deg); }
+  80%       { transform: translateY(-4px) rotate(5deg); }
 }
 .ecamp-char-thinking {
-  animation: ec-thinking 2s ease-in-out infinite;
+  animation: ec-thinking 2.2s ease-in-out infinite;
 }
 
 /* ── Confused: head shake ── */
 @keyframes ec-confused {
-  0%   { transform: rotate(0deg); }
-  15%  { transform: rotate(-6deg); }
-  30%  { transform: rotate(6deg); }
-  45%  { transform: rotate(-4deg); }
-  60%  { transform: rotate(4deg); }
-  75%  { transform: rotate(-2deg); }
-  90%  { transform: rotate(2deg); }
-  100% { transform: rotate(0deg); }
+  0%   { transform: rotate(0deg) translateX(0); }
+  12%  { transform: rotate(-7deg) translateX(-3px); }
+  28%  { transform: rotate(7deg) translateX(3px); }
+  44%  { transform: rotate(-5deg) translateX(-2px); }
+  60%  { transform: rotate(5deg) translateX(2px); }
+  76%  { transform: rotate(-2deg) translateX(-1px); }
+  90%  { transform: rotate(2deg) translateX(1px); }
+  100% { transform: rotate(0deg) translateX(0); }
 }
 .ecamp-char-confused {
-  animation: ec-confused 0.75s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+  animation: ec-confused 0.8s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
 }
 
-/* ── Worried: subtle anxious bounce ── */
+/* ── Worried: anxious micro-bounce ── */
 @keyframes ec-worried {
   0%, 100% { transform: translateY(0) scale(1); }
-  30%       { transform: translateY(-3px) scale(1.02); }
-  60%       { transform: translateY(1px) scale(0.99); }
+  35%       { transform: translateY(-4px) scale(1.02); }
+  65%       { transform: translateY(1px) scale(0.99); }
 }
 .ecamp-char-worried {
-  animation: ec-worried 1.4s ease-in-out infinite;
+  animation: ec-worried 1.5s ease-in-out infinite;
 }
 
 /* ── Happy: bouncy jump ── */
 @keyframes ec-happy {
   0%, 100% { transform: translateY(0) scale(1); }
-  20%       { transform: translateY(-10px) scale(1.04); }
-  40%       { transform: translateY(2px) scale(0.97); }
-  60%       { transform: translateY(-5px) scale(1.02); }
+  20%       { transform: translateY(-12px) scale(1.05); }
+  40%       { transform: translateY(3px) scale(0.96); }
+  60%       { transform: translateY(-6px) scale(1.02); }
   80%       { transform: translateY(1px) scale(0.99); }
 }
 .ecamp-char-happy {
-  animation: ec-happy 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: ec-happy 0.85s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 /* ── Success: proud stand-up ── */
 @keyframes ec-success {
-  0%   { transform: translateY(10px) scale(0.92); opacity: 0.6; }
-  60%  { transform: translateY(-6px) scale(1.05); opacity: 1; }
+  0%   { transform: translateY(12px) scale(0.9); opacity: 0.5; }
+  55%  { transform: translateY(-7px) scale(1.06); opacity: 1; }
   100% { transform: translateY(0) scale(1); opacity: 1; }
 }
 .ecamp-char-success {
-  animation: ec-success 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: ec-success 0.65s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-/* ── Celebrating: jump + spin ── */
+/* ── Celebrating: jump + wiggle ── */
 @keyframes ec-celebrating {
   0%   { transform: translateY(0) rotate(0deg) scale(1); }
-  25%  { transform: translateY(-14px) rotate(-8deg) scale(1.06); }
-  50%  { transform: translateY(-8px) rotate(8deg) scale(1.04); }
-  75%  { transform: translateY(-14px) rotate(-4deg) scale(1.06); }
+  20%  { transform: translateY(-16px) rotate(-9deg) scale(1.07); }
+  45%  { transform: translateY(-8px) rotate(9deg) scale(1.05); }
+  70%  { transform: translateY(-16px) rotate(-5deg) scale(1.07); }
   100% { transform: translateY(0) rotate(0deg) scale(1); }
 }
 .ecamp-char-celebrating {
-  animation: ec-celebrating 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: ec-celebrating 1s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-/* ── Waving arm ── */
-@keyframes ec-arm-wave {
-  0%, 100% { transform: rotate(0deg); }
-  25%       { transform: rotate(-35deg); }
-  75%       { transform: rotate(-15deg); }
-}
-.ecamp-char-arm-wave {
-  animation: ec-arm-wave 0.7s ease-in-out infinite;
-  transform-origin: 93px 102px;
-}
+/* ── Waving: full body sway ── */
 @keyframes ec-waving {
-  0%, 100% { transform: translateY(0); }
-  50%       { transform: translateY(-4px); }
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  30%       { transform: translateY(-4px) rotate(-2deg); }
+  70%       { transform: translateY(-2px) rotate(2deg); }
 }
 .ecamp-char-waving {
-  animation: ec-waving 1.2s ease-in-out infinite;
+  animation: ec-waving 1.3s ease-in-out infinite;
+}
+
+/* ── Wave arm (right arm waves up) ── */
+@keyframes ec-arm-wave {
+  0%, 100% { transform: rotate(0deg); }
+  30%       { transform: rotate(-55deg); }
+  60%       { transform: rotate(-30deg); }
+}
+.ecamp-char-arm-wave {
+  animation: ec-arm-wave 0.75s ease-in-out infinite;
+  transform-origin: 79px 78px;
 }
 
 /* ── Celebrate arm raise ── */
 @keyframes ec-arm-celebrate {
   0%, 100% { transform: rotate(0deg); }
-  40%       { transform: rotate(-80deg) translateY(-4px); }
+  45%       { transform: rotate(-95deg) translateY(-6px); }
 }
 .ecamp-char-arm-celebrate {
-  animation: ec-arm-celebrate 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
-  transform-origin: 93px 102px;
+  animation: ec-arm-celebrate 1s cubic-bezier(0.16, 1, 0.3, 1) both;
+  transform-origin: 79px 78px;
 }
 
-/* ── Pulling: lean forward + reach ── */
+/* ── Pulling: lean forward (pull toward self) ── */
 @keyframes ec-pulling {
   0%, 100% { transform: translateX(0) rotate(0deg); }
-  30%       { transform: translateX(8px) rotate(3deg); }
-  60%       { transform: translateX(12px) rotate(5deg); }
+  30%       { transform: translateX(10px) rotate(4deg); }
+  60%       { transform: translateX(14px) rotate(6deg); }
   80%       { transform: translateX(8px) rotate(3deg); }
 }
 .ecamp-char-pulling {
   animation: ec-pulling 1.2s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-/* ── Opening: step back after pull ── */
+/* ── Opening: step back after push completes ── */
 @keyframes ec-opening {
-  0%   { transform: translateX(12px) rotate(5deg); }
-  50%  { transform: translateX(-4px) rotate(-2deg); }
+  0%   { transform: translateX(16px) rotate(9deg); }
+  60%  { transform: translateX(-5px) rotate(-2deg); }
   100% { transform: translateX(0) rotate(0deg); }
 }
 .ecamp-char-opening {
-  animation: ec-opening 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: ec-opening 0.75s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 /* ── Loading: slow pulse ── */
 @keyframes ec-loading {
   0%, 100% { transform: scale(1) translateY(0); opacity: 1; }
-  50%       { transform: scale(0.97) translateY(-3px); opacity: 0.85; }
+  50%       { transform: scale(0.96) translateY(-4px); opacity: 0.8; }
 }
 .ecamp-char-loading {
-  animation: ec-loading 1.6s ease-in-out infinite;
+  animation: ec-loading 1.7s ease-in-out infinite;
 }
 
-/* ── Empty state: gentle bob ── */
+/* ── Empty state: gentle float ── */
 @keyframes ec-empty {
   0%, 100% { transform: translateY(0); }
-  50%       { transform: translateY(-6px); }
+  50%       { transform: translateY(-7px); }
 }
 .ecamp-char-empty {
-  animation: ec-empty 3s ease-in-out infinite;
+  animation: ec-empty 3.2s ease-in-out infinite;
+}
+
+/* ── Head subtle bob (used on head element) ── */
+.ecamp-char-head {
+  transform-origin: 50px 33px;
 }
 
 /* ── Thinking bubble pulse ── */
 @keyframes ec-think-bubble {
-  0%, 100% { opacity: 0.5; transform: scale(1); }
-  50%       { opacity: 0.9; transform: scale(1.08); }
+  0%, 100% { opacity: 0.45; transform: scale(1); }
+  50%       { opacity: 0.95; transform: scale(1.1); }
 }
 .ecamp-char-think-bubble {
-  animation: ec-think-bubble 1.4s ease-in-out infinite;
+  animation: ec-think-bubble 1.5s ease-in-out infinite;
 }
 
-/* ── Confused / worried marks ── */
+/* ── Confused / worried marks pop ── */
 @keyframes ec-mark-pop {
-  0%   { opacity: 0; transform: scale(0.4) rotate(-10deg); }
-  60%  { transform: scale(1.2) rotate(4deg); }
+  0%   { opacity: 0; transform: scale(0.3) rotate(-15deg); }
+  55%  { transform: scale(1.25) rotate(5deg); }
   100% { opacity: 1; transform: scale(1) rotate(0deg); }
 }
 .ecamp-char-confused-mark,
 .ecamp-char-worried-mark {
-  animation: ec-mark-pop 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: ec-mark-pop 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 /* ── Sparkles ── */
 @keyframes ec-sparkle {
-  0%, 100% { opacity: 0; transform: scale(0.5) rotate(0deg); }
-  50%       { opacity: 1; transform: scale(1.2) rotate(20deg); }
+  0%, 100% { opacity: 0; transform: scale(0.4) rotate(0deg); }
+  50%       { opacity: 1; transform: scale(1.3) rotate(25deg); }
 }
-.ecamp-sparkle-1 { animation: ec-sparkle 1s 0.00s ease-in-out infinite; fill: #fbbf24; }
-.ecamp-sparkle-2 { animation: ec-sparkle 1s 0.25s ease-in-out infinite; fill: #22d3ee; }
-.ecamp-sparkle-3 { animation: ec-sparkle 1s 0.50s ease-in-out infinite; fill: #fbbf24; }
-.ecamp-sparkle-4 { animation: ec-sparkle 1s 0.75s ease-in-out infinite; fill: #22d3ee; }
+.ecamp-sparkle-1 { animation: ec-sparkle 1.1s 0.00s ease-in-out infinite; }
+.ecamp-sparkle-2 { animation: ec-sparkle 1.1s 0.27s ease-in-out infinite; }
+.ecamp-sparkle-3 { animation: ec-sparkle 1.1s 0.55s ease-in-out infinite; }
+.ecamp-sparkle-4 { animation: ec-sparkle 1.1s 0.82s ease-in-out infinite; }
 
-/* ── Registration form reveal ── */
-@keyframes ec-form-reveal {
+/* ════════════════════════════════════════════════════════════════════════════
+   Form slide animations — Yassin pushes the form in from the right
+   ════════════════════════════════════════════════════════════════════════════ */
+
+/* Form starts off-screen to the right, slides left into place */
+@keyframes ec-form-slide-in {
   from {
     opacity: 0;
-    transform: scaleY(0.88) translateY(-12px);
-    transform-origin: top center;
+    transform: translateX(80px) scaleX(0.94);
+    transform-origin: left center;
   }
   to {
     opacity: 1;
-    transform: scaleY(1) translateY(0);
-    transform-origin: top center;
+    transform: translateX(0) scaleX(1);
+    transform-origin: left center;
   }
 }
-.ecamp-form-reveal {
-  animation: ec-form-reveal 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+.ecamp-form-slide-in {
+  animation: ec-form-slide-in 0.65s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-/* ── Form panel closed state ── */
-.ecamp-form-closed {
-  transform: scaleY(0.1) translateY(-30px);
+/* Waiting state — form waits off-screen to the right */
+.ecamp-form-waiting {
+  transform: translateX(70px);
   opacity: 0;
   pointer-events: none;
-  transform-origin: top center;
-  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease;
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.5s ease;
+  transform-origin: left center;
 }
-.ecamp-form-open {
-  transform: scaleY(1) translateY(0);
+
+/* Form is in position */
+.ecamp-form-in-place {
+  transform: translateX(0);
   opacity: 1;
-  transform-origin: top center;
-  transition: transform 0.55s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease;
+  pointer-events: auto;
+  transition: transform 0.65s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.5s ease;
+  transform-origin: left center;
 }
 
 /* ════════════════════════════════════════════════════════════════════════════
    Reduced Motion — accessibility
-   All character animations are disabled; UI transitions preserved as instant.
    ════════════════════════════════════════════════════════════════════════════ */
 @media (prefers-reduced-motion: reduce) {
   .ecamp-char-idle,
   .ecamp-char-looking,
+  .ecamp-char-pushing,
   .ecamp-char-typing,
   .ecamp-char-thinking,
   .ecamp-char-confused,
@@ -452,6 +494,7 @@
   .ecamp-char-opening,
   .ecamp-char-loading,
   .ecamp-char-empty,
+  .ecamp-char-arm-push,
   .ecamp-char-arm-wave,
   .ecamp-char-arm-celebrate,
   .ecamp-char-think-bubble,
@@ -460,16 +503,15 @@
   .ecamp-sparkle-1,
   .ecamp-sparkle-2,
   .ecamp-sparkle-3,
-  .ecamp-sparkle-4 {
+  .ecamp-sparkle-4,
+  .ecamp-form-slide-in {
     animation: none !important;
+    transition: none !important;
   }
-  .ecamp-form-closed {
-    transform: none;
-    opacity: 1;
-    pointer-events: auto;
-  }
-  .ecamp-form-reveal {
-    animation: none !important;
+  .ecamp-form-waiting {
+    transform: none !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
   }
 }
 

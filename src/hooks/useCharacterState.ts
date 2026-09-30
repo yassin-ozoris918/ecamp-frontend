@@ -1,36 +1,36 @@
 /**
  * useCharacterState — maps eCamp form/UI events to CharacterState.
  *
- * This hook is the bridge between UI state and the EcampCharacter component.
- * Keep all animation-decision logic HERE so individual pages stay clean.
+ * This is the bridge between UI state and the EcampCharacter component.
+ * All animation-decision logic lives HERE so individual pages stay clean.
  *
  * Usage:
- *   const { charState, onFocus, onBlur, onTyping, onError, onLoading, onSuccess } = useCharacterState();
- *   <EcampCharacter state={charState} />
+ *   const char = useCharacterState('idle');
+ *   <EcampCharacter state={char.charState} />
  */
 
 import { useState, useCallback, useRef } from 'react';
 import type { CharacterState } from '../components/common/EcampCharacter';
 
-// How long (ms) to hold a transient state before returning to idle/looking
-const TRANSIENT_DURATION = {
-  error:   2200,
-  success: 3000,
-  happy:   2400,
+// How long (ms) to hold a transient state before reverting
+const TRANSIENT = {
+  error:      2200,
+  success:    3000,
+  pushing:    1100,   // matches CSS animation duration
+  opening:    800,
 } as const;
 
-// Debounce typing reaction so it doesn't fire on every keystroke
-const TYPING_DEBOUNCE = 400;
+// Debounce delay — typing reaction reverts after this long with no keys
+const TYPING_DEBOUNCE = 420;
 
 export function useCharacterState(initialState: CharacterState = 'idle') {
   const [charState, setCharState] = useState<CharacterState>(initialState);
 
-  // Tracks whether a field is focused right now
-  const isFocusedRef    = useRef(false);
-  const typingTimerRef  = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isFocusedRef      = useRef(false);
+  const typingTimerRef    = useRef<ReturnType<typeof setTimeout> | null>(null);
   const transientTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  /** Clear any pending transient timer */
+  /** Clear any pending transient revert timer */
   const clearTransient = useCallback(() => {
     if (transientTimerRef.current) {
       clearTimeout(transientTimerRef.current);
@@ -39,78 +39,92 @@ export function useCharacterState(initialState: CharacterState = 'idle') {
   }, []);
 
   /** Set a state that auto-reverts after `duration` ms */
-  const setTransient = useCallback((state: CharacterState, duration: number, fallback: CharacterState = 'looking') => {
+  const setTransient = useCallback((
+    state: CharacterState,
+    duration: number,
+    fallback: CharacterState = 'idle',
+  ) => {
     clearTransient();
     setCharState(state);
     transientTimerRef.current = setTimeout(() => {
-      setCharState(isFocusedRef.current ? fallback : 'idle');
+      setCharState(isFocusedRef.current ? 'looking' : fallback);
     }, duration);
   }, [clearTransient]);
 
-  // ── Public callbacks ──────────────────────────────────────────────────────
+  // ── Public API ─────────────────────────────────────────────────────────────
 
-  /** Call when any form input gains focus */
+  /** Input gained focus */
   const onFocus = useCallback(() => {
     isFocusedRef.current = true;
     clearTransient();
     setCharState('looking');
   }, [clearTransient]);
 
-  /** Call when any form input loses focus */
+  /** Input lost focus */
   const onBlur = useCallback(() => {
     isFocusedRef.current = false;
     clearTransient();
     setCharState('idle');
   }, [clearTransient]);
 
-  /** Call on every onChange event (debounced) */
+  /** onChange event (debounced — call on every keystroke) */
   const onTyping = useCallback(() => {
     if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
     setCharState('typing');
     typingTimerRef.current = setTimeout(() => {
-      // After typing pause, return to looking (still focused)
       if (isFocusedRef.current) setCharState('looking');
     }, TYPING_DEBOUNCE);
   }, []);
 
-  /** Call when validation errors appear */
+  /** Validation error occurred */
   const onError = useCallback(() => {
     if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
-    setTransient('confused', TRANSIENT_DURATION.error, 'worried');
+    setTransient('confused', TRANSIENT.error, 'worried');
   }, [setTransient]);
 
-  /** Call when the form is loading/submitting */
+  /** Form is submitting */
   const onLoading = useCallback(() => {
     clearTransient();
     if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
     setCharState('thinking');
   }, [clearTransient]);
 
-  /** Call on successful submission */
+  /** Registration / action succeeded */
   const onSuccess = useCallback(() => {
     clearTransient();
-    setTransient('celebrating', TRANSIENT_DURATION.success, 'happy');
+    setTransient('celebrating', TRANSIENT.success, 'happy');
   }, [clearTransient, setTransient]);
 
-  /** Call when opening/revealing the form */
+  /**
+   * PUSHING: Yassin pushes the form panel in from the right.
+   * Duration matches the CSS animation (1.1s), then calls `onOpening`.
+   */
+  const onPushing = useCallback((afterPush?: () => void) => {
+    clearTransient();
+    setCharState('pushing');
+    transientTimerRef.current = setTimeout(() => {
+      setCharState('opening');
+      if (afterPush) afterPush();
+      // After the opening step-back, settle into idle
+      transientTimerRef.current = setTimeout(() => {
+        setCharState('idle');
+      }, TRANSIENT.opening);
+    }, TRANSIENT.pushing);
+  }, [clearTransient]);
+
+  /** Step back after the form slides in */
   const onOpening = useCallback(() => {
     clearTransient();
     setCharState('opening');
-    // After open animation, go to idle
     transientTimerRef.current = setTimeout(() => {
       setCharState('idle');
-    }, 900);
-  }, [clearTransient]);
-
-  /** Call when pulling/grabbing the form */
-  const onPulling = useCallback(() => {
-    clearTransient();
-    setCharState('pulling');
+    }, TRANSIENT.opening);
   }, [clearTransient]);
 
   /** Directly set any state */
   const setState = useCallback((s: CharacterState) => {
     clearTransient();
+    if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
     setCharState(s);
   }, [clearTransient]);
 
@@ -123,7 +137,7 @@ export function useCharacterState(initialState: CharacterState = 'idle') {
     onError,
     onLoading,
     onSuccess,
+    onPushing,
     onOpening,
-    onPulling,
   };
 }
