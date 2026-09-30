@@ -8,3 +8,5 @@ export { Badge } from './Badge';
 export { SectionHeader } from './SectionHeader';
 export * from './BiDiText';
 export * from './AutoDirectionInput';
+export { EcampCharacter } from './EcampCharacter';
+export type { CharacterState, CharacterSize } from './EcampCharacter';

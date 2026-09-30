@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { GraduationCap, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { api } from '../lib/api';
 import { useAuth } from '../lib/authContext';
@@ -8,14 +8,16 @@ import { LanguageToggle } from './common/LanguageToggle';
 import { useTranslation } from 'react-i18next';
 import { MaintenanceNotice } from './common/MaintenanceNotice';
 import { AcademicDropdowns } from './AcademicDropdowns';
-import { 
-  HighSchoolSystem, 
-  StudyMode, 
-  StudyLanguage, 
-  HighSchoolGrade, 
-  TraditionalBranch, 
-  BaccalaureatePath 
+import {
+  HighSchoolSystem,
+  StudyMode,
+  StudyLanguage,
+  HighSchoolGrade,
+  TraditionalBranch,
+  BaccalaureatePath
 } from '../lib/types';
+import { EcampCharacter } from './common/EcampCharacter';
+import { useCharacterState } from '../hooks/useCharacterState';
 
 export function AuthScreen() {
   const { signIn, signUp, error, setError } = useAuth();
@@ -26,6 +28,31 @@ export function AuthScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [registrationPending, setRegistrationPending] = useState(false);
   const [maintenanceInterrupted, setMaintenanceInterrupted] = useState(() => sessionStorage.getItem('maintenance_interruption') === 'true');
+
+  // ── Character animation system ──────────────────────────────────────────
+  const char = useCharacterState('idle');
+  // Track whether the register form has been "opened" yet
+  const [formOpened, setFormOpened] = useState(false);
+  const formRef = useRef<HTMLDivElement>(null);
+
+  function handleRegisterTabClick() {
+    setMode('register');
+    setLocalError(null);
+    if (!formOpened) {
+      // Trigger pull → open sequence
+      char.onPulling();
+      setTimeout(() => {
+        char.onOpening();
+        setFormOpened(true);
+      }, 600);
+    }
+  }
+
+  function handleLoginTabClick() {
+    setMode('login');
+    setLocalError(null);
+    char.setState('idle');
+  }
 
   const isMaintenanceActive = maintenanceInterrupted || error?.code === 'MAINTENANCE_MODE';
 
@@ -115,6 +142,7 @@ export function AuthScreen() {
     setError(null);
     e.preventDefault();
     setBusy(true);
+    if (mode === 'register') char.onLoading();
     try {
       if (mode === 'login') {
         const deviceId = generateDeviceFingerprint();
@@ -217,9 +245,11 @@ export function AuthScreen() {
             setError(error);
           } else {
             setLocalError(error.message);
+            char.onError();
           }
         } else if (status === 'PENDING_APPROVAL') {
           setRegistrationPending(true);
+          char.onSuccess();
         }
       }
     } finally {
@@ -298,11 +328,18 @@ export function AuthScreen() {
             </div>
           ) : (
             <>
+              {/* ── Character companion (register mode only) ── */}
+              {mode === 'register' && (
+                <div className="flex justify-center mb-4 animate-fade-up" style={{ animationDuration: '0.4s' }}>
+                  <EcampCharacter state={char.charState} size="lg" />
+                </div>
+              )}
+
               <div className="mb-8">
                 <div className="flex gap-1 p-1 rounded-xl bg-theme-card border border-theme-border">
               <button
                 type="button"
-                onClick={() => { setMode('login'); setLocalError(null); }}
+                onClick={handleLoginTabClick}
                 className={`flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all ${
                   mode === 'login'
                     ? 'bg-white/[0.08] text-theme-text shadow-sm'
@@ -313,7 +350,7 @@ export function AuthScreen() {
               </button>
               <button
                 type="button"
-                onClick={() => { setMode('register'); setLocalError(null); }}
+                onClick={handleRegisterTabClick}
                 className={`flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all ${
                   mode === 'register'
                     ? 'bg-white/[0.08] text-theme-text shadow-sm'
@@ -369,6 +406,11 @@ export function AuthScreen() {
           )
           */}
 
+          {/* Form wrapper with open/close animation */}
+          <div
+            ref={formRef}
+            className={mode === 'register' ? (formOpened ? 'ecamp-form-open' : 'ecamp-form-closed') : ''}
+          >
           <form onSubmit={handleSubmit} className="space-y-4" noValidate>
             {mode === 'register' && (
               <>
@@ -401,7 +443,9 @@ export function AuthScreen() {
                     required
                     className="input"
                     value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
+                    onChange={(e) => { setFullName(e.target.value); char.onTyping(); }}
+                    onFocus={char.onFocus}
+                    onBlur={char.onBlur}
                     disabled={busy}
                     autoComplete="name"
                   />
@@ -526,7 +570,9 @@ export function AuthScreen() {
                     <input dir="auto"
                       className="input"
                       value={phoneNumber}
-                      onChange={(e) => setPhoneNumber(e.target.value)}
+                      onChange={(e) => { setPhoneNumber(e.target.value); char.onTyping(); }}
+                      onFocus={char.onFocus}
+                      onBlur={char.onBlur}
                       required
                       type="tel"
                       autoComplete="tel"
@@ -538,7 +584,9 @@ export function AuthScreen() {
                       <input dir="auto"
                         className="input"
                         value={parentPhoneNumber}
-                        onChange={(e) => setParentPhoneNumber(e.target.value)}
+                        onChange={(e) => { setParentPhoneNumber(e.target.value); char.onTyping(); }}
+                        onFocus={char.onFocus}
+                        onBlur={char.onBlur}
                         placeholder="01xxxxxxxxx"
                         disabled={busy}
                         type="tel"
@@ -556,7 +604,9 @@ export function AuthScreen() {
                 type="email"
                 className="input"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => { setEmail(e.target.value); if (mode === 'register') char.onTyping(); }}
+                onFocus={() => { if (mode === 'register') char.onFocus(); }}
+                onBlur={() => { if (mode === 'register') char.onBlur(); }}
                 required
                 disabled={busy}
                 autoComplete="email"
@@ -569,7 +619,9 @@ export function AuthScreen() {
                   type={showPassword ? "text" : "password"}
                   className="input pe-12"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => { setPassword(e.target.value); if (mode === 'register') char.onTyping(); }}
+                  onFocus={() => { if (mode === 'register') char.onFocus(); }}
+                  onBlur={() => { if (mode === 'register') char.onBlur(); }}
                   required
                   disabled={busy}
                   autoComplete={mode === 'login' ? "current-password" : "new-password"}
@@ -603,6 +655,7 @@ export function AuthScreen() {
               )}
             </button>
           </form>
+          </div>{/* end ecamp-form wrapper */}
 
           {mode === 'register' && (
             <p className="mt-5 text-xs text-theme-muted leading-relaxed text-center">
