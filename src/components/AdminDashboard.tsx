@@ -314,6 +314,14 @@ export function AdminDashboard() {
           bg="bg-accent-500/10"
         />
         <QuickActionCard
+          icon={<Smartphone className="w-5 h-5" />}
+          title="Device Login Logs"
+          description="View all student login attempts, device fingerprints, mismatches, and device history events."
+          to="#/admin/device-logs"
+          color="text-error-300"
+          bg="bg-error-500/10"
+        />
+        <QuickActionCard
           icon={<Database className="w-5 h-5" />}
           title="System Audit & Analytics"
           description="View immutable operation logs and export wide-scale CSV metrics."
