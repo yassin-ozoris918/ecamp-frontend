@@ -656,9 +656,11 @@ function VideoPlayer({
     }
   };
 
+  const hasVideo = !!item.video_url;
+
   useEffect(() => {
     let mounted = true;
-    if (!item.video_url) {
+    if (!hasVideo) {
       setLoadingToken(false);
       return;
     }
@@ -701,7 +703,7 @@ function VideoPlayer({
       mounted = false;
       playerInstanceRef.current = null;
     };
-  }, [item.id, item.video_url]);
+  }, [item.id, hasVideo]);
 
   useEffect(() => {
     if (streamData?.provider !== 'AMAAN' || !iframeRef.current) return;
