@@ -61,6 +61,7 @@ export function LecturePlaylist({ lectureId }: { lectureId: string }) {
   const [completedIds, setCompletedIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [activeItemId, setActiveItemId] = useState<string | null>(null);
+  const [allowedActiveId, setAllowedActiveId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isFullyLocked, setIsFullyLocked] = useState(false);
   const [isStarted, setIsStarted] = useState(true);
@@ -71,17 +72,19 @@ export function LecturePlaylist({ lectureId }: { lectureId: string }) {
   const [timeLeftMs, setTimeLeftMs] = useState<number | null>(null);
   const [isTimerPaused, setIsTimerPaused] = useState(false);
 
-  const loadData = useCallback(async () => {
+  const loadData = useCallback(async (silent = false) => {
     if (!profile) return;
-    setLoading(true);
-    setError(null);
+    if (!silent) {
+      setLoading(true);
+      setError(null);
+    }
 
     try {
       const { data } = await api.get(`/progress/playlist/${lectureId}`);
       
       if (!data || typeof data !== 'object' || 'statusCode' in data) {
-        setError(data?.message || t('common.error'));
-        setLoading(false);
+        if (!silent) setError(data?.message || t('common.error'));
+        if (!silent) setLoading(false);
         return;
       }
 
@@ -99,8 +102,14 @@ export function LecturePlaylist({ lectureId }: { lectureId: string }) {
       }
       setCompletedIds(compIds);
 
-      const firstUnlocked = playlistData.find((p: PlaylistItem) => !p.isLocked && !p.isCompleted && !p.isExhausted && !p.isViewExhausted);
-      setActiveItemId(firstUnlocked?.id ?? playlistData[0]?.id ?? null);
+      setActiveItemId((current) => {
+        if (current) {
+          const stillExists = playlistData.find((p: PlaylistItem) => p.id === current);
+          if (stillExists) return current;
+        }
+        const firstUnlocked = playlistData.find((p: PlaylistItem) => !p.isLocked && !p.isCompleted && !p.isExhausted && !p.isViewExhausted);
+        return firstUnlocked?.id ?? playlistData[0]?.id ?? null;
+      });
 
       const expiration = data.expiresAt || data.access_expires_at;
       if (expiration) {
@@ -111,10 +120,10 @@ export function LecturePlaylist({ lectureId }: { lectureId: string }) {
         setTimeLeftMs(null);
       }
     } catch (err: unknown) {
-      setError((err as any)?.response?.data?.message || 'Failed to load lecture playlist.');
+      if (!silent) setError((err as any)?.response?.data?.message || 'Failed to load lecture playlist.');
     }
 
-    setLoading(false);
+    if (!silent) setLoading(false);
   }, [profile, lectureId]);
 
   useEffect(() => {
@@ -140,6 +149,16 @@ export function LecturePlaylist({ lectureId }: { lectureId: string }) {
     [playlist, activeItemId],
   );
 
+  useEffect(() => {
+    if (activeItem) {
+      if (!activeItem.isViewExhausted) {
+        setAllowedActiveId(activeItem.id);
+      } else {
+        setAllowedActiveId(prev => (prev !== activeItem.id ? null : prev));
+      }
+    }
+  }, [activeItem?.id, activeItem?.isViewExhausted]);
+
   const { prevLecture, nextLecture } = useMemo(() => {
     const currentLecIndex = allLectures.findIndex((l) => l.id === lectureId);
     return {
@@ -160,7 +179,7 @@ export function LecturePlaylist({ lectureId }: { lectureId: string }) {
         next.add(itemId);
         return next;
       });
-      await loadData();
+      await loadData(true);
     } catch (e) {
       console.error(e);
     }
@@ -287,7 +306,7 @@ export function LecturePlaylist({ lectureId }: { lectureId: string }) {
             </div>
           ) : activeItem ? (
             activeItem.type === 'SESSION' ? (
-              activeItem.isViewExhausted ? (
+              activeItem.isViewExhausted && activeItem.id !== allowedActiveId ? (
                 // View limit reached for this session
                 <div className="glass rounded-2xl p-8 sm:p-12 text-center animate-scale-in border-error-500/20">
                   <div className="w-20 h-20 mx-auto rounded-full bg-error-500/10 flex items-center justify-center text-error-400 mb-6">
@@ -309,14 +328,14 @@ export function LecturePlaylist({ lectureId }: { lectureId: string }) {
                   item={activeItem}
                   onComplete={() => markSessionComplete(activeItem.id)}
                   isCompleted={activeItem.isCompleted}
-                  onViewConsumed={loadData}
+                  onViewConsumed={() => loadData(true)}
                 />
               )
             ) : activeItem.type === 'QUIZ' ? (
               <InteractiveQuizClient
                 lectureId={lectureId}
                 quiz={playlist.find(p => p.id === activeItem.id)!}
-                onComplete={loadData}
+                onComplete={() => loadData(true)}
                 onPauseTimer={() => setIsTimerPaused(true)}
                 onResumeTimer={() => setIsTimerPaused(false)}
               />
