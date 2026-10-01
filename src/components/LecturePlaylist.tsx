@@ -61,6 +61,7 @@ export function LecturePlaylist({ lectureId }: { lectureId: string }) {
   const [completedIds, setCompletedIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [activeItemId, setActiveItemId] = useState<string | null>(null);
+  const activeOrderIndexRef = useRef<number | null>(null);
   const [allowedActiveId, setAllowedActiveId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isFullyLocked, setIsFullyLocked] = useState(false);
@@ -104,8 +105,9 @@ export function LecturePlaylist({ lectureId }: { lectureId: string }) {
 
       setActiveItemId((current) => {
         if (current) {
-          const stillExists = playlistData.find((p: PlaylistItem) => p.id === current);
-          if (stillExists) return current;
+          const currentOrder = activeOrderIndexRef.current;
+          const stillExists = playlistData.find((p: PlaylistItem) => p.id === current || (currentOrder !== null && p.orderIndex === currentOrder));
+          if (stillExists) return stillExists.id;
         }
         const firstUnlocked = playlistData.find((p: PlaylistItem) => !p.isLocked && !p.isCompleted && !p.isExhausted && !p.isViewExhausted);
         return firstUnlocked?.id ?? playlistData[0]?.id ?? null;
@@ -148,6 +150,12 @@ export function LecturePlaylist({ lectureId }: { lectureId: string }) {
     () => playlist.find((p: PlaylistItem) => p.id === activeItemId) ?? null,
     [playlist, activeItemId],
   );
+
+  useEffect(() => {
+    if (activeItem) {
+      activeOrderIndexRef.current = activeItem.orderIndex;
+    }
+  }, [activeItem]);
 
   useEffect(() => {
     if (activeItem) {
@@ -324,7 +332,7 @@ export function LecturePlaylist({ lectureId }: { lectureId: string }) {
                 </div>
               ) : (
                 <VideoPlayer
-                  key={activeItem.id}
+                  key={activeItem.orderIndex}
                   item={activeItem}
                   onComplete={() => markSessionComplete(activeItem.id)}
                   isCompleted={activeItem.isCompleted}
@@ -397,7 +405,7 @@ export function LecturePlaylist({ lectureId }: { lectureId: string }) {
             <div className="max-h-[70vh] overflow-y-auto scrollbar-thin divide-y divide-white/[0.04]">
               {playlist.map((entry: PlaylistItem, idx: number) => (
                 <button
-                  key={entry.id}
+                  key={entry.orderIndex}
                   disabled={entry.isLocked}
                   onClick={() => {
                     if (entry.isLocked) return;
