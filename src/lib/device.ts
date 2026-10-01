@@ -70,3 +70,24 @@ export function generateDeviceFingerprint(): string {
   localStorage.setItem(IDENTITY_KEY, identity);
   return identity;
 }
+
+export function isInAppBrowser(): boolean {
+  if (typeof navigator === 'undefined') return false;
+  
+  const ua = navigator.userAgent || navigator.vendor || (window as any).opera;
+  if (!ua) return false;
+  
+  const rules = [
+    'FBAN', 'FBAV', // Facebook
+    'Instagram', // Instagram
+    'WhatsApp', // WhatsApp
+    'Telegram', // Telegram
+    'Line', // Line
+    'MicroMessenger', // WeChat
+    'Snapchat', // Snapchat
+    'Viber', // Viber
+  ];
+  
+  const regex = new RegExp(`(${rules.join('|')})`, 'i');
+  return Boolean(ua.match(regex));
+}

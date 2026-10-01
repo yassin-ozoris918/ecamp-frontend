@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { GraduationCap, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { api } from '../lib/api';
 import { useAuth } from '../lib/authContext';
-import { generateDeviceFingerprint } from '../lib/device';
+import { generateDeviceFingerprint, isInAppBrowser } from '../lib/device';
 import { ThemeToggle } from './common/ThemeToggle';
 import { LanguageToggle } from './common/LanguageToggle';
 import { useTranslation } from 'react-i18next';
@@ -141,6 +141,13 @@ export function AuthScreen() {
     setBusy(true);
     if (mode === 'register') char.onLoading();
     try {
+      if (isInAppBrowser()) {
+        setLocalError(t('auth.errors.inAppBrowserError'));
+        setBusy(false);
+        if (mode === 'register') char.onError();
+        return;
+      }
+      
       if (mode === 'login') {
         const deviceId = generateDeviceFingerprint();
         const { error } = await signIn(email, password, deviceId);

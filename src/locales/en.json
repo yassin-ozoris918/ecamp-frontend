@@ -124,6 +124,7 @@
       "parentPhoneRequired": "Parent phone number is required for High School students.",
       "invalidParentPhone": "Invalid Egyptian parent phone number format.",
       "deviceRequired": "Device fingerprint is required for student login.",
+      "inAppBrowserError": "In-app browsers (like Facebook/WhatsApp) are not supported. Please open the link in Safari or Chrome to register or log in.",
       "unrecognizedDevice": "Unrecognized Device. You can only log in from your registered device. Please contact technical support to request a device reset.",
       "missingFields": "Please fill in all required fields.",
       "missingBranch": "Please select a branch.",
