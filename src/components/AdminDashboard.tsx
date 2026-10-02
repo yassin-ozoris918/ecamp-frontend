@@ -79,14 +79,14 @@ function getAbbreviation(text: string | null | undefined): string {
   return words.map(w => w[0].toUpperCase()).join('');
 }
 
-function formatRole(role: string): string {
-  const map: Record<string, string> = {
-    STUDENT: 'Student',
-    INSTRUCTOR: 'Instructor',
-    ADMIN: 'Admin',
-  };
-  return map[role] || role || '';
-}
+// function formatRole(role: string): string {
+//   const map: Record<string, string> = {
+//     STUDENT: 'Student',
+//     INSTRUCTOR: 'Instructor',
+//     ADMIN: 'Admin',
+//   };
+//   return map[role] || role || '';
+// }
 
 function formatCodeStatus(status: string): string {
   const map: Record<string, string> = {
@@ -106,7 +106,7 @@ function getArabicLabel(val: string | null | undefined): string {
     INSTRUCTOR: 'معلم',
     ADMIN: 'مدير',
     TRADITIONAL: 'عام',
-    BACCALAUREATE: 'أزهري/لغات',
+    BACCALAUREATE: 'الباكلوريا',
     ONLINE: 'أونلاين',
     CENTER: 'سنتر',
     ARABIC: 'عربي',
