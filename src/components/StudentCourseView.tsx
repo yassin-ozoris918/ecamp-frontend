@@ -94,19 +94,56 @@ export function StudentCourseView({ courseId }: { courseId: string }) {
 
   async function startLecture(lecture: Lecture) {
     if (!profile) return;
-    const durationStr = [
+    const durationParts = [
       lecture.durationDays ? `${lecture.durationDays}d` : '',
       lecture.durationHours ? `${lecture.durationHours}h` : '',
       lecture.durationMinutes ? `${lecture.durationMinutes}m` : ''
-    ].filter(Boolean).join(' ') || t('courseView.lifetime');
+    ].filter(Boolean);
+    const hasTimeLimit = durationParts.length > 0;
+    const durationStr = hasTimeLimit ? durationParts.join(' ') : null;
+    const hasViewLimit = typeof lecture.maxViews === 'number' && lecture.maxViews > 0;
     
     let ok = true;
     if (!course?.isFree) {
-      ok = await confirm(
-        t('courseView.startLecture'),
-        t('courseView.startLectureDesc', { duration: durationStr })
-      );
+      if (!hasTimeLimit && !hasViewLimit) {
+        ok = true; // Open immediately without popup if no limits exist
+      } else {
+        const infoItems = [];
+        if (hasTimeLimit) {
+          infoItems.push(
+            <div key="time" className="flex items-center gap-2">
+              <Clock className="w-4 h-4 shrink-0" />
+              <span>
+                {t('courseView.timeLimit', 'Time Limit:')} <strong className="font-bold text-orange-300">{durationStr}</strong>
+              </span>
+            </div>
+          );
+        }
+        if (hasViewLimit) {
+          infoItems.push(
+            <div key="views" className="flex items-center gap-2">
+              <PlayCircle className="w-4 h-4 shrink-0" />
+              <span>
+                {t('courseView.viewLimit', 'View Limit:')} <strong className="font-bold text-orange-300">{lecture.maxViews}</strong> {t('courseView.views', 'views')}
+              </span>
+            </div>
+          );
+        }
+
+        const infoMessage = infoItems.length > 0 ? (
+          <div className="flex flex-col gap-2">
+            {infoItems}
+          </div>
+        ) : undefined;
+
+        ok = await confirm(
+          t('courseView.startLecture'),
+          t('courseView.startLecturePrompt', 'Are you sure you want to start now?'),
+          infoMessage
+        );
+      }
     }
+    
     if (ok) {
       try {
         await api.post(`/lectures/${lecture.id}/start-access`);
@@ -393,6 +430,7 @@ export function StudentCourseView({ courseId }: { courseId: string }) {
         open={confirmState.open}
         title={confirmState.title}
         message={confirmState.message}
+        infoMessage={confirmState.infoMessage}
         onConfirm={handleConfirm}
         onCancel={handleCancel}
       />
