@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
 import { GraduationCap, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { api } from '../lib/api';
 import { useAuth } from '../lib/authContext';
@@ -16,95 +16,9 @@ import {
   TraditionalBranch,
   BaccalaureatePath
 } from '../lib/types';
-import { EcampCharacter } from './common/EcampCharacter';
-import { useCharacterState } from '../hooks/useCharacterState';
 
-// ── Intro Phase State Machine ─────────────────────────────────────────────────
-// hidden → entering → placing → packet-dropped → packet-opening → form-ready
-type IntroPhase =
-  | 'hidden'
-  | 'entering'
-  | 'placing'
-  | 'packet-dropped'
-  | 'packet-opening'
-  | 'form-ready';
 
-// ── Packet SVG — eCamp delivery box ──────────────────────────────────────────
-function PacketSVG({ lidOpen }: { lidOpen: boolean }) {
-  return (
-    <svg
-      viewBox="0 0 120 110"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      className="w-full h-auto overflow-visible"
-      style={{ filter: 'drop-shadow(0 8px 24px rgba(34,211,238,0.25))' }}
-    >
-      <defs>
-        <linearGradient id="box-body" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stopColor="#0e7490" />
-          <stop offset="100%" stopColor="#164e63" />
-        </linearGradient>
-        <linearGradient id="box-front" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stopColor="#22d3ee" stopOpacity="0.18" />
-          <stop offset="100%" stopColor="#0891b2" stopOpacity="0.08" />
-        </linearGradient>
-        <linearGradient id="box-lid" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stopColor="#38bdf8" />
-          <stop offset="100%" stopColor="#0ea5e9" />
-        </linearGradient>
-        <linearGradient id="ribbon" x1="0%" y1="0%" x2="100%" y2="0%">
-          <stop offset="0%" stopColor="#fbbf24" />
-          <stop offset="100%" stopColor="#f59e0b" />
-        </linearGradient>
-      </defs>
 
-      {/* ── Box body ── */}
-      <rect x="8" y="42" width="104" height="64" rx="6" fill="url(#box-body)" />
-      {/* Front face shine */}
-      <rect x="8" y="42" width="104" height="64" rx="6" fill="url(#box-front)" />
-      {/* Side shadow panel */}
-      <rect x="88" y="42" width="24" height="64" rx="0" fill="rgba(0,0,0,0.15)" />
-      {/* Bottom edge */}
-      <rect x="8" y="98" width="104" height="8" rx="4" fill="rgba(0,0,0,0.2)" />
-
-      {/* Vertical ribbon on body */}
-      <rect x="52" y="42" width="16" height="64" fill="url(#ribbon)" opacity="0.75" />
-
-      {/* E.CAMP label on box */}
-      <rect x="22" y="68" width="52" height="22" rx="5" fill="rgba(255,255,255,0.08)"
-            stroke="rgba(255,255,255,0.18)" strokeWidth="0.8" />
-      <text x="48" y="82" textAnchor="middle" fontSize="9" fontWeight="900"
-            fontFamily="Outfit, system-ui, sans-serif" fill="rgba(255,255,255,0.85)" letterSpacing="1">
-        E.CAMP
-      </text>
-
-      {/* ── Lid ── */}
-      <g
-        style={{
-          transformOrigin: '60px 42px',
-          transform: lidOpen ? 'rotateX(-140deg)' : 'rotateX(0deg)',
-          transition: 'transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
-        }}
-      >
-        <rect x="4" y="28" width="112" height="18" rx="5" fill="url(#box-lid)" />
-        {/* Lid shine */}
-        <rect x="4" y="28" width="112" height="7" rx="5" fill="rgba(255,255,255,0.2)" />
-        {/* Horizontal ribbon on lid */}
-        <rect x="4" y="34" width="112" height="6" fill="url(#ribbon)" opacity="0.7" />
-        {/* Bow top-left half */}
-        <ellipse cx="46" cy="28" rx="10" ry="8" fill="#fbbf24" opacity="0.85" />
-        {/* Bow top-right half */}
-        <ellipse cx="74" cy="28" rx="10" ry="8" fill="#f59e0b" opacity="0.85" />
-        {/* Bow knot center */}
-        <ellipse cx="60" cy="28" rx="6" ry="5" fill="#fde68a" />
-      </g>
-
-      {/* Stars / shine on box */}
-      <circle cx="28" cy="56" r="2" fill="rgba(255,255,255,0.25)" />
-      <circle cx="34" cy="50" r="1.2" fill="rgba(255,255,255,0.15)" />
-    </svg>
-  );
-}
 
 // ── Main Component ─────────────────────────────────────────────────────────────
 export function AuthScreen() {
@@ -119,81 +33,16 @@ export function AuthScreen() {
     sessionStorage.getItem('maintenance_interruption') === 'true'
   );
 
-  // ── Intro Sequence ────────────────────────────────────────────────────────
-  const [introPhase, setIntroPhase] = useState<IntroPhase>('hidden');
-  const [lidOpen, setLidOpen] = useState(false);
-  const introTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
-
-  function clearIntroTimers() {
-    introTimersRef.current.forEach(clearTimeout);
-    introTimersRef.current = [];
-  }
-
-  function scheduleIntro() {
-    clearIntroTimers();
-    setLidOpen(false);
-    setIntroPhase('entering');
-
-    // Phase 1 → Phase 2: character places packet (after walk-in completes)
-    introTimersRef.current.push(
-      setTimeout(() => {
-        setIntroPhase('placing');
-      }, 1100)
-    );
-
-    // Phase 2 → Phase 3: packet drops in (character places it)
-    introTimersRef.current.push(
-      setTimeout(() => {
-        setIntroPhase('packet-dropped');
-      }, 1900)
-    );
-  }
-
-  function handlePacketClick() {
-    if (introPhase !== 'packet-dropped') return;
-    setIntroPhase('packet-opening');
-    setLidOpen(true);
-
-    // Phase 4 → Phase 5: form reveals after lid opens
-    introTimersRef.current.push(
-      setTimeout(() => {
-        setIntroPhase('form-ready');
-      }, 600)
-    );
-  }
-
-  // ── Character animation system (Yassin) ─────────────────────────────────
-  const char = useCharacterState('waving');
-
   function handleRegisterTabClick() {
     setMode('register');
     setLocalError(null);
-    if (introPhase === 'hidden') {
-      scheduleIntro();
-    }
   }
 
   function handleLoginTabClick() {
     setMode('login');
     setLocalError(null);
-    clearIntroTimers();
-    setIntroPhase('hidden');
-    setLidOpen(false);
-    char.setState('waving');
   }
 
-  // Cleanup on unmount
-  useEffect(() => () => clearIntroTimers(), []);
-
-  // ── Char state driven by intro phase ────────────────────────────────────
-  useEffect(() => {
-    if (introPhase === 'entering') char.setState('waving');
-    else if (introPhase === 'placing') char.setState('pulling');
-    else if (introPhase === 'packet-dropped') char.setState('happy');
-    else if (introPhase === 'packet-opening') char.setState('celebrating');
-    else if (introPhase === 'form-ready') char.setState('idle');
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [introPhase]);
 
   const isMaintenanceActive = maintenanceInterrupted || error?.code === 'MAINTENANCE_MODE';
 
@@ -282,12 +131,10 @@ export function AuthScreen() {
     setError(null);
     e.preventDefault();
     setBusy(true);
-    if (mode === 'register') char.onLoading();
     try {
       if (isInAppBrowser()) {
         setLocalError(t('auth.errors.inAppBrowserError'));
         setBusy(false);
-        if (mode === 'register') char.onError();
         return;
       }
       
@@ -305,67 +152,60 @@ export function AuthScreen() {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email.trim())) {
           setLocalError(t('auth.errors.invalidEmail'));
-          char.onError();
           return;
         }
         
         if (fullName.trim().length < 3) {
           setLocalError(t('auth.errors.nameTooShort'));
-          char.onError();
           return;
         }
         if (fullName.trim().length > 50) {
           setLocalError(t('auth.errors.nameTooLong'));
-          char.onError();
           return;
         }
 
         if (password.length < 8) {
           setLocalError(t('auth.errors.passwordTooShort'));
-          char.onError();
           return;
         }
         if (!/[A-Za-z]/.test(password) || !/\d/.test(password)) {
           setLocalError(t('auth.errors.passwordCriteria'));
-          char.onError();
           return;
         }
         const egyptPhoneRegex = /^01[0125][0-9]{8}$/;
         if (!egyptPhoneRegex.test(phoneNumber.trim())) {
           setLocalError(t('auth.errors.invalidPhone'));
-          char.onError();
           return;
         }
         
         if (educationLevel === 'HIGH_SCHOOL') {
-          if (!highSchoolSystem) { setLocalError(t('auth.errors.missingSystem')); char.onError(); return; }
-          if (!studyMode) { setLocalError(t('auth.errors.missingMode')); char.onError(); return; }
-          if (!studyLanguage) { setLocalError(t('auth.errors.missingLanguage')); char.onError(); return; }
-          if (!highSchoolGrade) { setLocalError(t('auth.errors.missingGrade')); char.onError(); return; }
+          if (!highSchoolSystem) { setLocalError(t('auth.errors.missingSystem')); return; }
+          if (!studyMode) { setLocalError(t('auth.errors.missingMode')); return; }
+          if (!studyLanguage) { setLocalError(t('auth.errors.missingLanguage')); return; }
+          if (!highSchoolGrade) { setLocalError(t('auth.errors.missingGrade')); return; }
           if (highSchoolSystem === 'TRADITIONAL' && (highSchoolGrade === 'GRADE_2' || highSchoolGrade === 'GRADE_3') && !traditionalBranch) {
-            setLocalError(t('auth.errors.missingBranch')); char.onError(); return;
+            setLocalError(t('auth.errors.missingBranch')); return;
           }
           if (highSchoolSystem === 'BACCALAUREATE' && (highSchoolGrade === 'GRADE_2' || highSchoolGrade === 'GRADE_3') && !baccalaureatePath) {
-            setLocalError(t('auth.errors.missingPath')); char.onError(); return;
+            setLocalError(t('auth.errors.missingPath')); return;
           }
           if (!parentPhoneNumber.trim()) {
-            setLocalError(t('auth.errors.parentPhoneRequired')); char.onError(); return;
+            setLocalError(t('auth.errors.parentPhoneRequired')); return;
           }
           if (!egyptPhoneRegex.test(parentPhoneNumber.trim())) {
-            setLocalError(t('auth.errors.invalidParentPhone')); char.onError(); return;
+            setLocalError(t('auth.errors.invalidParentPhone')); return;
           }
         } else if (educationLevel === 'UNIVERSITY') {
-          if (!universityId) { setLocalError(t('auth.errors.missingUniversity')); char.onError(); return; }
-          if (universityId === 'other' && (!otherUniversityName || !otherUniversityName.trim())) { setLocalError(t('auth.errors.missingOtherUniversity')); char.onError(); return; }
-          if (!facultyId) { setLocalError(t('auth.errors.missingFaculty')); char.onError(); return; }
-          if (facultyId === 'other' && (!otherFacultyName || !otherFacultyName.trim())) { setLocalError(t('auth.errors.missingOtherFaculty')); char.onError(); return; }
-          if (hasDepartments && !departmentId) { setLocalError(t('auth.errors.missingDepartment')); char.onError(); return; }
-          if (hasPrograms && !programId) { setLocalError(t('auth.errors.missingProgram')); char.onError(); return; }
+          if (!universityId) { setLocalError(t('auth.errors.missingUniversity')); return; }
+          if (universityId === 'other' && (!otherUniversityName || !otherUniversityName.trim())) { setLocalError(t('auth.errors.missingOtherUniversity')); return; }
+          if (!facultyId) { setLocalError(t('auth.errors.missingFaculty')); return; }
+          if (facultyId === 'other' && (!otherFacultyName || !otherFacultyName.trim())) { setLocalError(t('auth.errors.missingOtherFaculty')); return; }
+          if (hasDepartments && !departmentId) { setLocalError(t('auth.errors.missingDepartment')); return; }
+          if (hasPrograms && !programId) { setLocalError(t('auth.errors.missingProgram')); return; }
         }
 
         if (phoneNumber.trim() && parentPhoneNumber.trim() && phoneNumber.trim() === parentPhoneNumber.trim()) {
           setLocalError(t('auth.errors.duplicatePhoneError'));
-          char.onError();
           return;
         }
 
@@ -399,11 +239,9 @@ export function AuthScreen() {
             setError(error);
           } else {
             setLocalError(error.message);
-            char.onError();
           }
         } else if (status === 'PENDING_APPROVAL') {
           setRegistrationPending(true);
-          char.onSuccess();
         }
       }
     } finally {
@@ -412,23 +250,10 @@ export function AuthScreen() {
   }
 
   // ── Derived booleans ──────────────────────────────────────────────────────
-  const showIntroOverlay =
-    mode === 'register' &&
-    !isMaintenanceActive &&
-    !registrationPending &&
-    (introPhase === 'entering' || introPhase === 'placing' || introPhase === 'packet-dropped' || introPhase === 'packet-opening');
-  
   const showForm =
     mode === 'register' &&
     !isMaintenanceActive &&
-    !registrationPending &&
-    introPhase === 'form-ready';
-
-  // ── Char animation class for intro phases ────────────────────────────────
-  const charExtraClass =
-    introPhase === 'entering'   ? 'ecamp-char-enter'      :
-    introPhase === 'placing'    ? 'ecamp-char-placing'     :
-    introPhase === 'form-ready' ? 'ecamp-char-slide-left'  : '';
+    !registrationPending;
 
   return (
     <div className="min-h-screen flex flex-col lg:flex-row relative">
@@ -599,92 +424,12 @@ export function AuthScreen() {
           /* ── REGISTER MODE ── */
           <div className="w-full h-full flex items-center justify-center relative">
 
-            {/* ══ INTRO OVERLAY: character enters + packet drops ══ */}
-            {showIntroOverlay && (
-              <div className="w-full max-w-2xl flex flex-col items-center justify-center min-h-[400px] relative">
-
-                {/* Tab switcher always visible */}
-                <div className="w-full max-w-md mb-8">
-                  <div className="flex gap-1 p-1 rounded-xl bg-theme-card border border-theme-border">
-                    <button type="button" onClick={handleLoginTabClick}
-                      className="flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all text-theme-muted hover:text-theme-text">
-                      {t('auth.signIn')}
-                    </button>
-                    <button type="button" onClick={handleRegisterTabClick}
-                      className="flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all bg-white/[0.08] text-theme-text shadow-sm">
-                      {t('auth.createAccount')}
-                    </button>
-                  </div>
-                </div>
-
-                {/* Stage: character + packet */}
-                <div className="relative flex flex-col items-center gap-4">
-
-                  {/* Character — big, centred during intro */}
-                  <div
-                    className={charExtraClass}
-                    style={{ display: 'inline-block' }}
-                  >
-                    <EcampCharacter
-                      state={char.charState}
-                      size="2xl"
-                      showName
-                      className="drop-shadow-2xl"
-                    />
-                  </div>
-
-                  {/* Packet — shown after entering phase */}
-                  {(introPhase === 'packet-dropped' || introPhase === 'packet-opening') && (
-                    <div
-                      className={`w-36 cursor-pointer select-none ${
-                        introPhase === 'packet-dropped'
-                          ? 'ecamp-packet-drop ecamp-packet-glow'
-                          : 'ecamp-packet-shrink'
-                      }`}
-                      onClick={handlePacketClick}
-                      role="button"
-                      aria-label="Open the registration packet"
-                      title="Click to open!"
-                    >
-                      <PacketSVG lidOpen={lidOpen} />
-                    </div>
-                  )}
-
-                  {/* Tap hint */}
-                  {introPhase === 'packet-dropped' && (
-                    <p className="text-xs text-accent-400 font-semibold animate-pulse tracking-widest uppercase">
-                      {t('auth.tapToOpen', 'Tap the box to open ✨')}
-                    </p>
-                  )}
-
-                  {/* During entering/placing — hint text */}
-                  {(introPhase === 'entering' || introPhase === 'placing') && (
-                    <p className="text-sm text-theme-muted animate-pulse">
-                      {introPhase === 'entering'
-                        ? t('auth.characterArriving', 'Yassin is arriving...')
-                        : t('auth.characterPlacing', 'Yassin is setting things up...')}
-                    </p>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* ══ FORM READY: character on left, form on right ══ */}
+            {/* ══ REGISTER FORM ══ */}
             {showForm && (
-              <div className="w-full max-w-3xl flex items-start gap-5">
-
-                {/* Character column — fixed on left */}
-                <div className="flex-shrink-0 flex flex-col items-center self-end pb-2 ecamp-char-slide-left">
-                  <EcampCharacter
-                    state={char.charState}
-                    size="xl"
-                    showName
-                    className="drop-shadow-lg"
-                  />
-                </div>
+              <div className="w-full max-w-xl">
 
                 {/* Form column */}
-                <div className="flex-1 min-w-0 ecamp-form-burst">
+                <div className="w-full">
                   <>
                   {/* Tab switcher */}
                   <div className="mb-5">
@@ -754,9 +499,7 @@ export function AuthScreen() {
                         required
                         className="input"
                         value={fullName}
-                        onChange={(e) => { setFullName(e.target.value); char.onTyping(); }}
-                        onFocus={char.onFocus}
-                        onBlur={char.onBlur}
+                        onChange={(e) => { setFullName(e.target.value); }}
                         disabled={busy}
                         autoComplete="name"
                       />
@@ -767,9 +510,7 @@ export function AuthScreen() {
                       <select
                         className="input"
                         value={educationLevel}
-                        onChange={(e) => { setEducationLevel(e.target.value as 'HIGH_SCHOOL' | 'UNIVERSITY'); char.onTyping(); }}
-                        onFocus={char.onFocus}
-                        onBlur={char.onBlur}
+                        onChange={(e) => { setEducationLevel(e.target.value as 'HIGH_SCHOOL' | 'UNIVERSITY'); }}
                         disabled={busy}
                       >
                         <option value="HIGH_SCHOOL">{t('auth.highSchool')}</option>
@@ -784,8 +525,8 @@ export function AuthScreen() {
                         <div>
                           <label className="label">{t('auth.highSchoolSystem', 'Educational System')}</label>
                           <select className="input" value={highSchoolSystem}
-                            onChange={(e) => { setHighSchoolSystem(e.target.value as HighSchoolSystem); char.onTyping(); }}
-                            onFocus={char.onFocus} onBlur={char.onBlur} disabled={busy}>
+                            onChange={(e) => { setHighSchoolSystem(e.target.value as HighSchoolSystem); }}
+                            disabled={busy}>
                             <option value="">{t('auth.selectSystem', 'Select System')}</option>
                             <option value="TRADITIONAL">{t('auth.systemTraditional', 'Traditional Secondary')}</option>
                             <option value="BACCALAUREATE">{t('auth.systemBaccalaureate', 'Egyptian Baccalaureate')}</option>
@@ -796,8 +537,8 @@ export function AuthScreen() {
                           <div>
                             <label className="label">{t('auth.studyMode', 'Study Mode')}</label>
                             <select className="input" value={studyMode}
-                              onChange={(e) => { setStudyMode(e.target.value as StudyMode); char.onTyping(); }}
-                              onFocus={char.onFocus} onBlur={char.onBlur} disabled={busy}>
+                              onChange={(e) => { setStudyMode(e.target.value as StudyMode); }}
+                              disabled={busy}>
                               <option value="">{t('auth.selectMode', 'Select Mode')}</option>
                               <option value="ONLINE">{t('auth.modeOnline', 'Online')}</option>
                               <option value="CENTER">{t('auth.modeCenter', 'Center')}</option>
@@ -806,8 +547,8 @@ export function AuthScreen() {
                           <div>
                             <label className="label">{t('auth.studyLanguage', 'Study Language')}</label>
                             <select className="input" value={studyLanguage}
-                              onChange={(e) => { setStudyLanguage(e.target.value as StudyLanguage); char.onTyping(); }}
-                              onFocus={char.onFocus} onBlur={char.onBlur} disabled={busy}>
+                              onChange={(e) => { setStudyLanguage(e.target.value as StudyLanguage); }}
+                              disabled={busy}>
                               <option value="">{t('auth.selectLanguage', 'Select Language')}</option>
                               <option value="ARABIC">{t('auth.langArabic', 'Arabic')}</option>
                               <option value="ENGLISH">{t('auth.langEnglish', 'English')}</option>
@@ -818,8 +559,8 @@ export function AuthScreen() {
                         <div>
                           <label className="label">{t('auth.grade', 'Grade')}</label>
                           <select className="input" value={highSchoolGrade}
-                            onChange={(e) => { setHighSchoolGrade(e.target.value as HighSchoolGrade); char.onTyping(); }}
-                            onFocus={char.onFocus} onBlur={char.onBlur} disabled={busy}>
+                            onChange={(e) => { setHighSchoolGrade(e.target.value as HighSchoolGrade); }}
+                            disabled={busy}>
                             <option value="">{t('auth.selectGrade', 'Select Grade')}</option>
                             <option value="GRADE_1">{t('auth.grade1', 'Grade 1')}</option>
                             <option value="GRADE_2">{t('auth.grade2', 'Grade 2')}</option>
@@ -831,8 +572,8 @@ export function AuthScreen() {
                           <div>
                             <label className="label">{t('auth.branch', 'Branch')}</label>
                             <select className="input" value={traditionalBranch}
-                              onChange={(e) => { setTraditionalBranch(e.target.value as TraditionalBranch); char.onTyping(); }}
-                              onFocus={char.onFocus} onBlur={char.onBlur} disabled={busy}>
+                              onChange={(e) => { setTraditionalBranch(e.target.value as TraditionalBranch); }}
+                              disabled={busy}>
                               <option value="">{t('auth.selectBranch', 'Select Branch')}</option>
                               {highSchoolGrade === 'GRADE_2' && (
                                 <>
@@ -855,8 +596,8 @@ export function AuthScreen() {
                           <div>
                             <label className="label">{t('auth.path', 'Path')}</label>
                             <select className="input" value={baccalaureatePath}
-                              onChange={(e) => { setBaccalaureatePath(e.target.value as BaccalaureatePath); char.onTyping(); }}
-                              onFocus={char.onFocus} onBlur={char.onBlur} disabled={busy}>
+                              onChange={(e) => { setBaccalaureatePath(e.target.value as BaccalaureatePath); }}
+                              disabled={busy}>
                               <option value="">{t('auth.selectPath', 'Select Path')}</option>
                               <option value="MEDICINE_AND_LIFE_SCIENCES">{t('auth.pathMedicine', 'Medicine & Life Sciences')}</option>
                               <option value="ENGINEERING_AND_COMPUTER_SCIENCE">{t('auth.pathEngineering', 'Engineering & Computer Science')}</option>
@@ -895,9 +636,7 @@ export function AuthScreen() {
                         <input dir="auto"
                           className="input"
                           value={phoneNumber}
-                          onChange={(e) => { setPhoneNumber(e.target.value); char.onTyping(); }}
-                          onFocus={char.onFocus}
-                          onBlur={char.onBlur}
+                          onChange={(e) => { setPhoneNumber(e.target.value); }}
                           required
                           type="tel"
                           autoComplete="tel"
@@ -910,9 +649,7 @@ export function AuthScreen() {
                           <input dir="auto"
                             className="input"
                             value={parentPhoneNumber}
-                            onChange={(e) => { setParentPhoneNumber(e.target.value); char.onTyping(); }}
-                            onFocus={char.onFocus}
-                            onBlur={char.onBlur}
+                            onChange={(e) => { setParentPhoneNumber(e.target.value); }}
                             placeholder="01xxxxxxxxx"
                             disabled={busy}
                             type="tel"
@@ -928,9 +665,7 @@ export function AuthScreen() {
                         type="email"
                         className="input"
                         value={email}
-                        onChange={(e) => { setEmail(e.target.value); char.onTyping(); }}
-                        onFocus={char.onFocus}
-                        onBlur={char.onBlur}
+                        onChange={(e) => { setEmail(e.target.value); }}
                         required
                         disabled={busy}
                         autoComplete="email"
@@ -943,9 +678,7 @@ export function AuthScreen() {
                           type={showPassword ? "text" : "password"}
                           className="input pe-12"
                           value={password}
-                          onChange={(e) => { setPassword(e.target.value); char.onTyping(); }}
-                          onFocus={char.onFocus}
-                          onBlur={char.onBlur}
+                          onChange={(e) => { setPassword(e.target.value); }}
                           required
                           disabled={busy}
                           autoComplete="new-password"
