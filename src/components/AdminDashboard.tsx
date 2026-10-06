@@ -1451,7 +1451,6 @@ export function AdminCodes() {
             <option value="All">All Statuses</option>
             <option value="AVAILABLE">Available</option>
             <option value="REDEEMED">Redeemed</option>
-            <option value="DEACTIVATED">Deactivated</option>
           </select>
           <select 
             className="input w-full sm:w-auto text-sm"
