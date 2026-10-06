@@ -19,10 +19,11 @@ export function Student360Workspace() {
   const [reviewAttemptId, setReviewAttemptId] = useState<string | null>(null);
   const { confirm, state: confirmState, handleConfirm, handleCancel } = useConfirm();
 
-  const fetchStudents = async () => {
+  const fetchStudents = async (query = '') => {
     setLoading(true);
     try {
-      const result = await client.get<{ items: any[] }>('/admin/users?role=STUDENT&take=100');
+      const endpoint = `/admin/users?role=STUDENT&take=100${query ? `&search=${encodeURIComponent(query)}` : ''}`;
+      const result = await client.get<{ items: any[] }>(endpoint);
       const items = (result as any)?.items || result;
       setStudents(Array.isArray(items) ? items : []);
     } catch (e) {
@@ -33,8 +34,8 @@ export function Student360Workspace() {
   };
 
   useEffect(() => {
-    fetchStudents();
-  }, []);
+    fetchStudents(debouncedSearch);
+  }, [debouncedSearch]);
 
   useEffect(() => {
     if (!selectedStudentId) {
@@ -78,14 +79,7 @@ export function Student360Workspace() {
     }
   };
 
-  const filtered = useMemo(() => {
-    if (!debouncedSearch) return students;
-    const q = debouncedSearch.toLowerCase();
-    return students.filter(
-      (s) =>
-        s.fullName.toLowerCase().includes(q) || s.email.toLowerCase().includes(q),
-    );
-  }, [students, debouncedSearch]);
+  const filtered = students; // The backend now handles search filtering
 
   return (
     <div className="space-y-6 animate-fade-up flex gap-6 h-[calc(100vh-140px)]">
