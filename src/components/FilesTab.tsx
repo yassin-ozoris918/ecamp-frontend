@@ -58,13 +58,11 @@ export function FilesTab({ hideHeader = false }: { hideHeader?: boolean }) {
     }
   });
 
-  const [viewingFile, setViewingFile] = useState<{ url: string, title: string, type: string } | null>(null);
-
   const handleOpen = async (id: string, title: string) => {
     try {
       const res = await api.get(`/attachments/${id}/view`);
       if (res.data.url) {
-        setViewingFile({ url: res.data.url, title, type: 'FILE' });
+        window.open(res.data.url, '_blank', 'noopener,noreferrer');
       }
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Failed to open file.');
@@ -81,12 +79,6 @@ export function FilesTab({ hideHeader = false }: { hideHeader?: boolean }) {
 
   return (
     <div className={`space-y-6 animate-fade-up ${hideHeader ? '' : 'pb-20 max-w-6xl mx-auto'}`}>
-      <FileViewerModal 
-        open={!!viewingFile} 
-        onClose={() => setViewingFile(null)} 
-        title={viewingFile?.title} 
-        url={viewingFile?.url} 
-      />
       {!hideHeader && (
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>

@@ -993,14 +993,12 @@ function LectureAttachments({ lectureId }: { lectureId: string }) {
     enabled: !!lectureId
   });
 
-  const [viewingFile, setViewingFile] = useState<{ url: string, title: string } | null>(null);
-
   const handleOpen = async (id: string, title: string, e: React.MouseEvent) => {
     e.preventDefault();
     try {
       const res = await api.get(`/attachments/${id}/view`);
       if (res.data.url) {
-        setViewingFile({ url: res.data.url, title });
+        window.open(res.data.url, '_blank', 'noopener,noreferrer');
       }
     } catch (err: any) {
       alert(err.response?.data?.message || 'Failed to open file.');
@@ -1011,12 +1009,6 @@ function LectureAttachments({ lectureId }: { lectureId: string }) {
 
   return (
     <div className="mt-6 rounded-2xl border border-neutral-800 bg-neutral-900 p-4 text-theme-text">
-      <FileViewerModal 
-        open={!!viewingFile} 
-        onClose={() => setViewingFile(null)} 
-        title={viewingFile?.title} 
-        url={viewingFile?.url} 
-      />
       <h3 className="text-md font-bold flex items-center gap-2 border-b border-neutral-800 pb-2 mb-3">
         <Paperclip className="h-4 w-4 text-cyan-400" />
         <span>Lecture Attachments</span>
