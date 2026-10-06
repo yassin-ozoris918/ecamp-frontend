@@ -1,6 +1,6 @@
 import toast from 'react-hot-toast';
 import { useState, useEffect, useMemo } from 'react';
-import { Users, User, ShieldAlert, BookOpen, Search, X, Smartphone, Eye } from 'lucide-react';
+import { Users, User, ShieldAlert, BookOpen, Search, X, Smartphone, Eye, Video } from 'lucide-react';
 import { client } from '../lib/api';
 import { Badge, Skeleton, EmptyState, Button, SectionHeader } from './ui';
 import { useConfirm, ConfirmDialog } from '../hooks/useConfirm';
@@ -235,6 +235,99 @@ export function Student360Workspace() {
                   </div>
                 ) : (
                   <p className="text-sm text-theme-muted">No lectures accessed yet.</p>
+                )}
+              </div>
+
+              {/* Video View Limits */}
+              <div className="glass bg-black/20 rounded-xl p-5 border border-white/[0.04]">
+                <h3 className="text-sm font-bold text-theme-muted uppercase tracking-wider mb-4 flex items-center gap-2">
+                  <Video className="w-4 h-4 text-accent-400" /> Video View Limits
+                </h3>
+                {profileData.sessionViews?.filter((sv: any) => sv.maxViews !== null)?.length > 0 ? (
+                  <div className="space-y-3">
+                    {profileData.sessionViews.filter((sv: any) => sv.maxViews !== null).map((sv: any) => {
+                      const remaining = Math.max(0, sv.effectiveMaxViews - sv.usedViews);
+                      const isExhausted = remaining === 0;
+
+                      return (
+                        <div key={sv.sessionId} className="p-4 rounded-lg bg-white/[0.02] border border-white/[0.04] flex flex-col gap-2">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <p className="text-sm text-theme-text font-medium">{sv.sessionTitle}</p>
+                              <p className="text-xs text-theme-muted">{sv.lectureTitle} • {sv.courseTitle}</p>
+                            </div>
+                            <Badge variant={isExhausted ? 'error' : 'success'}>
+                              {remaining} Remaining
+                            </Badge>
+                          </div>
+                          
+                          <div className="flex justify-between items-end mt-2">
+                            <div className="text-xs text-theme-muted space-y-1">
+                              <p>Used: <span className="text-theme-text font-medium">{sv.usedViews}</span></p>
+                              <p>Original Limit: <span className="text-theme-text font-medium">{sv.maxViews}</span></p>
+                              <p>Previously Granted: <span className="text-theme-text font-medium">{sv.grantedViews}</span></p>
+                              <p>Effective Limit: <span className="text-theme-text font-medium">{sv.effectiveMaxViews}</span></p>
+                            </div>
+                            
+                            <Button 
+                              variant="secondary" 
+                              size="sm"
+                              onClick={async () => {
+                                const input = window.prompt(`How many additional views would you like to grant for ${sv.sessionTitle}? (Enter a positive integer)`);
+                                if (!input) return;
+                                const additionalViews = parseInt(input, 10);
+                                if (isNaN(additionalViews) || additionalViews <= 0) {
+                                  toast.error('Please enter a valid positive integer.');
+                                  return;
+                                }
+
+                                const message = `
+Current:
+Used: ${sv.usedViews}
+Original limit: ${sv.maxViews}
+Previously granted: ${sv.grantedViews}
+Effective limit: ${sv.effectiveMaxViews}
+Remaining: ${remaining}
+
+Admin enters:
+Additional views: ${additionalViews}
+
+After:
+Used: ${sv.usedViews}
+Original limit: ${sv.maxViews}
+Granted: ${sv.grantedViews + additionalViews}
+Effective limit: ${sv.effectiveMaxViews + additionalViews}
+Remaining: ${Math.max(0, sv.effectiveMaxViews + additionalViews - sv.usedViews)}
+
+Are you sure you want to apply this grant?`;
+
+                                const ok = await confirm('Grant New Viewing Allowance', message);
+                                if (!ok) return;
+
+                                try {
+                                  await client.post(`/admin/users/${selectedStudentId}/sessions/${sv.sessionId}/grant-views`, { additionalViews });
+                                  toast.success(`Successfully granted ${additionalViews} views`);
+                                  
+                                  // Refresh profile data
+                                  const [userDetail, progressData] = await Promise.all([
+                                    client.get<any>(`/admin/users/${selectedStudentId}`),
+                                    client.get<any>(`/admin/users/${selectedStudentId}/progress`),
+                                  ]);
+                                  setProfileData({ ...userDetail, ...progressData });
+                                } catch (e: any) {
+                                  toast.error(e.message || 'Failed to grant views');
+                                }
+                              }}
+                            >
+                              Grant Views
+                            </Button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p className="text-sm text-theme-muted">No limited videos accessed yet.</p>
                 )}
               </div>
 
