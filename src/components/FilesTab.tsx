@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../lib/api';
-import { BookOpen, Search, Lock, Unlock, KeyRound, ExternalLink } from 'lucide-react';
+import { BookOpen, Search, Lock, Unlock, KeyRound, ExternalLink, Download } from 'lucide-react';
 import { useAuth } from '../lib/authContext';
 import { Spinner, Badge, EmptyState, ErrorMessage, Button } from './ui';
 import { FileViewerModal } from './FileViewerModal';
@@ -58,9 +58,9 @@ export function FilesTab({ hideHeader = false }: { hideHeader?: boolean }) {
     }
   });
 
-  const handleOpen = async (id: string, title: string) => {
+  const handleOpen = async (id: string, title: string, download = false) => {
     try {
-      const res = await api.get(`/attachments/${id}/view`);
+      const res = await api.get(`/attachments/${id}/view${download ? '?download=true' : ''}`);
       if (res.data.url) {
         window.open(res.data.url, '_blank', 'noopener,noreferrer');
       }
@@ -218,10 +218,16 @@ export function FilesTab({ hideHeader = false }: { hideHeader?: boolean }) {
               </div>
 
               {file.accessStatus === 'UNLOCKED' ? (
-                <Button variant="primary" className="w-full" onClick={() => handleOpen(file.id, file.title)}>
-                  <ExternalLink className="w-4 h-4 mr-2" />
-                  {t('files.open', 'Open File')}
-                </Button>
+                <div className="flex gap-2 w-full">
+                  <Button variant="primary" className="flex-1" onClick={() => handleOpen(file.id, file.title)}>
+                    <ExternalLink className="w-4 h-4 mr-2" />
+                    {t('files.open', 'Open')}
+                  </Button>
+                  <Button variant="secondary" className="flex-1" onClick={() => handleOpen(file.id, file.title, true)}>
+                    <Download className="w-4 h-4 mr-2" />
+                    {t('files.download', 'Download')}
+                  </Button>
+                </div>
               ) : (
                 <div className="flex flex-col gap-2 mt-auto">
                   {redeemingTarget?.id === file.id && redeemingTarget?.type === 'FILE' ? (

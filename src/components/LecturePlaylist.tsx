@@ -17,6 +17,7 @@ import {
   ExternalLink,
   Eye,
   EyeOff,
+  Download,
 } from 'lucide-react';
 import { api } from '../lib/api';
 import { useAuth } from '../lib/authContext';
@@ -993,10 +994,10 @@ function LectureAttachments({ lectureId }: { lectureId: string }) {
     enabled: !!lectureId
   });
 
-  const handleOpen = async (id: string, title: string, e: React.MouseEvent) => {
+  const handleOpen = async (id: string, title: string, download: boolean, e: React.MouseEvent) => {
     e.preventDefault();
     try {
-      const res = await api.get(`/attachments/${id}/view`);
+      const res = await api.get(`/attachments/${id}/view${download ? '?download=true' : ''}`);
       if (res.data.url) {
         window.open(res.data.url, '_blank', 'noopener,noreferrer');
       }
@@ -1015,21 +1016,29 @@ function LectureAttachments({ lectureId }: { lectureId: string }) {
       </h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
         {attachments.map((file: any) => (
-          <button 
-            key={file.id} 
-            onClick={(e) => handleOpen(file.id, file.title, e)}
-            className="flex items-center justify-between rounded-xl bg-neutral-950 p-3 text-xs border border-neutral-800 hover:border-cyan-500/40 transition group w-full text-left"
-          >
-            <div className="flex items-center gap-2 overflow-hidden max-w-[65%]">
-              <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-neutral-800 text-cyan-400 border border-neutral-700 shrink-0">
-                {file.type || 'OTHER'}
+          <div key={file.id} className="flex gap-2 w-full">
+            <button 
+              onClick={(e) => handleOpen(file.id, file.title, false, e)}
+              className="flex-1 flex items-center justify-between rounded-xl bg-neutral-950 p-3 text-xs border border-neutral-800 hover:border-cyan-500/40 transition group text-left"
+            >
+              <div className="flex items-center gap-2 overflow-hidden max-w-[75%]">
+                <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-neutral-800 text-cyan-400 border border-neutral-700 shrink-0">
+                  {file.type || 'OTHER'}
+                </span>
+                <span className="font-semibold text-theme-muted group-hover:text-cyan-400 transition truncate">{file.title}</span>
+              </div>
+              <span className="text-[10px] bg-neutral-900 px-2 py-1 rounded border border-neutral-800 uppercase tracking-wider text-cyan-400 font-bold shrink-0 flex items-center gap-1">
+                <ExternalLink className="w-3 h-3" /> Open
               </span>
-              <span className="font-semibold text-theme-muted group-hover:text-cyan-400 transition truncate">{file.title}</span>
-            </div>
-            <span className="text-[10px] bg-neutral-900 px-2 py-1 rounded border border-neutral-800 uppercase tracking-wider text-cyan-400 font-bold shrink-0 flex items-center gap-1">
-              <ExternalLink className="w-3 h-3" /> Open
-            </span>
-          </button>
+            </button>
+            <button 
+              onClick={(e) => handleOpen(file.id, file.title, true, e)}
+              className="flex items-center justify-center rounded-xl bg-neutral-950 px-4 py-3 text-xs border border-neutral-800 hover:border-cyan-500/40 hover:text-cyan-400 transition group text-theme-muted"
+              title="Download File"
+            >
+              <Download className="w-4 h-4" />
+            </button>
+          </div>
         ))}
       </div>
     </div>
