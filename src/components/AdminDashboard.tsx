@@ -542,6 +542,28 @@ export function AdminUsers() {
     }
   });
 
+  const { data: stats } = useQuery({
+    queryKey: ['admin', 'users', 'stats'],
+    queryFn: async () => {
+      const { data } = await api.get('/admin/users/stats/overview');
+      return data;
+    }
+  });
+
+  const fetchExportData = async () => {
+    let query = `/admin/users?`;
+    if (search) query += `search=${encodeURIComponent(search)}&`;
+    if (roleFilter !== 'All') query += `role=${roleFilter}&`;
+    if (statusFilter !== 'All') query += `isActive=${statusFilter === 'Active' ? 'true' : 'false'}&`;
+    if (educationLevelFilter !== 'All') query += `educationLevel=${educationLevelFilter}&`;
+    if (highSchoolSystemFilter !== 'All') query += `highSchoolSystem=${highSchoolSystemFilter}&`;
+    if (studyModeFilter !== 'All') query += `studyMode=${studyModeFilter}&`;
+    if (studyLanguageFilter !== 'All') query += `studyLanguage=${studyLanguageFilter}&`;
+    query += `take=1000000`;
+    const { data } = await api.get(query);
+    return data?.items || data || [];
+  };
+
   const toggleSuspendMutation = useMutation({
     mutationFn: async (user: UserListItem & { full_name: string; is_active: boolean }) => {
       return api.put(`/admin/users/${user.id}`, { isActive: !user.is_active });
@@ -678,64 +700,80 @@ export function AdminUsers() {
           </div>
           <div className="flex gap-2">
             <button 
-              onClick={() => {
-                const headers = ['معرف المستخدم', 'الاسم بالكامل', 'البريد الإلكتروني', 'رقم الهاتف', 'رقم هاتف ولي الأمر', 'الدور', 'المرحلة الدراسية', 'النظام', 'نظام الدراسة', 'لغة الدراسة', 'الصف', 'الشعبة', 'المسار', 'الجامعة', 'الكلية', 'القسم', 'البرنامج', 'نشط', 'الجهاز مرتبط', 'نقاط الخبرة', 'تاريخ الانضمام'];
-                const rows = filtered.map((u: any) => [
-                  u.id || '',
-                  u.full_name || u.fullName || '',
-                  u.email || '',
-                  u.phoneNumber || '',
-                  u.parentPhoneNumber || '',
-                  getArabicLabel(u.role),
-                  getArabicLabel(u.educationLevel),
-                  getArabicLabel(u.highSchoolSystem),
-                  getArabicLabel(u.studyMode),
-                  getArabicLabel(u.studyLanguage),
-                  getArabicLabel(u.highSchoolGrade),
-                  getArabicLabel(u.traditionalBranch),
-                  getArabicLabel(u.baccalaureatePath),
-                  u.academicUniversity?.nameAr || u.academicUniversity?.nameEn || u.otherUniversityName || u.university || '',
-                  u.academicFaculty?.nameAr || u.academicFaculty?.nameEn || u.otherFacultyName || u.faculty || '',
-                  u.academicDepartment?.nameAr || u.academicDepartment?.nameEn || u.otherDepartmentName || u.department || '',
-                  u.academicProgram?.nameAr || u.academicProgram?.nameEn || u.otherProgramName || u.program || '',
-                  (u.is_active !== undefined ? u.is_active : u.isActive) ? 'نعم' : 'لا',
-                  (u.device_id || u.deviceId) ? 'نعم' : 'لا',
-                  u.xp || 0,
-                  new Date(u.created_at || u.createdAt).toLocaleDateString('ar-EG')
-                ]);
-                downloadCsv(headers, rows, 'platform_users.csv');
+              onClick={async () => {
+                const toastId = toast.loading('Fetching data for export...');
+                try {
+                  const exportData = await fetchExportData();
+                  const headers = ['معرف المستخدم', 'الاسم بالكامل', 'البريد الإلكتروني', 'رقم الهاتف', 'رقم هاتف ولي الأمر', 'الدور', 'المرحلة الدراسية', 'النظام', 'نظام الدراسة', 'لغة الدراسة', 'الصف', 'الشعبة', 'المسار', 'الجامعة', 'الكلية', 'القسم', 'البرنامج', 'نشط', 'الجهاز مرتبط', 'نقاط الخبرة', 'تاريخ الانضمام'];
+                  const rows = exportData.map((u: any) => [
+                    u.id || '',
+                    u.full_name || u.fullName || '',
+                    u.email || '',
+                    u.phoneNumber || '',
+                    u.parentPhoneNumber || '',
+                    getArabicLabel(u.role),
+                    getArabicLabel(u.educationLevel),
+                    getArabicLabel(u.highSchoolSystem),
+                    getArabicLabel(u.studyMode),
+                    getArabicLabel(u.studyLanguage),
+                    getArabicLabel(u.highSchoolGrade),
+                    getArabicLabel(u.traditionalBranch),
+                    getArabicLabel(u.baccalaureatePath),
+                    u.academicUniversity?.nameAr || u.academicUniversity?.nameEn || u.otherUniversityName || u.university || '',
+                    u.academicFaculty?.nameAr || u.academicFaculty?.nameEn || u.otherFacultyName || u.faculty || '',
+                    u.academicDepartment?.nameAr || u.academicDepartment?.nameEn || u.otherDepartmentName || u.department || '',
+                    u.academicProgram?.nameAr || u.academicProgram?.nameEn || u.otherProgramName || u.program || '',
+                    (u.is_active !== undefined ? u.is_active : u.isActive) ? 'نعم' : 'لا',
+                    (u.device_id || u.deviceId) ? 'نعم' : 'لا',
+                    u.xp || 0,
+                    new Date(u.created_at || u.createdAt).toLocaleDateString('ar-EG')
+                  ]);
+                  downloadCsv(headers, rows, 'platform_users.csv');
+                  toast.success('Export downloaded!', { id: toastId });
+                } catch (e) {
+                  console.error(e);
+                  toast.error('Export failed', { id: toastId });
+                }
               }} 
               className="btn-secondary whitespace-nowrap"
             >
               Export CSV
             </button>
             <button 
-              onClick={() => {
-                const headers = ['معرف المستخدم', 'الاسم بالكامل', 'البريد الإلكتروني', 'رقم الهاتف', 'رقم هاتف ولي الأمر', 'الدور', 'المرحلة الدراسية', 'النظام', 'نظام الدراسة', 'لغة الدراسة', 'الصف', 'الشعبة', 'المسار', 'الجامعة', 'الكلية', 'القسم', 'البرنامج', 'نشط', 'الجهاز مرتبط', 'نقاط الخبرة', 'تاريخ الانضمام'];
-                const rows = filtered.map((u: any) => [
-                  u.id || '',
-                  u.full_name || u.fullName || '',
-                  u.email || '',
-                  u.phoneNumber || '',
-                  u.parentPhoneNumber || '',
-                  getArabicLabel(u.role),
-                  getArabicLabel(u.educationLevel),
-                  getArabicLabel(u.highSchoolSystem),
-                  getArabicLabel(u.studyMode),
-                  getArabicLabel(u.studyLanguage),
-                  getArabicLabel(u.highSchoolGrade),
-                  getArabicLabel(u.traditionalBranch),
-                  getArabicLabel(u.baccalaureatePath),
-                  u.academicUniversity?.nameAr || u.academicUniversity?.nameEn || u.otherUniversityName || u.university || '',
-                  u.academicFaculty?.nameAr || u.academicFaculty?.nameEn || u.otherFacultyName || u.faculty || '',
-                  u.academicDepartment?.nameAr || u.academicDepartment?.nameEn || u.otherDepartmentName || u.department || '',
-                  u.academicProgram?.nameAr || u.academicProgram?.nameEn || u.otherProgramName || u.program || '',
-                  (u.is_active !== undefined ? u.is_active : u.isActive) ? 'نعم' : 'لا',
-                  (u.device_id || u.deviceId) ? 'نعم' : 'لا',
-                  u.xp || 0,
-                  new Date(u.created_at || u.createdAt).toLocaleDateString('ar-EG')
-                ]);
-                printTable(headers, rows, 'تقرير إدارة المستخدمين');
+              onClick={async () => {
+                const toastId = toast.loading('Fetching data for print...');
+                try {
+                  const exportData = await fetchExportData();
+                  const headers = ['معرف المستخدم', 'الاسم بالكامل', 'البريد الإلكتروني', 'رقم الهاتف', 'رقم هاتف ولي الأمر', 'الدور', 'المرحلة الدراسية', 'النظام', 'نظام الدراسة', 'لغة الدراسة', 'الصف', 'الشعبة', 'المسار', 'الجامعة', 'الكلية', 'القسم', 'البرنامج', 'نشط', 'الجهاز مرتبط', 'نقاط الخبرة', 'تاريخ الانضمام'];
+                  const rows = exportData.map((u: any) => [
+                    u.id || '',
+                    u.full_name || u.fullName || '',
+                    u.email || '',
+                    u.phoneNumber || '',
+                    u.parentPhoneNumber || '',
+                    getArabicLabel(u.role),
+                    getArabicLabel(u.educationLevel),
+                    getArabicLabel(u.highSchoolSystem),
+                    getArabicLabel(u.studyMode),
+                    getArabicLabel(u.studyLanguage),
+                    getArabicLabel(u.highSchoolGrade),
+                    getArabicLabel(u.traditionalBranch),
+                    getArabicLabel(u.baccalaureatePath),
+                    u.academicUniversity?.nameAr || u.academicUniversity?.nameEn || u.otherUniversityName || u.university || '',
+                    u.academicFaculty?.nameAr || u.academicFaculty?.nameEn || u.otherFacultyName || u.faculty || '',
+                    u.academicDepartment?.nameAr || u.academicDepartment?.nameEn || u.otherDepartmentName || u.department || '',
+                    u.academicProgram?.nameAr || u.academicProgram?.nameEn || u.otherProgramName || u.program || '',
+                    (u.is_active !== undefined ? u.is_active : u.isActive) ? 'نعم' : 'لا',
+                    (u.device_id || u.deviceId) ? 'نعم' : 'لا',
+                    u.xp || 0,
+                    new Date(u.created_at || u.createdAt).toLocaleDateString('ar-EG')
+                  ]);
+                  toast.dismiss(toastId);
+                  printTable(headers, rows, 'تقرير إدارة المستخدمين');
+                } catch (e) {
+                  console.error(e);
+                  toast.error('Print failed', { id: toastId });
+                }
               }} 
               className="btn-secondary whitespace-nowrap"
             >
@@ -745,6 +783,60 @@ export function AdminUsers() {
           </div>
         </div>
       </div>
+
+      {stats && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="glass p-4 rounded-xl flex flex-col items-center justify-center text-center">
+            <h3 className="text-sm font-semibold text-theme-muted uppercase tracking-wider mb-1">Total Students</h3>
+            <p className="text-4xl font-display font-bold text-accent-400">{stats.totalStudents}</p>
+          </div>
+          <div className="glass p-4 rounded-xl flex flex-col">
+            <h3 className="text-sm font-semibold text-theme-muted uppercase tracking-wider mb-2">High School ({stats.highSchoolTotal})</h3>
+            <div className="flex-1 overflow-y-auto pr-2" style={{ maxHeight: '120px' }}>
+              {stats.highSchoolBreakdown?.grade && Object.entries(stats.highSchoolBreakdown.grade).map(([sys, count]) => (
+                <div key={sys} className="flex justify-between text-xs text-theme-muted mt-1.5 border-b border-white/[0.05] pb-1">
+                  <span>{getArabicLabel(sys)}</span>
+                  <span className="font-bold text-theme-text">{count as number}</span>
+                </div>
+              ))}
+              {stats.highSchoolBreakdown?.branch && Object.entries(stats.highSchoolBreakdown.branch).map(([sys, count]) => (
+                <div key={sys} className="flex justify-between text-xs text-theme-muted mt-1.5 border-b border-white/[0.05] pb-1">
+                  <span>{getArabicLabel(sys)}</span>
+                  <span className="font-bold text-theme-text">{count as number}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="glass p-4 rounded-xl flex flex-col">
+            <h3 className="text-sm font-semibold text-theme-muted uppercase tracking-wider mb-2">University ({stats.universityTotal})</h3>
+            <div className="flex-1 overflow-y-auto pr-2" style={{ maxHeight: '120px' }}>
+              {stats.universityBreakdown?.university && Object.entries(stats.universityBreakdown.university).map(([uni, count]) => (
+                <div key={uni} className="flex justify-between text-xs text-theme-muted mt-1.5 border-b border-white/[0.05] pb-1">
+                  <span className="truncate mr-2" title={uni}>{uni}</span>
+                  <span className="font-bold text-theme-text">{count as number}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="glass p-4 rounded-xl flex flex-col">
+            <h3 className="text-sm font-semibold text-theme-muted uppercase tracking-wider mb-2">University Details</h3>
+            <div className="flex-1 overflow-y-auto pr-2" style={{ maxHeight: '120px' }}>
+              {stats.universityBreakdown?.faculty && Object.entries(stats.universityBreakdown.faculty).map(([f, c]) => (
+                <div key={f} className="flex justify-between text-xs text-theme-muted mt-1.5 border-b border-white/[0.05] pb-1">
+                  <span className="truncate mr-2" title={f}>{f}</span>
+                  <span className="font-bold text-theme-text">{c as number}</span>
+                </div>
+              ))}
+              {stats.universityBreakdown?.department && Object.entries(stats.universityBreakdown.department).map(([d, c]) => (
+                <div key={d} className="flex justify-between text-xs text-theme-muted mt-1.5 border-b border-white/[0.05] pb-1">
+                  <span className="truncate mr-2 text-warning-300" title={d}>{d}</span>
+                  <span className="font-bold text-theme-text">{c as number}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {loading ? (
         <Skeleton className="h-96" />
@@ -1392,6 +1484,18 @@ export function AdminCodes() {
     setLoading(false);
   }, [search, statusFilter, typeFilter, audienceFilter]);
 
+  const fetchExportData = async () => {
+    let query = `/activation-codes?`;
+    if (search) query += `search=${encodeURIComponent(search)}&`;
+    if (statusFilter !== 'All') query += `status=${statusFilter}&`;
+    if (typeFilter !== 'All') query += `targetType=${typeFilter}&`;
+    if (audienceFilter !== 'All') query += `educationLevel=${audienceFilter}&`;
+    query += `take=1000000`;
+
+    const { data } = await api.get(query);
+    return data?.items || data || [];
+  };
+
   useEffect(() => {
     loadCodes();
   }, [loadCodes]);
@@ -1483,24 +1587,61 @@ export function AdminCodes() {
             <Search className="w-4 h-4 text-theme-muted absolute left-3 top-1/2 -translate-y-1/2" />
           </div>
           <button 
-            onClick={() => {
-              const headers = ['Code', 'Type', 'Education Level', 'Status', 'Redeemed Course', 'Redeemed Lecture', 'Redeemed File', 'Redeemed By', 'Created At'];
-              const rows = codes.map(c => [
-                c.code || '',
-                c.targetType || '',
-                formatEducationLevel(c.educationLevel),
-                formatCodeStatus(c.status),
-                c.courseTitle || '',
-                c.lectureTitle || '',
-                c.attachmentTitle || '',
-                c.redeemerName || '',
-                new Date(c.createdAt).toLocaleDateString()
-              ]);
-              downloadCsv(headers, rows, 'activation_codes.csv');
+            onClick={async () => {
+              const toastId = toast.loading('Fetching data for export...');
+              try {
+                const exportData = await fetchExportData();
+                const headers = ['Code', 'Type', 'Education Level', 'Status', 'Redeemed Course', 'Redeemed Lecture', 'Redeemed File', 'Redeemed By', 'Created At'];
+                const rows = exportData.map((c: any) => [
+                  c.code || '',
+                  c.targetType || '',
+                  formatEducationLevel(c.educationLevel),
+                  formatCodeStatus(c.status),
+                  c.courseTitle || '',
+                  c.lectureTitle || '',
+                  c.attachmentTitle || '',
+                  c.redeemerName || '',
+                  new Date(c.createdAt).toLocaleDateString()
+                ]);
+                downloadCsv(headers, rows, 'activation_codes.csv');
+                toast.success('Export downloaded!', { id: toastId });
+              } catch (e) {
+                console.error(e);
+                toast.error('Export failed', { id: toastId });
+              }
             }} 
-            className="btn-secondary"
+            className="btn-secondary whitespace-nowrap"
           >
             Export CSV
+          </button>
+          <button 
+            onClick={async () => {
+              const toastId = toast.loading('Fetching data for print...');
+              try {
+                const exportData = await fetchExportData();
+                const headers = ['Code', 'Type', 'Education Level', 'Status', 'Redeemed Course', 'Redeemed Lecture', 'Redeemed File', 'Redeemed By', 'Created At'];
+                const rows = exportData.map((c: any) => [
+                  c.code || '',
+                  c.targetType || '',
+                  formatEducationLevel(c.educationLevel),
+                  formatCodeStatus(c.status),
+                  c.courseTitle || '',
+                  c.lectureTitle || '',
+                  c.attachmentTitle || '',
+                  c.redeemerName || '',
+                  new Date(c.createdAt).toLocaleDateString()
+                ]);
+                toast.dismiss(toastId);
+                printTable(headers, rows, 'تقرير أكواد التفعيل');
+              } catch (e) {
+                console.error(e);
+                toast.error('Print failed', { id: toastId });
+              }
+            }} 
+            className="btn-secondary whitespace-nowrap"
+          >
+            <Printer className="w-4 h-4 mr-2" />
+            Print / PDF
           </button>
           <button onClick={handleClearAll} className="btn-secondary text-error-400 hover:text-error-300 border-error-500/20 hover:bg-error-500/10">
             <Trash2 className="w-4 h-4 mr-2" /> Clear All
