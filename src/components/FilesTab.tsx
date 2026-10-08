@@ -23,7 +23,7 @@ export function FilesTab({ hideHeader = false }: { hideHeader?: boolean }) {
   const { data: courses } = useQuery({
     queryKey: ['student_courses'],
     queryFn: async () => {
-      const res = await api.get('/courses/student');
+      const res = await api.get('/courses/student?includeMaterialsOnly=true');
       return Array.isArray(res.data) ? res.data : [];
     },
     enabled: !!profile,
