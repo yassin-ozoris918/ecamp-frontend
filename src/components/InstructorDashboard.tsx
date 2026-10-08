@@ -36,7 +36,6 @@ export function InstructorDashboard() {
   const [pendingGrading, setPendingGrading] = useState(0);
   const [codesGenerated, setCodesGenerated] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [createCourseOpen, setCreateCourseOpen] = useState(false);
   const { confirm, state: confirmState, handleConfirm, handleCancel } = useConfirm();
 
   const { t } = useTranslation();
@@ -139,13 +138,7 @@ export function InstructorDashboard() {
           <EmptyState
             icon={<BookOpen className="w-8 h-8" />}
             title={t('dashboard.noCoursesYet')}
-            description="Create your first course to start building lectures and quizzes."
-            action={
-              <button onClick={() => setCreateOpen(true)} className="btn-primary">
-                <Plus className="w-4 h-4 mr-2" />
-                Create Course
-              </button>
-            }
+            description="You don't have any assigned courses yet."
           />
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -176,12 +169,6 @@ export function InstructorDashboard() {
           </div>
         )}
       </div>
-
-      <CreateCourseModal
-        open={createCourseOpen}
-        onClose={() => setCreateCourseOpen(false)}
-        onCreated={(id) => navigate(`/instructor/courses/${id}`)}
-      />
       <ConfirmDialog
         open={confirmState.open}
         title={confirmState.title}
@@ -322,7 +309,6 @@ export function InstructorCourses() {
   const { navigate } = useRouter();
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
-  const [createOpen, setCreateOpen] = useState(false);
   const { confirm, state: confirmState, handleConfirm, handleCancel } = useConfirm();
 
   const load = useCallback(async () => {
@@ -352,13 +338,7 @@ export function InstructorCourses() {
         <EmptyState
           icon={<BookOpen className="w-8 h-8" />}
           title="No courses"
-          description="Create your first course to get started."
-          action={
-            <button onClick={() => setCreateOpen(true)} className="btn-primary">
-              <Plus className="w-4 h-4 mr-2" />
-              Create Course
-            </button>
-          }
+          description="You don't have any assigned courses yet."
         />
       ) : (
         <div className="glass rounded-2xl overflow-hidden divide-y divide-white/[0.04]">
@@ -374,7 +354,6 @@ export function InstructorCourses() {
           ))}
         </div>
       )}
-      <CreateCourseModal open={createOpen} onClose={() => setCreateOpen(false)} onCreated={(id) => navigate(`/instructor/courses/${id}`)} />
       <ConfirmDialog
         open={confirmState.open}
         title={confirmState.title}

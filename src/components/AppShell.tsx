@@ -264,7 +264,7 @@ function SidebarContent({
           <div className="flex items-center gap-2">
             <span className={`badge ${roleBadgeClass}`}>
               <Shield className="w-3 h-3" />
-              {roleLabel === 'Student' ? (t('auth.educationLevel') === 'المستوى التعليمي' ? 'طالب' : 'Student') : roleLabel === 'Instructor' ? t('nav.instructors') : 'Admin'}
+              {roleLabel === 'Student' ? (t('auth.educationLevel') === 'المستوى التعليمي' ? 'طالب' : 'Student') : roleLabel === 'Instructor' ? 'Instructor' : 'Admin'}
             </span>
           </div>
           <div className="grid grid-cols-2 gap-2">
