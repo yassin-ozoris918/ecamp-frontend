@@ -45,16 +45,15 @@ export function InstructorDashboard() {
     setLoading(true);
 
     try {
-      const [coursesRes, statsRes] = await Promise.all([
-        api.get('/courses').catch(() => ({ data: [] })),
-        api.get('/instructor-dashboard/stats').catch(() => ({ data: {} })),
+      const [coursesRes] = await Promise.all([
+        api.get('/instructor/courses').catch(() => ({ data: [] })),
       ]);
 
       const fetched = coursesRes.data?.items || coursesRes.data || [];
       setCourses(Array.isArray(fetched) ? fetched : []);
-      setStudentCount(statsRes.data?.totalStudents || 0);
-      setPendingGrading(statsRes.data?.pendingGrading || 0);
-      setCodesGenerated(statsRes.data?.codesGenerated || 0);
+      setStudentCount(0);
+      setPendingGrading(0);
+      setCodesGenerated(0);
     } catch (e) {
       console.error(e);
       setCourses([]);
@@ -78,11 +77,8 @@ export function InstructorDashboard() {
       </div>
 
       {/* KPIs */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <KpiCard icon={<BookOpen className="w-5 h-5" />} label={t('dashboard.kpi.courses')} value={courses.length} color="text-accent-700 dark:text-accent-300" bg="bg-accent-500/10" loading={loading} />
-        <KpiCard icon={<Users className="w-5 h-5" />} label={t('dashboard.kpi.students')} value={studentCount} color="text-secondary-700 dark:text-secondary-300" bg="bg-secondary-500/10" loading={loading} />
-        <KpiCard icon={<KeyRound className="w-5 h-5" />} label={t('dashboard.kpi.codesGenerated')} value={codesGenerated} color="text-gold-700 dark:text-gold-300" bg="bg-gold-500/10" loading={loading} />
-        <KpiCard icon={<ClipboardList className="w-5 h-5" />} label={t('dashboard.kpi.pendingReviews')} value={pendingGrading} color="text-warning-700 dark:text-warning-300" bg="bg-warning-500/10" loading={loading} />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <KpiCard icon={<BookOpen className="w-5 h-5" />} label="Courses" value={courses.length} color="text-accent-700 dark:text-accent-300" bg="bg-accent-500/10" loading={loading} />
       </div>
 
       {/* Pending grading alert */}
@@ -314,7 +310,7 @@ export function InstructorCourses() {
   const load = useCallback(async () => {
     if (!profile) return;
     try {
-      const { data } = await api.get('/courses');
+      const { data } = await api.get('/instructor/courses');
       setCourses(data.items || data);
     } catch (e) {
       console.error(e);
