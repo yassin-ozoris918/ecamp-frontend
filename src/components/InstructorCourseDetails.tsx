@@ -46,15 +46,8 @@ export function InstructorCourseDetails({ courseId }: { courseId: string }) {
         {course.thumbnailUrl && <img src={course.thumbnailUrl} alt={course.title} className="w-32 h-32 rounded-xl object-cover" />}
         <div className="flex-1">
           <Badge className="mb-2" variant={course.status === 'PUBLISHED' ? 'success' : 'warning'}>{course.status}</Badge>
-          <div className="flex justify-between items-start">
-            <div>
-              <h1 className="text-3xl font-bold font-display">{course.title}</h1>
-              <p className="text-theme-muted mt-2">{course.description}</p>
-            </div>
-            <Link to={`/instructor/course/${course.id}`} className="btn-secondary shrink-0">
-              Edit Curriculum
-            </Link>
-          </div>
+          <h1 className="text-3xl font-bold font-display">{course.title}</h1>
+          <p className="text-theme-muted mt-2">{course.description}</p>
         </div>
       </div>
 

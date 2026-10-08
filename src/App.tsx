@@ -254,7 +254,6 @@ function RoleRoutes({ role }: { role: string }) {
           { pattern: '/instructor/courses', element: () => <InstructorCourses /> },
           { pattern: '/instructor/grading', element: () => <GradingQueue /> },
           { pattern: '/instructor/quiz-review', element: () => <QuizAttemptsManager /> },
-          { pattern: '/instructor/course/:courseId', element: (p) => <CourseBuilder courseId={p.courseId} /> },
           { pattern: '/instructor/courses/:courseId', element: (p) => <InstructorCourseDetails courseId={p.courseId} /> },
           { pattern: '/instructor/courses/:courseId/lectures/:lectureId', element: (p) => <InstructorLectureDetails courseId={p.courseId} lectureId={p.lectureId} /> },
           { pattern: '/profile', element: () => <ProfileScreen /> },

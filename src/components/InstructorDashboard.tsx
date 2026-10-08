@@ -168,17 +168,8 @@ export function InstructorDashboard() {
                 </div>
                 <p className="font-display font-bold text-theme-text text-lg leading-snug">{c.title}</p>
                 <p className="text-sm text-theme-muted mt-1 line-clamp-2">{c.description}</p>
-                <div className="mt-4 flex items-center justify-between text-sm">
-                  <span className="text-accent-700 dark:text-accent-300 flex items-center gap-1">
-                    View Details <ChevronRight className="w-4 h-4" />
-                  </span>
-                  <Link 
-                    to={`/instructor/course/${c.id}`} 
-                    className="p-1.5 rounded hover:bg-white/[0.1] text-theme-muted hover:text-theme-text transition-all z-10"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    Edit
-                  </Link>
+                <div className="mt-4 flex items-center gap-2 text-sm text-accent-700 dark:text-accent-300">
+                  View Details <ChevronRight className="w-4 h-4" />
                 </div>
               </Link>
             ))}
@@ -378,14 +369,6 @@ export function InstructorCourses() {
                 <p className="text-xs text-theme-muted truncate">{c.description}</p>
               </div>
               <Badge variant={c.status === 'PUBLISHED' ? 'success' : 'warning'}>{c.status}</Badge>
-              <Link 
-                to={`/instructor/course/${c.id}`} 
-                className="p-2 opacity-0 group-hover:opacity-100 hover:text-accent-400 text-theme-muted transition-all z-10"
-                onClick={(e) => e.stopPropagation()}
-                title="Edit Curriculum"
-              >
-                Edit
-              </Link>
               <ChevronRight className="w-4 h-4 text-theme-muted" />
             </Link>
           ))}
