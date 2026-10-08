@@ -107,8 +107,10 @@ export function LecturePlaylist({ lectureId }: { lectureId: string }) {
       setActiveItemId((current) => {
         if (current) {
           const currentOrder = activeOrderIndexRef.current;
-          const stillExists = playlistData.find((p: PlaylistItem) => p.id === current || (currentOrder !== null && p.orderIndex === currentOrder));
-          if (stillExists) return stillExists.id;
+          const exactMatch = playlistData.find((p: PlaylistItem) => p.id === current);
+          if (exactMatch) return exactMatch.id;
+          const sameOrder = currentOrder !== null ? playlistData.find((p: PlaylistItem) => p.orderIndex === currentOrder) : null;
+          if (sameOrder) return sameOrder.id;
         }
         const firstUnlocked = playlistData.find((p: PlaylistItem) => !p.isLocked && !p.isCompleted && !p.isExhausted && !p.isViewExhausted);
         return firstUnlocked?.id ?? playlistData[0]?.id ?? null;
