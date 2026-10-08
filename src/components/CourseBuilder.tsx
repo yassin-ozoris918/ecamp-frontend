@@ -458,17 +458,19 @@ export function CourseBuilder({ courseId }: { courseId: string }) {
           <div className="glass rounded-2xl p-6">
             <h2 className="text-xl font-display font-bold text-theme-text mb-4">Global Content</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div>
-                <label className="label">Introductory Video URL</label>
-                <div className="flex gap-2">
-                  <input dir="auto" className="input" placeholder="e.g. https://youtube.com/..." defaultValue={course.introductoryVideoUrl || ''} id="introVideoUrl" />
-                  <button onClick={async () => {
-                    const val = (document.getElementById('introVideoUrl') as HTMLInputElement).value;
-                    await api.post(`/courses/${course.id}/intro`, { url: val });
-                    toast.success('Saved');
-                  }} className="btn-secondary whitespace-nowrap">Save URL</button>
+              {course.type !== 'MATERIALS_ONLY' && (
+                <div>
+                  <label className="label">Introductory Video URL</label>
+                  <div className="flex gap-2">
+                    <input dir="auto" className="input" placeholder="e.g. https://youtube.com/..." defaultValue={course.introductoryVideoUrl || ''} id="introVideoUrl" />
+                    <button onClick={async () => {
+                      const val = (document.getElementById('introVideoUrl') as HTMLInputElement).value;
+                      await api.post(`/courses/${course.id}/intro`, { url: val });
+                      toast.success('Saved');
+                    }} className="btn-secondary whitespace-nowrap">Save URL</button>
+                  </div>
                 </div>
-              </div>
+              )}
               <div>
                 <label className="label">Course Attachments</label>
                 <button 
@@ -575,7 +577,7 @@ export function CourseBuilder({ courseId }: { courseId: string }) {
                         {chapter.lectures.length === 0 ? (
                           <p className="text-sm text-theme-muted text-center py-4">No lectures in this chapter yet.</p>
                         ) : (
-                            <LectureList lectures={chapter.lectures} items={items} expandedLecs={expandedLecs} toggleLec={toggleLec} load={load} setAiModalLecInfo={setAiModalLecInfo} onAddQuestion={(id: string, type: 'EXAM'|'QUIZ') => { setAddQuestionTargetId(id); setAddQuestionTargetType(type); }} onEditQuizSettings={(quiz) => setEditQuiz(quiz)} />
+                            <LectureList lectures={chapter.lectures} items={items} expandedLecs={expandedLecs} toggleLec={toggleLec} load={load} setAiModalLecInfo={setAiModalLecInfo} isMaterialsOnly={course.type === 'MATERIALS_ONLY'} onAddQuestion={(id: string, type: 'EXAM'|'QUIZ') => { setAddQuestionTargetId(id); setAddQuestionTargetType(type); }} onEditQuizSettings={(quiz) => setEditQuiz(quiz)} />
                         )}
                         
                         {/* Chapter Exams */}
@@ -679,7 +681,7 @@ export function CourseBuilder({ courseId }: { courseId: string }) {
               {unassignedLectures.length > 0 && (
                 <div className="space-y-3">
                   <h3 className="text-sm font-bold text-theme-muted tracking-wider uppercase pl-2 pt-4">Unassigned Lectures</h3>
-                  <LectureList lectures={unassignedLectures} items={items} expandedLecs={expandedLecs} toggleLec={toggleLec} load={load} setAiModalLecInfo={setAiModalLecInfo} onAddQuestion={(id: string, type: 'EXAM'|'QUIZ') => { setAddQuestionTargetId(id); setAddQuestionTargetType(type); }} onEditQuizSettings={(quiz) => setEditQuiz(quiz)} />
+                  <LectureList lectures={unassignedLectures} items={items} expandedLecs={expandedLecs} toggleLec={toggleLec} load={load} setAiModalLecInfo={setAiModalLecInfo} isMaterialsOnly={course.type === 'MATERIALS_ONLY'} onAddQuestion={(id: string, type: 'EXAM'|'QUIZ') => { setAddQuestionTargetId(id); setAddQuestionTargetType(type); }} onEditQuizSettings={(quiz) => setEditQuiz(quiz)} />
                 </div>
               )}
             </div>
@@ -807,6 +809,7 @@ export function CourseBuilder({ courseId }: { courseId: string }) {
         courseId={courseId}
         chapterId={activeChapterId}
         sortOrder={unassignedLectures.length}
+        isMaterialsOnly={course?.type === 'MATERIALS_ONLY'}
         onClose={() => { setCreateLecOpen(false); setActiveChapterId(null); }}
         onCreated={() => { setCreateLecOpen(false); setActiveChapterId(null); load(); }}
       />
@@ -1239,6 +1242,7 @@ function CreateLectureModal({
   courseId,
   chapterId,
   sortOrder,
+  isMaterialsOnly,
   onClose,
   onCreated,
 }: {
@@ -1246,6 +1250,7 @@ function CreateLectureModal({
   courseId: string;
   chapterId?: string | null;
   sortOrder: number;
+  isMaterialsOnly?: boolean;
   onClose: () => void;
   onCreated: () => void;
 }) {
@@ -1349,55 +1354,57 @@ function CreateLectureModal({
         </div>
 
         {/* ── Video Session View Limit ─────────────────────────────────── */}
-        <div className="rounded-xl border border-theme-border bg-theme-card/50 p-4 space-y-3">
-          <p className="text-sm font-semibold text-theme-text">Video Session View Limit</p>
-          <p className="text-xs text-theme-muted">
-            Each video session inside this lecture independently inherits this limit.
-            Quizzes and exams are never affected.
-          </p>
-          <div className="space-y-2">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="radio"
-                name="viewLimitMode"
-                value="unlimited"
-                checked={viewLimitMode === 'unlimited'}
-                onChange={() => setViewLimitMode('unlimited')}
-                className="accent-accent-500"
-              />
-              <span className="text-sm text-theme-text">Unlimited</span>
-            </label>
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="radio"
-                name="viewLimitMode"
-                value="limited"
-                checked={viewLimitMode === 'limited'}
-                onChange={() => setViewLimitMode('limited')}
-                className="accent-accent-500"
-              />
-              <span className="text-sm text-theme-text">Limit views</span>
-            </label>
-          </div>
-          {viewLimitMode === 'limited' && (
-            <div className="flex items-center gap-3 pl-6">
-              <label className="text-sm text-theme-muted whitespace-nowrap">Maximum views per session:</label>
-              <input
-                dir="auto"
-                type="number"
-                min="1"
-                step="1"
-                className="input w-24"
-                value={maxViewsInput}
-                onChange={(e) => setMaxViewsInput(e.target.value)}
-                placeholder="e.g. 3"
-              />
+        {!isMaterialsOnly && (
+          <div className="rounded-xl border border-theme-border bg-theme-card/50 p-4 space-y-3">
+            <p className="text-sm font-semibold text-theme-text">Video Session View Limit</p>
+            <p className="text-xs text-theme-muted">
+              Each video session inside this lecture independently inherits this limit.
+              Quizzes and exams are never affected.
+            </p>
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  name="viewLimitMode"
+                  value="unlimited"
+                  checked={viewLimitMode === 'unlimited'}
+                  onChange={() => setViewLimitMode('unlimited')}
+                  className="accent-accent-500"
+                />
+                <span className="text-sm text-theme-text">Unlimited</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  name="viewLimitMode"
+                  value="limited"
+                  checked={viewLimitMode === 'limited'}
+                  onChange={() => setViewLimitMode('limited')}
+                  className="accent-accent-500"
+                />
+                <span className="text-sm text-theme-text">Limit views</span>
+              </label>
             </div>
-          )}
-          {formError && (
-            <p className="text-xs text-error-400">{formError}</p>
-          )}
-        </div>
+            {viewLimitMode === 'limited' && (
+              <div className="flex items-center gap-3 pl-6">
+                <label className="text-sm text-theme-muted whitespace-nowrap">Maximum views per session:</label>
+                <input
+                  dir="auto"
+                  type="number"
+                  min="1"
+                  step="1"
+                  className="input w-24"
+                  value={maxViewsInput}
+                  onChange={(e) => setMaxViewsInput(e.target.value)}
+                  placeholder="e.g. 3"
+                />
+              </div>
+            )}
+            {formError && (
+              <p className="text-xs text-error-400">{formError}</p>
+            )}
+          </div>
+        )}
         {/* ─────────────────────────────────────────────────────────────── */}
 
         <div className="flex justify-end gap-2">
@@ -1618,6 +1625,7 @@ export function LectureList({ lectures, items, expandedLecs, toggleLec, load, se
   toggleLec: (id: string) => void;
   load: () => Promise<void>;
   setAiModalLecInfo: (info: { lectureId: string; title?: string; description?: string; passGrade?: number; timeLimit?: number } | null) => void;
+  isMaterialsOnly?: boolean;
   onAddQuestion: (id: string, type: 'EXAM' | 'QUIZ') => void;
   onEditQuizSettings?: (quiz: any) => void;
 }) {
@@ -1723,7 +1731,7 @@ export function LectureList({ lectures, items, expandedLecs, toggleLec, load, se
                   />
                 )}
                 <div className="flex flex-wrap gap-2 pt-2">
-                  <AddItemButton lectureId={lec.id} type="SESSION" onAdded={load} />
+                  {!isMaterialsOnly && <AddItemButton lectureId={lec.id} type="SESSION" onAdded={load} />}
                   <AddItemButton 
                     lectureId={lec.id} 
                     type="QUIZ" 

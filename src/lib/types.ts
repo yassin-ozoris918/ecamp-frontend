@@ -89,6 +89,7 @@ export interface Course {
   thumbnailUrl?: string | null;
   introductoryVideoUrl?: string | null;
   status: ContentStatus;
+  type?: 'NORMAL' | 'MATERIALS_ONLY';
   audienceType?: EducationLevel;
 
   // --- Targeting Additions ---

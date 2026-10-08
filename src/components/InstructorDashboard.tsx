@@ -75,10 +75,7 @@ export function InstructorDashboard() {
           <p className="text-sm text-theme-muted">{t('dashboard.welcomeBack')}</p>
           <h1 className="text-3xl font-display font-bold text-theme-text mt-1">{profile?.full_name}</h1>
         </div>
-        <button onClick={() => setCreateCourseOpen(true)} className="btn-primary">
-          <Plus className="w-4 h-4" />
-          New Course
-        </button>
+        
       </div>
 
       {/* KPIs */}
@@ -144,8 +141,9 @@ export function InstructorDashboard() {
             title={t('dashboard.noCoursesYet')}
             description="Create your first course to start building lectures and quizzes."
             action={
-              <button onClick={() => setCreateCourseOpen(true)} className="btn-primary">
-                <Plus className="w-4 h-4" /> Create Course
+              <button onClick={() => setCreateOpen(true)} className="btn-primary">
+                <Plus className="w-4 h-4 mr-2" />
+                Create Course
               </button>
             }
           />
@@ -154,7 +152,7 @@ export function InstructorDashboard() {
             {(Array.isArray(courses) ? courses : []).map((c) => (
               <Link
                 key={c.id}
-                to={`/instructor/course/${c.id}`}
+                to={`/instructor/courses/${c.id}`}
                 className="glass rounded-2xl p-5 hover:border-white/[0.12] transition-all hover:-translate-y-0.5 group relative"
               >
                 <div className="flex items-start justify-between mb-3">
@@ -165,19 +163,7 @@ export function InstructorDashboard() {
                     {c.validity_days && (
                       <Badge variant="default">{c.validity_days}d access</Badge>
                     )}
-                    <button onClick={async (e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      const ok = await confirm('Delete Course', 'Are you sure you want to delete this course? This action cannot be undone.');
-                      if (ok) {
-                        try {
-                          await api.delete(`/courses/${c.id}`);
-                          setCourses(prev => prev.filter(course => course.id !== c.id));
-                        } catch(err) { console.error(err); toast.error('Failed to delete course'); }
-                      }
-                    }} className="p-1 rounded-md opacity-0 group-hover:opacity-100 hover:bg-error-500/10 text-theme-muted hover:text-error-400 transition-all">
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    
                   </div>
                 </div>
                 <p className="font-display font-bold text-theme-text text-lg leading-snug">{c.title}</p>
@@ -194,7 +180,7 @@ export function InstructorDashboard() {
       <CreateCourseModal
         open={createCourseOpen}
         onClose={() => setCreateCourseOpen(false)}
-        onCreated={(id) => navigate(`/instructor/course/${id}`)}
+        onCreated={(id) => navigate(`/instructor/courses/${id}`)}
       />
       <ConfirmDialog
         open={confirmState.open}
@@ -248,6 +234,7 @@ export function CreateCourseModal({
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [audienceType, setAudienceType] = useState('HIGH_SCHOOL');
+  const [courseType, setCourseType] = useState('NORMAL');
   const [isFree, setIsFree] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -262,6 +249,7 @@ export function CreateCourseModal({
         title: title.trim(),
         description: description.trim(),
         audienceType,
+        type: courseType,
         isFree,
       });
 
@@ -292,6 +280,13 @@ export function CreateCourseModal({
           <select className="input" value={audienceType} onChange={(e) => setAudienceType(e.target.value)} required>
             <option value="HIGH_SCHOOL">High School</option>
             <option value="UNIVERSITY">University</option>
+          </select>
+        </div>
+        <div>
+          <label className="label">Course Type</label>
+          <select className="input" value={courseType} onChange={(e) => setCourseType(e.target.value)} required>
+            <option value="NORMAL">Normal Course (Videos + Materials)</option>
+            <option value="MATERIALS_ONLY">Materials Only (Files/Handouts)</option>
           </select>
         </div>
         
@@ -347,9 +342,7 @@ export function InstructorCourses() {
     <div className="space-y-6 animate-fade-up">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-display font-bold text-theme-text">Courses</h1>
-        <button onClick={() => setCreateOpen(true)} className="btn-primary">
-          <Plus className="w-4 h-4" /> New Course
-        </button>
+        
       </div>
       {loading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -360,36 +353,29 @@ export function InstructorCourses() {
           icon={<BookOpen className="w-8 h-8" />}
           title="No courses"
           description="Create your first course to get started."
-          action={<button onClick={() => setCreateOpen(true)} className="btn-primary"><Plus className="w-4 h-4" /> New Course</button>}
+          action={
+            <button onClick={() => setCreateOpen(true)} className="btn-primary">
+              <Plus className="w-4 h-4 mr-2" />
+              Create Course
+            </button>
+          }
         />
       ) : (
         <div className="glass rounded-2xl overflow-hidden divide-y divide-white/[0.04]">
           {(Array.isArray(courses) ? courses : []).map((c) => (
-            <Link key={c.id} to={`/instructor/course/${c.id}`} className="flex items-center gap-4 p-4 hover:bg-white/[0.02] transition-colors group relative">
+            <Link key={c.id} to={`/instructor/courses/${c.id}`} className="flex items-center gap-4 p-4 hover:bg-white/[0.02] transition-colors group relative">
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-theme-text truncate">{c.title}</p>
                 <p className="text-xs text-theme-muted truncate">{c.description}</p>
               </div>
               <Badge variant={c.status === 'PUBLISHED' ? 'success' : 'warning'}>{c.status}</Badge>
-              <button onClick={async (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                const ok = await confirm('Delete Course', 'Are you sure you want to delete this course? This action cannot be undone.');
-                if (ok) {
-                  try {
-                    await api.delete(`/courses/${c.id}`);
-                    setCourses(prev => prev.filter(course => course.id !== c.id));
-                  } catch(err) { console.error(err); toast.error('Failed to delete course'); }
-                }
-              }} className="p-2 opacity-0 group-hover:opacity-100 hover:text-error-400 text-theme-muted transition-all">
-                <Trash2 className="w-4 h-4" />
-              </button>
+              
               <ChevronRight className="w-4 h-4 text-theme-muted" />
             </Link>
           ))}
         </div>
       )}
-      <CreateCourseModal open={createOpen} onClose={() => setCreateOpen(false)} onCreated={(id) => navigate(`/instructor/course/${id}`)} />
+      <CreateCourseModal open={createOpen} onClose={() => setCreateOpen(false)} onCreated={(id) => navigate(`/instructor/courses/${id}`)} />
       <ConfirmDialog
         open={confirmState.open}
         title={confirmState.title}

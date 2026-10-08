@@ -44,6 +44,8 @@ const InstructorDashboard = lazyImport(() => import('./components/InstructorDash
 const InstructorCourses = lazyImport(() => import('./components/InstructorDashboard').then(m => ({ default: m.InstructorCourses })));
 const GradingQueue = lazyImport(() => import('./components/InstructorDashboard').then(m => ({ default: m.GradingQueue })));
 const CourseBuilder = lazyImport(() => import('./components/CourseBuilder').then(m => ({ default: m.CourseBuilder })));
+const InstructorCourseDetails = lazyImport(() => import('./components/InstructorCourseDetails').then(m => ({ default: m.InstructorCourseDetails })));
+const InstructorLectureDetails = lazyImport(() => import('./components/InstructorLectureDetails').then(m => ({ default: m.InstructorLectureDetails })));
 const AdminDashboard = lazyImport(() => import('./components/AdminDashboard').then(m => ({ default: m.AdminDashboard })));
 const AdminUsers = lazyImport(() => import('./components/AdminDashboard').then(m => ({ default: m.AdminUsers })));
 const AdminLectureViewers = lazyImport(() => import('./components/AdminDashboard').then(m => ({ default: m.AdminLectureViewers })));
@@ -252,7 +254,8 @@ function RoleRoutes({ role }: { role: string }) {
           { pattern: '/instructor/courses', element: () => <InstructorCourses /> },
           { pattern: '/instructor/grading', element: () => <GradingQueue /> },
           { pattern: '/instructor/quiz-review', element: () => <QuizAttemptsManager /> },
-          { pattern: '/instructor/course/:courseId', element: (p) => <CourseBuilder courseId={p.courseId} /> },
+          { pattern: '/instructor/courses/:courseId', element: (p) => <InstructorCourseDetails courseId={p.courseId} /> },
+          { pattern: '/instructor/courses/:courseId/lectures/:lectureId', element: (p) => <InstructorLectureDetails courseId={p.courseId} lectureId={p.lectureId} /> },
           { pattern: '/profile', element: () => <ProfileScreen /> },
           { pattern: '/contact', element: () => <ContactScreen /> },
           { pattern: '/instructors', element: () => <InstructorsScreen /> },
@@ -281,7 +284,8 @@ function RoleRoutes({ role }: { role: string }) {
         { pattern: '/instructor/courses', element: () => <InstructorCourses /> },
         { pattern: '/instructor/grading', element: () => <GradingQueue /> },
         { pattern: '/instructor/quiz-review', element: () => <QuizAttemptsManager /> },
-        { pattern: '/instructor/course/:courseId', element: (p) => <CourseBuilder courseId={p.courseId} /> },
+        { pattern: '/instructor/courses/:courseId', element: (p) => <InstructorCourseDetails courseId={p.courseId} /> },
+        { pattern: '/instructor/courses/:courseId/lectures/:lectureId', element: (p) => <InstructorLectureDetails courseId={p.courseId} lectureId={p.lectureId} /> },
         { pattern: '/profile', element: () => <ProfileScreen /> },
         { pattern: '/contact', element: () => <ContactScreen /> },
         { pattern: '/instructors', element: () => <InstructorsScreen /> },
