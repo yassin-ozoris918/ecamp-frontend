@@ -1618,7 +1618,7 @@ function IssueCertificateModal({
   }
 }
 
-export function LectureList({ lectures, items, expandedLecs, toggleLec, load, setAiModalLecInfo, onAddQuestion, onEditQuizSettings }: {
+export function LectureList({ lectures, items, expandedLecs, toggleLec, load, setAiModalLecInfo, onAddQuestion, onEditQuizSettings, isMaterialsOnly }: {
   lectures: BuilderLecture[];
   items: Record<string, BuilderItem[]>;
   expandedLecs: Set<string>;
