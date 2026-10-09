@@ -229,7 +229,9 @@ export function HelpCenter() {
           {t('help.supportDesc', 'If you couldn\'t find the answer to your question, our support team is here to help.')}
         </p>
         <a 
-          href="/contact" 
+          href="https://wa.me/201221822703" 
+          target="_blank"
+          rel="noopener noreferrer"
           className="mt-5 btn-primary"
         >
           {t('help.contactSupport', 'Contact Support')}
