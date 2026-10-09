@@ -27,6 +27,7 @@ import { Badge, EmptyState, Skeleton } from './ui';
 import { Modal } from './Modal';
 import { useTranslation } from 'react-i18next';
 import { useConfirm, ConfirmDialog } from '../hooks/useConfirm';
+import { COURSE_COVERS } from '../lib/covers';
 
 export function InstructorDashboard() {
   const { profile } = useAuth();
@@ -138,30 +139,45 @@ export function InstructorDashboard() {
           />
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {(Array.isArray(courses) ? courses : []).map((c) => (
+            {(Array.isArray(courses) ? courses : []).map((c) => {
+              const cover = COURSE_COVERS[c.id] ?? COURSE_COVERS.default;
+              return (
               <Link
                 key={c.id}
                 to={`/instructor/courses/${c.id}`}
-                className="glass rounded-2xl p-5 hover:border-white/[0.12] transition-all hover:-translate-y-0.5 group relative"
+                className="glass rounded-2xl overflow-hidden hover:border-white/[0.12] transition-all hover:-translate-y-0.5 group relative flex flex-col"
               >
-                <div className="flex items-start justify-between mb-3">
-                  <Badge variant={c.status === 'PUBLISHED' ? 'success' : 'warning'}>
-                    {c.status}
-                  </Badge>
-                  <div className="flex gap-2">
-                    {c.validity_days && (
-                      <Badge variant="default">{c.validity_days}d access</Badge>
-                    )}
-                    
+                <div
+                  className="h-32 relative bg-gradient-to-br bg-theme-secondary shrink-0"
+                  style={{ background: c.thumbnailUrl ? 'none' : cover.gradient }}
+                >
+                  {c.thumbnailUrl && (
+                    <img src={c.thumbnailUrl} alt={c.title} className="w-full h-full object-cover absolute inset-0" />
+                  )}
+                  <div className="absolute inset-0 bg-theme-bg/20" />
+                  <div className="absolute top-2 right-2 flex flex-col gap-2 items-end">
+                    <Badge variant={c.status === 'PUBLISHED' ? 'success' : 'warning'} className="bg-black/60 backdrop-blur-md border-theme-border">
+                      {c.status}
+                    </Badge>
+                  </div>
+                  {c.validity_days && (
+                    <div className="absolute top-2 left-2">
+                      <Badge variant="default" className="bg-black/60 backdrop-blur-md border-theme-border">
+                        {c.validity_days}d access
+                      </Badge>
+                    </div>
+                  )}
+                </div>
+                
+                <div className="p-5 flex-1 flex flex-col">
+                  <p className="font-display font-bold text-theme-text text-lg leading-snug group-hover:text-accent-200 transition-colors">{c.title}</p>
+                  <p className="text-sm text-theme-muted mt-1 line-clamp-2">{c.description}</p>
+                  <div className="mt-auto pt-4 flex items-center gap-2 text-sm text-accent-700 dark:text-accent-300">
+                    View Details <ChevronRight className="w-4 h-4" />
                   </div>
                 </div>
-                <p className="font-display font-bold text-theme-text text-lg leading-snug">{c.title}</p>
-                <p className="text-sm text-theme-muted mt-1 line-clamp-2">{c.description}</p>
-                <div className="mt-4 flex items-center gap-2 text-sm text-accent-700 dark:text-accent-300">
-                  View Details <ChevronRight className="w-4 h-4" />
-                </div>
               </Link>
-            ))}
+            )})}
           </div>
         )}
       </div>
@@ -338,8 +354,18 @@ export function InstructorCourses() {
         />
       ) : (
         <div className="glass rounded-2xl overflow-hidden divide-y divide-white/[0.04]">
-          {(Array.isArray(courses) ? courses : []).map((c) => (
+          {(Array.isArray(courses) ? courses : []).map((c) => {
+            const cover = COURSE_COVERS[c.id] ?? COURSE_COVERS.default;
+            return (
             <Link key={c.id} to={`/instructor/courses/${c.id}`} className="flex items-center gap-4 p-4 hover:bg-white/[0.02] transition-colors group relative">
+              <div
+                className="w-12 h-12 rounded-lg bg-theme-secondary shrink-0 relative overflow-hidden"
+                style={{ background: c.thumbnailUrl ? 'none' : cover.gradient }}
+              >
+                {c.thumbnailUrl && (
+                  <img src={c.thumbnailUrl} alt={c.title} className="w-full h-full object-cover absolute inset-0" />
+                )}
+              </div>
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-theme-text truncate">{c.title}</p>
                 <p className="text-xs text-theme-muted truncate">{c.description}</p>
@@ -347,7 +373,7 @@ export function InstructorCourses() {
               <Badge variant={c.status === 'PUBLISHED' ? 'success' : 'warning'}>{c.status}</Badge>
               <ChevronRight className="w-4 h-4 text-theme-muted" />
             </Link>
-          ))}
+          )})}
         </div>
       )}
       <ConfirmDialog
