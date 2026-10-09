@@ -102,7 +102,7 @@ export function InstructorCourseDetails({ courseId }: { courseId: string }) {
                     { label: 'Completed (100%)', count: analytics.progressDistribution?.['100'] || 0, color: 'bg-emerald-400' },
                     { label: 'Almost There (51-99%)', count: analytics.progressDistribution?.['51-99'] || 0, color: 'bg-accent-400' },
                     { label: 'Learning (1-50%)', count: analytics.progressDistribution?.['1-50'] || 0, color: 'bg-secondary-400' },
-                    { label: 'Just Enrolled (0%)', count: analytics.progressDistribution?.['0'] || 0, color: 'bg-white/20' }
+                    { label: '0% Completed', count: analytics.progressDistribution?.['0'] || 0, color: 'bg-white/20' }
                   ].map((p, i) => (
                     <div key={i}>
                       <div className="flex justify-between text-sm mb-1">
