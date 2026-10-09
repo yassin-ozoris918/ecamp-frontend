@@ -26,6 +26,7 @@ import {
   Download,
   Settings,
   Printer,
+  HelpCircle,
 } from 'lucide-react';
 import { api } from '../lib/api';
 import type { Profile, UserListItem, ActivationCode, Course, CourseInstructor } from '../lib/types';
@@ -253,6 +254,14 @@ export function AdminDashboard() {
           to="#/admin/codes"
           color="text-gold-700 dark:text-gold-300"
           bg="bg-gold-500/10"
+        />
+        <QuickActionCard
+          icon={<HelpCircle className="w-5 h-5" />}
+          title="Help Center"
+          description="Manage tutorial videos and support guides."
+          to="#/admin/help-center"
+          color="text-blue-700 dark:text-blue-300"
+          bg="bg-blue-500/10"
         />
         <QuickActionCard
           icon={<Shield className="w-5 h-5" />}

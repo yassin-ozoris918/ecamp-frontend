@@ -18,12 +18,13 @@ import { useTranslation } from 'react-i18next';
 
 import { COURSE_COVERS } from '../lib/covers';
 import { FilesTab } from './FilesTab';
+import { HelpCenter } from './HelpCenter';
 
 export function StudentDashboard() {
   const { profile } = useAuth();
   const [courses, setCourses] = useState<CourseProgressItem[]>([]);
   const [catalogCourses, setCatalogCourses] = useState<Course[]>([]);
-  const [activeTab, setActiveTab] = useState<'my-courses' | 'catalog' | 'files'>('my-courses');
+  const [activeTab, setActiveTab] = useState<'my-courses' | 'catalog' | 'files' | 'help'>('my-courses');
   const [stats, setStats] = useState<{ xp: number; streakDays: number; rank: number | null } | null>(null);
   const [loading, setLoading] = useState(true);
   const { t } = useTranslation();
@@ -126,6 +127,13 @@ export function StudentDashboard() {
               {t('nav.files', 'Files')}
               {activeTab === 'files' && <div className="absolute -bottom-[9px] left-0 right-0 h-[2px] bg-accent-400 rounded-t" />}
             </button>
+            <button
+              onClick={() => setActiveTab('help')}
+              className={`text-lg font-display font-bold pb-2 transition-colors relative ${activeTab === 'help' ? 'text-theme-text' : 'text-theme-muted hover:text-theme-muted'}`}
+            >
+              {t('nav.help', 'Help & Guides')}
+              {activeTab === 'help' && <div className="absolute -bottom-[9px] left-0 right-0 h-[2px] bg-accent-400 rounded-t" />}
+            </button>
           </div>
           {courses.length > 0 && activeTab === 'my-courses' && (
             <Link to="/leaderboard" className="text-sm text-accent-700 dark:text-accent-300 hover:text-accent-200">
@@ -140,6 +148,8 @@ export function StudentDashboard() {
               <Skeleton key={i} className="h-56" />
             ))}
           </div>
+        ) : activeTab === 'help' ? (
+          <HelpCenter />
         ) : activeTab === 'my-courses' ? (
           (!Array.isArray(courses) || courses.length === 0) ? (
             <EmptyState

@@ -59,6 +59,7 @@ const Student360Workspace = lazyImport(() => import('./components/Student360Work
 const SystemAuditViewer = lazyImport(() => import('./components/SystemAuditViewer').then(m => ({ default: m.SystemAuditViewer })));
 const QuizAttemptsManager = lazyImport(() => import('./components/QuizAttemptsManager').then(m => ({ default: m.QuizAttemptsManager })));
 const DeviceLogsViewer = lazyImport(() => import('./components/DeviceLogsViewer').then(m => ({ default: m.DeviceLogsViewer })));
+const AdminHelpCenterManager = lazyImport(() => import('./components/AdminHelpCenterManager').then(m => ({ default: m.AdminHelpCenterManager })));
 
 
 import { ThemeProvider } from './lib/ThemeProvider';
@@ -280,6 +281,7 @@ function RoleRoutes({ role }: { role: string }) {
         { pattern: '/admin/pending-users', element: () => <AdminPendingUsers /> },
         { pattern: '/admin/quiz-review', element: () => <QuizAttemptsManager /> },
         { pattern: '/admin/device-logs', element: () => <DeviceLogsViewer /> },
+        { pattern: '/admin/help-center', element: () => <AdminHelpCenterManager /> },
         { pattern: '/instructor', element: () => <InstructorDashboard /> },
         { pattern: '/instructor/courses', element: () => <InstructorCourses /> },
         { pattern: '/instructor/grading', element: () => <GradingQueue /> },

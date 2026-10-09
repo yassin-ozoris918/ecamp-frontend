@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { GraduationCap, AlertCircle, Eye, EyeOff } from 'lucide-react';
+import { GraduationCap, AlertCircle, Eye, EyeOff, Video } from 'lucide-react';
 import { api } from '../lib/api';
 import { useAuth } from '../lib/authContext';
 import { generateDeviceFingerprint, isInAppBrowser } from '../lib/device';
@@ -451,8 +451,21 @@ export function AuthScreen() {
                     </div>
                   </div>
 
-                  <h2 className="text-2xl font-display font-bold text-theme-text mb-1">{t('auth.joinEcamp')}</h2>
-                  <p className="text-sm text-theme-muted mb-5">{t('auth.joinEcampDesc')}</p>
+                  <div className="flex justify-between items-start mb-5">
+                    <div>
+                      <h2 className="text-2xl font-display font-bold text-theme-text mb-1">{t('auth.joinEcamp')}</h2>
+                      <p className="text-sm text-theme-muted">{t('auth.joinEcampDesc')}</p>
+                    </div>
+                    <a
+                      href={import.meta.env.VITE_REGISTRATION_HELP_URL || 'https://www.facebook.com/'}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-500/10 text-blue-600 dark:text-blue-400 hover:bg-blue-500/20 rounded-lg text-sm font-medium transition-colors"
+                    >
+                      <Video className="w-4 h-4" />
+                      {t('auth.needHelpRegistering', 'Need help registering?')}
+                    </a>
+                  </div>
 
                   {errMsg === 'auth.errors.unrecognizedDevice' || errMsg?.includes('Unrecognized Device') ? (
                     <div className="mb-5 rounded-xl border border-warning-500/30 bg-warning-500/10 p-5 text-center">
