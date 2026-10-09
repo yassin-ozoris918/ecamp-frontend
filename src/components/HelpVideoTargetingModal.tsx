@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import toast from 'react-hot-toast';
 import { Modal } from './Modal';
 import { AcademicDropdowns } from './AcademicDropdowns';
 import { api } from '../lib/api';
@@ -113,7 +114,11 @@ export function HelpVideoTargetingModal({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tutorials'] });
+      toast.success('Targeting updated successfully');
       onClose();
+    },
+    onError: (err: any) => {
+      toast.error(err.response?.data?.message || 'Failed to update targeting');
     }
   });
 
