@@ -34,6 +34,8 @@ export function InstructorDashboard() {
   const { navigate } = useRouter();
   const [courses, setCourses] = useState<Course[]>([]);
   const [studentCount, setStudentCount] = useState(0);
+  const [platformHs, setPlatformHs] = useState(0);
+  const [platformUni, setPlatformUni] = useState(0);
   const [pendingGrading, setPendingGrading] = useState(0);
   const [codesGenerated, setCodesGenerated] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -46,13 +48,16 @@ export function InstructorDashboard() {
     setLoading(true);
 
     try {
-      const [coursesRes] = await Promise.all([
+      const [coursesRes, statsRes] = await Promise.all([
         api.get('/instructor/courses').catch(() => ({ data: [] })),
+        api.get('/instructor/dashboard/stats').catch(() => ({ data: { myTotalStudents: 0, totalHighSchoolStudents: 0, totalUniversityStudents: 0 } }))
       ]);
 
       const fetched = coursesRes.data?.items || coursesRes.data || [];
       setCourses(Array.isArray(fetched) ? fetched : []);
-      setStudentCount(0);
+      setStudentCount(statsRes.data?.myTotalStudents || 0);
+      setPlatformHs(statsRes.data?.totalHighSchoolStudents || 0);
+      setPlatformUni(statsRes.data?.totalUniversityStudents || 0);
       setPendingGrading(0);
       setCodesGenerated(0);
     } catch (e) {
@@ -79,7 +84,10 @@ export function InstructorDashboard() {
 
       {/* KPIs */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <KpiCard icon={<BookOpen className="w-5 h-5" />} label="Courses" value={courses.length} color="text-accent-700 dark:text-accent-300" bg="bg-accent-500/10" loading={loading} />
+        <KpiCard icon={<BookOpen className="w-5 h-5" />} label="Total Courses" value={courses.length} color="text-accent-700 dark:text-accent-300" bg="bg-accent-500/10" loading={loading} />
+        <KpiCard icon={<Users className="w-5 h-5" />} label="My Enrolled Students" value={studentCount} color="text-secondary-700 dark:text-secondary-300" bg="bg-secondary-500/10" loading={loading} />
+        <KpiCard icon={<Users className="w-5 h-5" />} label="Platform (High School)" value={platformHs} color="text-emerald-700 dark:text-emerald-300" bg="bg-emerald-500/10" loading={loading} />
+        <KpiCard icon={<Users className="w-5 h-5" />} label="Platform (University)" value={platformUni} color="text-blue-700 dark:text-blue-300" bg="bg-blue-500/10" loading={loading} />
       </div>
 
       {/* Pending grading alert */}

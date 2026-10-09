@@ -1267,13 +1267,6 @@ function CreateLectureModal({
   const [busy, setBusy] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
-  function validateMaxViews(): number | null {
-    if (viewLimitMode === 'unlimited') return null;
-    const parsed = parseInt(maxViewsInput, 10);
-    if (!maxViewsInput || isNaN(parsed) || parsed < 1 || String(parsed) !== maxViewsInput) return undefined as any;
-    return parsed;
-  }
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setFormError(null);
