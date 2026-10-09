@@ -58,6 +58,7 @@ export function InstructorCourseDetails({ courseId }: { courseId: string }) {
       </div>
 
       {tab === 'OVERVIEW' && analytics && (
+        <>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="glass p-5 rounded-xl text-center flex flex-col justify-center">
             <Users className="w-6 h-6 mx-auto mb-2 text-secondary-400" />
@@ -194,6 +195,7 @@ export function InstructorCourseDetails({ courseId }: { courseId: string }) {
             </div>
           </div>
         </div>
+        </>
       )}
 
       {tab === 'STUDENTS' && (
