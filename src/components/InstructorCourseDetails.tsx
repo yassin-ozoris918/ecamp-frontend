@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api } from '../lib/api';
 import { Link } from '../lib/router';
-import { Users, PlayCircle, BarChart2, Layout, User } from 'lucide-react';
+import { Users, PlayCircle, BarChart2, Layout, User, Settings, GraduationCap, Clock, MessageSquare, TrendingUp, Trophy } from 'lucide-react';
 import { Badge, Skeleton, EmptyState } from './ui';
 
 export function InstructorCourseDetails({ courseId }: { courseId: string }) {
@@ -88,6 +88,110 @@ export function InstructorCourseDetails({ courseId }: { courseId: string }) {
             <BarChart2 className="w-6 h-6 mx-auto mb-2 text-emerald-400" />
             <p className="text-3xl font-bold">{analytics.courseCompletionEstimate.toFixed(1)}%</p>
             <p className="text-sm text-theme-muted">Engagement Rate</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+          <div className="lg:col-span-2 space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="glass p-6 rounded-xl">
+                <h3 className="text-lg font-bold mb-4 flex items-center gap-2"><Trophy className="w-5 h-5 text-accent-400" /> Progress Distribution</h3>
+                <div className="space-y-4">
+                  {[
+                    { label: 'Completed (100%)', count: analytics.progressDistribution?.['100'] || 0, color: 'bg-emerald-400' },
+                    { label: 'Almost There (51-99%)', count: analytics.progressDistribution?.['51-99'] || 0, color: 'bg-accent-400' },
+                    { label: 'Learning (1-50%)', count: analytics.progressDistribution?.['1-50'] || 0, color: 'bg-secondary-400' },
+                    { label: 'Just Enrolled (0%)', count: analytics.progressDistribution?.['0'] || 0, color: 'bg-white/20' }
+                  ].map((p, i) => (
+                    <div key={i}>
+                      <div className="flex justify-between text-sm mb-1">
+                        <span className="text-theme-muted">{p.label}</span>
+                        <span className="font-bold">{p.count} students</span>
+                      </div>
+                      <div className="h-2 bg-white/5 rounded-full overflow-hidden">
+                        <div className={`h-full ${p.color}`} style={{ width: `${analytics.enrolledStudents > 0 ? (p.count / analytics.enrolledStudents) * 100 : 0}%` }} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="glass p-6 rounded-xl flex flex-col">
+                <h3 className="text-lg font-bold mb-4 flex items-center gap-2"><TrendingUp className="w-5 h-5 text-emerald-400" /> Enrollments (7 Days)</h3>
+                <div className="flex-1 flex items-end gap-2 justify-between mt-4">
+                  {analytics.enrollmentsTimeline?.map((t: any, i: number) => {
+                    const maxCount = Math.max(...analytics.enrollmentsTimeline.map((x: any) => x.count), 1);
+                    const height = `${(t.count / maxCount) * 100}%`;
+                    const dateObj = new Date(t.date);
+                    const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'short' });
+                    return (
+                      <div key={i} className="flex flex-col items-center gap-2 flex-1 group">
+                        <div className="relative w-full h-32 bg-white/5 rounded-t-sm overflow-hidden">
+                          <div className="absolute bottom-0 w-full bg-accent-500/80 group-hover:bg-accent-400 transition-all rounded-t-sm" style={{ height }} />
+                        </div>
+                        <span className="text-xs text-theme-muted">{dayName}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            <div className="glass p-6 rounded-xl">
+              <h3 className="text-lg font-bold mb-4 flex items-center gap-2"><PlayCircle className="w-5 h-5 text-secondary-400" /> Most Popular Lectures</h3>
+              <div className="space-y-3">
+                {analytics.topLectures?.length === 0 ? <p className="text-theme-muted text-sm">No lecture data yet.</p> : 
+                  analytics.topLectures?.map((l: any, i: number) => (
+                    <div key={l.id} className="flex items-center justify-between p-3 rounded-lg bg-white/[0.02] border border-white/[0.05]">
+                      <div className="flex items-center gap-3">
+                        <span className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-xs font-bold">{i + 1}</span>
+                        <p className="font-semibold">{l.title}</p>
+                      </div>
+                      <Badge variant="default" className="text-xs">{l.watches} views</Badge>
+                    </div>
+                  ))
+                }
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-6">
+            <div className="glass p-6 rounded-xl">
+              <h3 className="text-lg font-bold mb-4">Quick Actions</h3>
+              <div className="grid grid-cols-1 gap-2">
+                <Link to={`/instructor/course/${courseId}`} className="flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 transition-colors border border-transparent hover:border-white/10 group">
+                  <div className="w-10 h-10 rounded-lg bg-accent-500/20 text-accent-400 flex items-center justify-center group-hover:bg-accent-500 group-hover:text-white transition-colors"><Settings className="w-5 h-5" /></div>
+                  <div className="text-left"><p className="font-bold text-sm">Course Builder</p><p className="text-xs text-theme-muted">Edit content & settings</p></div>
+                </Link>
+                <button onClick={() => setTab('STUDENTS')} className="flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 transition-colors border border-transparent hover:border-white/10 group w-full text-left">
+                  <div className="w-10 h-10 rounded-lg bg-secondary-500/20 text-secondary-400 flex items-center justify-center group-hover:bg-secondary-500 group-hover:text-white transition-colors"><Users className="w-5 h-5" /></div>
+                  <div className="text-left"><p className="font-bold text-sm">Manage Students</p><p className="text-xs text-theme-muted">View student list</p></div>
+                </button>
+                <Link to={`/instructor/grading`} className="flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 transition-colors border border-transparent hover:border-white/10 group">
+                  <div className="w-10 h-10 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center group-hover:bg-emerald-500 group-hover:text-white transition-colors"><GraduationCap className="w-5 h-5" /></div>
+                  <div className="text-left"><p className="font-bold text-sm">Grading Queue</p><p className="text-xs text-theme-muted">Review assignments</p></div>
+                </Link>
+              </div>
+            </div>
+
+            <div className="glass p-6 rounded-xl">
+              <h3 className="text-lg font-bold mb-4 flex items-center gap-2"><Clock className="w-5 h-5 text-theme-muted" /> Live Feed</h3>
+              <div className="space-y-4">
+                {analytics.recentActivity?.length === 0 ? <p className="text-theme-muted text-sm">No recent activity.</p> :
+                  analytics.recentActivity?.map((act: any, i: number) => (
+                    <div key={i} className="flex gap-3 items-start">
+                      <div className={`mt-1 w-2 h-2 rounded-full shadow-[0_0_8px_rgba(255,255,255,0.5)] ${act.type === 'ENROLLMENT' ? 'bg-secondary-400' : 'bg-accent-400'}`} />
+                      <div>
+                        <p className="text-sm">
+                          <span className="font-bold">{act.studentName}</span> {act.type === 'ENROLLMENT' ? 'enrolled in the course' : `started watching "${act.lectureTitle}"`}
+                        </p>
+                        <p className="text-xs text-theme-muted mt-0.5">{new Date(act.date).toLocaleString()}</p>
+                      </div>
+                    </div>
+                  ))
+                }
+              </div>
+            </div>
           </div>
         </div>
       )}
