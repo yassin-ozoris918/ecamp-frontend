@@ -14,7 +14,8 @@
     "certificates": "Certificates",
     "auditLogs": "Audit Logs",
     "reports": "Reports",
-    "files": "Files"
+    "files": "Files",
+    "help": "Help & Guides"
   },
   "files": {
     "title": "Files",
@@ -545,5 +546,16 @@
     "maxViewsLabel": "Maximum views per session",
     "viewLimitSection": "Video Session View Limit",
     "viewLimitHint": "Each video session inside this lecture independently inherits this limit. Quizzes and exams are never affected."
+  },
+  "help": {
+    "noTutorials": "No tutorials available",
+    "noTutorialsDesc": "Check back later for guides and help videos.",
+    "externalVideo": "External Video",
+    "watchExternal": "This video is hosted externally.",
+    "openVideo": "Open Video",
+    "videoUnavailable": "Video unavailable",
+    "stillNeedHelp": "Still Need Help?",
+    "supportDesc": "If you couldn't find the answer to your question, our support team is here to help.",
+    "contactSupport": "Contact Support"
   }
 }
