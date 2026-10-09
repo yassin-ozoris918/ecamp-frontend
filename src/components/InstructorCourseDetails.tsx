@@ -59,10 +59,20 @@ export function InstructorCourseDetails({ courseId }: { courseId: string }) {
 
       {tab === 'OVERVIEW' && analytics && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="glass p-5 rounded-xl text-center">
+          <div className="glass p-5 rounded-xl text-center flex flex-col justify-center">
             <Users className="w-6 h-6 mx-auto mb-2 text-secondary-400" />
             <p className="text-3xl font-bold">{analytics.enrolledStudents}</p>
-            <p className="text-sm text-theme-muted">Enrolled Students</p>
+            <p className="text-sm text-theme-muted font-bold mb-2">Total Enrolled</p>
+            <div className="grid grid-cols-2 gap-2 mt-auto pt-2 border-t border-white/5">
+              <div>
+                <p className="text-xs text-theme-muted">Full Course</p>
+                <p className="text-sm font-semibold">{analytics.fullCourseEnrolled}</p>
+              </div>
+              <div>
+                <p className="text-xs text-theme-muted">Lectures Only</p>
+                <p className="text-sm font-semibold">{analytics.lectureOnlyEnrolled}</p>
+              </div>
+            </div>
           </div>
           <div className="glass p-5 rounded-xl text-center">
             <PlayCircle className="w-6 h-6 mx-auto mb-2 text-accent-400" />
