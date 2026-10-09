@@ -67,12 +67,12 @@ export function AddQuestionModal({ isOpen, onClose, targetId, type }: AddQuestio
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm">
-      <div className="w-full max-w-lg rounded-2xl border border-neutral-800 bg-neutral-900 p-6 text-theme-text shadow-2xl">
-        <h3 className="text-lg font-bold border-b border-neutral-800 pb-2">{t('quizBuilder.addManualQuestion')} ({type})</h3>
+      <div className="w-full max-w-lg rounded-2xl border border-theme-border bg-theme-card p-6 text-theme-text shadow-2xl">
+        <h3 className="text-lg font-bold border-b border-theme-border pb-2">{t('quizBuilder.addManualQuestion')} ({type})</h3>
         <form onSubmit={handleSubmit} className="mt-4 space-y-4">
           <div>
             <label className="block text-xs text-theme-muted mb-1">{t('quizBuilder.questionText')}</label>
-            <input dir="auto" type="text" value={text} onChange={(e) => setText(e.target.value)} className="w-full rounded-xl border border-neutral-800 bg-neutral-950 p-3 text-sm outline-none focus:border-cyan-500" placeholder={t('quizBuilder.typeQuestionHere')} />
+            <input dir="auto" type="text" value={text} onChange={(e) => setText(e.target.value)} className="w-full rounded-xl border border-theme-border bg-theme-secondary p-3 text-sm outline-none focus:border-cyan-500" placeholder={t('quizBuilder.typeQuestionHere')} />
           </div>
 
           <div className="space-y-2">
@@ -80,7 +80,7 @@ export function AddQuestionModal({ isOpen, onClose, targetId, type }: AddQuestio
             {options.map((opt, idx) => (
               <div key={idx} className="flex items-center gap-2">
                 <input type="radio" checked={correctIndex === idx} onChange={() => setCorrectIndex(idx)} className="accent-cyan-500" />
-                <input dir="auto" type="text" value={opt} onChange={(e) => handleOptionChange(idx, e.target.value)} className="flex-1 rounded-lg border border-neutral-800 bg-neutral-950 p-2 text-xs outline-none" placeholder={`${t('quizBuilder.option')} ${idx + 1}`} />
+                <input dir="auto" type="text" value={opt} onChange={(e) => handleOptionChange(idx, e.target.value)} className="flex-1 rounded-lg border border-theme-border bg-theme-secondary p-2 text-xs outline-none" placeholder={`${t('quizBuilder.option')} ${idx + 1}`} />
                 {options.length > 2 && (
                   <button type="button" onClick={() => removeOptionRow(idx)} className="text-xs text-theme-muted hover:text-red-400">&times;</button>
                 )}
@@ -101,11 +101,11 @@ export function AddQuestionModal({ isOpen, onClose, targetId, type }: AddQuestio
                 setPoints(safe);
                 setPointsRaw(String(safe));
               }}
-              className="w-40 rounded-xl border border-neutral-800 bg-neutral-950 p-3 text-sm outline-none"
+              className="w-40 rounded-xl border border-theme-border bg-theme-secondary p-3 text-sm outline-none"
             />
           </div>
 
-          <div className="flex justify-end gap-2 border-t border-neutral-800 pt-3">
+          <div className="flex justify-end gap-2 border-t border-theme-border pt-3">
             <button type="button" onClick={onClose} className="px-3 py-2 text-xs text-theme-muted">{t('common.cancel')}</button>
             <button type="submit" className="rounded-lg bg-cyan-500 px-4 py-2 text-xs font-bold text-black hover:bg-cyan-400">{t('quizBuilder.saveQuestion')}</button>
           </div>

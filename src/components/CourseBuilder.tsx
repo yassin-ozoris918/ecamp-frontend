@@ -103,8 +103,8 @@ export function CourseSettingsPanel({ courseId }: { courseId: string }) {
   });
 
   return (
-    <div className="rounded-2xl border border-neutral-800 bg-neutral-900 p-6 text-theme-text space-y-6">
-      <div className="flex items-center justify-between border-b border-neutral-800 pb-4">
+    <div className="rounded-2xl border border-theme-border bg-theme-card p-6 text-theme-text space-y-6">
+      <div className="flex items-center justify-between border-b border-theme-border pb-4">
         <div className="flex items-center gap-2">
           <GraduationCap className="h-5 w-5 text-cyan-400" />
           <div>
@@ -115,7 +115,7 @@ export function CourseSettingsPanel({ courseId }: { courseId: string }) {
         <div className="flex items-center gap-3">
           <button
             onClick={() => setTargetingModalOpen(true)}
-            className="btn-ghost py-1 px-3 text-xs border border-neutral-700 hover:bg-neutral-800"
+            className="btn-ghost py-1 px-3 text-xs border border-theme-border hover:bg-theme-secondary"
           >
             Edit Targeting
           </button>
@@ -123,7 +123,7 @@ export function CourseSettingsPanel({ courseId }: { courseId: string }) {
       </div>
 
       {courseDetails && (
-        <div className="mt-4 rounded-xl bg-neutral-800/30 p-4 border border-neutral-800 text-sm">
+        <div className="mt-4 rounded-xl bg-theme-secondary/30 p-4 border border-theme-border text-sm">
           {courseDetails.audienceType === 'HIGH_SCHOOL' ? (
             <div className="grid grid-cols-2 gap-y-3">
               <div className="col-span-2 font-bold text-cyan-400 mb-1">Education Level: High School</div>
@@ -158,7 +158,7 @@ export function CourseSettingsPanel({ courseId }: { courseId: string }) {
         />
       )}
 
-      <div className="flex items-center justify-between border-b border-neutral-800 pb-4">
+      <div className="flex items-center justify-between border-b border-theme-border pb-4">
         <div className="flex items-center gap-2">
           <Sparkles className="h-5 w-5 text-emerald-400" />
           <div>
@@ -175,7 +175,7 @@ export function CourseSettingsPanel({ courseId }: { courseId: string }) {
           <button
             onClick={() => toggleFreeMutation.mutate(!courseDetails?.isFree)}
             disabled={toggleFreeMutation.isPending}
-            className={`btn-ghost py-1 px-3 text-xs border ${courseDetails?.isFree ? 'border-emerald-500/30 hover:bg-emerald-500/10' : 'border-neutral-700 hover:bg-neutral-800'}`}
+            className={`btn-ghost py-1 px-3 text-xs border ${courseDetails?.isFree ? 'border-emerald-500/30 hover:bg-emerald-500/10' : 'border-theme-border hover:bg-theme-secondary'}`}
           >
             {courseDetails?.isFree ? 'Make Paid' : 'Make Free'}
           </button>
@@ -194,7 +194,7 @@ export function CourseSettingsPanel({ courseId }: { courseId: string }) {
 
         <div className="space-y-2">
           {courseDetails?.instructors?.map((item: CourseInstructor) => (
-            <div key={item.instructor.id} className="flex items-center justify-between rounded-xl bg-neutral-950 p-3 text-xs border border-neutral-800">
+            <div key={item.instructor.id} className="flex items-center justify-between rounded-xl bg-theme-secondary p-3 text-xs border border-theme-border">
               <div className="flex flex-col">
                 <span className="font-semibold text-theme-muted">{item.instructor.email}</span>
                 <span className="text-[10px] text-theme-muted font-mono">ID: {item.instructor.id.slice(0,8)}...</span>
@@ -211,8 +211,8 @@ export function CourseSettingsPanel({ courseId }: { courseId: string }) {
           ))}
         </div>
 
-        <form onSubmit={(e) => { e.preventDefault(); if(selectedInstructorId) assignMutation.mutate(selectedInstructorId); }} className="flex gap-2 pt-2 border-t border-neutral-800/60">
-          <select value={selectedInstructorId} onChange={(e) => setSelectedInstructorId(e.target.value)} className="flex-1 rounded-xl border border-neutral-800 bg-neutral-950 p-3 text-xs outline-none text-theme-muted focus:border-cyan-500">
+        <form onSubmit={(e) => { e.preventDefault(); if(selectedInstructorId) assignMutation.mutate(selectedInstructorId); }} className="flex gap-2 pt-2 border-t border-theme-border/60">
+          <select value={selectedInstructorId} onChange={(e) => setSelectedInstructorId(e.target.value)} className="flex-1 rounded-xl border border-theme-border bg-theme-secondary p-3 text-xs outline-none text-theme-muted focus:border-cyan-500">
             <option value="">Select Instructor to Add...</option>
             {globalInstructors.map((ins: UserListItem) => (
               <option key={ins.id} value={ins.id}>{ins.fullName} ({ins.email})</option>
@@ -405,7 +405,7 @@ export function CourseBuilder({ courseId }: { courseId: string }) {
                   <div className="group relative">
                     <h1 className="text-2xl sm:text-3xl font-display font-bold text-theme-text mt-2 flex items-center gap-2">
                       {course.title}
-                      <button onClick={() => { setEditTitle(course.title); setEditDesc(course.description || ''); setIsEditingTitle(true); }} className="opacity-0 group-hover:opacity-100 p-1 text-theme-muted hover:text-white transition">
+                      <button onClick={() => { setEditTitle(course.title); setEditDesc(course.description || ''); setIsEditingTitle(true); }} className="opacity-0 group-hover:opacity-100 p-1 text-theme-muted hover:text-theme-text transition">
                         <Pencil className="w-4 h-4" />
                       </button>
                     </h1>
@@ -1175,23 +1175,23 @@ function AddItemModal({
                           : uploadStatus === 'processing' ? '⚙ Processing on server…'
                           : `⬆ Uploading…`}
                       </span>
-                      <span className="text-xs text-neutral-400 font-mono">
+                      <span className="text-xs text-theme-muted font-mono">
                         {uploadProgress}%
                       </span>
                     </div>
                   </div>
                 )}
                 {!uploading && uploadProgress === 0 && (
-                  <span className="text-xs text-neutral-400">Ready to upload</span>
+                  <span className="text-xs text-theme-muted">Ready to upload</span>
                 )}
               </div>
             ) : (
               <label className="flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-white/[0.08] p-6 cursor-pointer hover:border-accent-500/40 transition-colors">
-                <Upload className="w-6 h-6 text-neutral-400" />
-                <span className="text-sm text-neutral-400">
+                <Upload className="w-6 h-6 text-theme-muted" />
+                <span className="text-sm text-theme-muted">
                   Click to select video
                 </span>
-                <span className="text-xs text-neutral-500">MP4, MOV, MKV, WebM</span>
+                <span className="text-xs text-theme-muted">MP4, MOV, MKV, WebM</span>
                 <input type="file" accept="video/mp4,video/webm,video/quicktime,video/x-matroska" className="hidden" onChange={handleUpload} />
               </label>
             )}

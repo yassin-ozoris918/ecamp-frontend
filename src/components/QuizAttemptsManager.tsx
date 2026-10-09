@@ -193,7 +193,7 @@ function AttemptsTable({
           {search && (
             <button
               onClick={() => setSearch('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-theme-muted hover:text-white"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-theme-muted hover:text-theme-text"
             >
               <X className="w-3 h-3" />
             </button>
@@ -208,7 +208,7 @@ function AttemptsTable({
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
                 statusFilter === s
                   ? 'bg-accent-500 text-white'
-                  : 'bg-theme-card border border-theme-border text-theme-muted hover:text-white'
+                  : 'bg-theme-card border border-theme-border text-theme-muted hover:text-theme-text'
               }`}
             >
               {s}

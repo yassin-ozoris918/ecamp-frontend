@@ -74,8 +74,8 @@ export function LectureFilesSection({ lectureId }: LectureFilesSectionProps) {
   };
 
   return (
-    <div className="mt-4 rounded-xl border border-neutral-800 bg-neutral-950 p-4 text-theme-text">
-      <div className="flex items-center gap-2 border-b border-neutral-800 pb-2 mb-3">
+    <div className="mt-4 rounded-xl border border-theme-border bg-theme-secondary p-4 text-theme-text">
+      <div className="flex items-center gap-2 border-b border-theme-border pb-2 mb-3">
         <Paperclip className="h-4 w-4 text-cyan-400" />
         <h4 className="text-sm font-bold uppercase tracking-wider text-theme-muted">Lecture Attachments</h4>
       </div>
@@ -88,9 +88,9 @@ export function LectureFilesSection({ lectureId }: LectureFilesSectionProps) {
             <p className="text-xs text-theme-muted italic">No resources attached to this lecture yet.</p>
           ) : (
             files.map((file: { id: string; title: string; type?: string }) => (
-              <div key={file.id} className="flex items-center justify-between rounded-lg bg-neutral-900 p-2 text-xs border border-neutral-800/50">
+              <div key={file.id} className="flex items-center justify-between rounded-lg bg-theme-card p-2 text-xs border border-theme-border/50">
                 <div className="flex items-center gap-2 overflow-hidden">
-                  <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-neutral-800 text-cyan-400 border border-neutral-700">
+                  <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-theme-secondary text-cyan-400 border border-theme-border">
                     {file.type || 'OTHER'}
                   </span>
                   <span className="font-medium text-theme-muted truncate max-w-[200px] sm:max-w-xs">{file.title}</span>
@@ -105,7 +105,7 @@ export function LectureFilesSection({ lectureId }: LectureFilesSectionProps) {
       )}
 
       <form onSubmit={handleUploadSubmit} className="mt-4 flex flex-col md:flex-row gap-2 border-t border-neutral-900 pt-3">
-        <select value={fileType} onChange={(e) => setFileType(e.target.value)} className="rounded-lg border border-neutral-800 bg-neutral-900 p-2 text-xs outline-none focus:border-cyan-500 text-theme-muted">
+        <select value={fileType} onChange={(e) => setFileType(e.target.value)} className="rounded-lg border border-theme-border bg-theme-card p-2 text-xs outline-none focus:border-cyan-500 text-theme-muted">
           <option value="HOMEWORK">HOMEWORK</option>
           <option value="PDF">PDF</option>
           <option value="SHEET">SHEET</option>
@@ -113,8 +113,8 @@ export function LectureFilesSection({ lectureId }: LectureFilesSectionProps) {
           <option value="ASSIGNMENT">ASSIGNMENT</option>
           <option value="OTHER">OTHER</option>
         </select>
-        <input dir="auto" type="text" placeholder="Custom File Title" value={fileTitle} onChange={(e) => setFileTitle(e.target.value)} className="flex-1 rounded-lg border border-neutral-800 bg-neutral-900 p-2 text-xs outline-none focus:border-cyan-500 text-theme-muted" />
-        <div className="relative flex items-center justify-center rounded-lg border border-dashed border-neutral-800 bg-neutral-900 p-2 hover:bg-neutral-800 transition cursor-pointer">
+        <input dir="auto" type="text" placeholder="Custom File Title" value={fileTitle} onChange={(e) => setFileTitle(e.target.value)} className="flex-1 rounded-lg border border-theme-border bg-theme-card p-2 text-xs outline-none focus:border-cyan-500 text-theme-muted" />
+        <div className="relative flex items-center justify-center rounded-lg border border-dashed border-theme-border bg-theme-card p-2 hover:bg-theme-secondary transition cursor-pointer">
           <input type="file" onChange={handleFileChange} className="absolute inset-0 opacity-0 cursor-pointer" />
           <UploadCloud className="h-4 w-4 mr-1 text-theme-muted" />
           <span className="text-xs text-theme-muted truncate max-w-[120px]">{selectedFile ? selectedFile.name : 'Choose File'}</span>

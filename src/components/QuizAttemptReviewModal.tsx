@@ -58,7 +58,7 @@ function CorrectnessBadge({ status }: { status: string }) {
       );
     case 'READ_ONLY':
       return (
-        <span className="inline-flex items-center gap-1 text-xs font-semibold text-neutral-400 bg-neutral-500/10 border border-neutral-500/20 px-2 py-0.5 rounded-full">
+        <span className="inline-flex items-center gap-1 text-xs font-semibold text-theme-muted bg-neutral-500/10 border border-neutral-500/20 px-2 py-0.5 rounded-full">
           <Eye className="w-3 h-3" /> Read Only
         </span>
       );
@@ -460,7 +460,7 @@ export function QuizAttemptReviewModal({ attemptId, onClose }: QuizAttemptReview
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/70 backdrop-blur-sm overflow-y-auto p-4">
-      <div className="relative w-full max-w-4xl my-8 rounded-3xl border border-white/[0.08] bg-neutral-950 shadow-2xl flex flex-col animate-fade-up">
+      <div className="relative w-full max-w-4xl my-8 rounded-3xl border border-white/[0.08] bg-theme-secondary shadow-2xl flex flex-col animate-fade-up">
         {/* Header */}
         <div className="flex items-start justify-between p-6 border-b border-white/[0.06]">
           <div className="flex items-center gap-3">
@@ -474,7 +474,7 @@ export function QuizAttemptReviewModal({ attemptId, onClose }: QuizAttemptReview
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-xl hover:bg-white/[0.05] text-theme-muted hover:text-white transition"
+            className="p-2 rounded-xl hover:bg-white/[0.05] text-theme-muted hover:text-theme-text transition"
           >
             <X className="w-5 h-5" />
           </button>

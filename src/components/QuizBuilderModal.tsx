@@ -23,7 +23,7 @@ function PointsInput({ value, onChange }: { value: number; onChange: (v: number)
         setRaw(String(safe));
         onChange(safe);
       }}
-      className="w-16 rounded-lg border border-neutral-800 bg-neutral-950 p-1.5 text-center text-sm outline-none focus:border-cyan-500"
+      className="w-16 rounded-lg border border-theme-border bg-theme-secondary p-1.5 text-center text-sm outline-none focus:border-cyan-500"
     />
   );
 }
@@ -269,13 +269,13 @@ export function QuizBuilderModal({ isOpen, onClose, targetId, type }: QuizBuilde
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 sm:p-8">
-      <div className="w-full max-w-4xl h-full max-h-[90vh] flex flex-col rounded-2xl border border-neutral-800 bg-neutral-950 text-theme-text shadow-2xl overflow-hidden">
-        <div className="shrink-0 flex items-center justify-between border-b border-neutral-800 p-6 bg-neutral-900">
+      <div className="w-full max-w-4xl h-full max-h-[90vh] flex flex-col rounded-2xl border border-theme-border bg-theme-secondary text-theme-text shadow-2xl overflow-hidden">
+        <div className="shrink-0 flex items-center justify-between border-b border-theme-border p-6 bg-theme-card">
           <div>
             <h3 className="text-xl font-bold font-display text-theme-text">{t('quizBuilder.editTitle')} ({type})</h3>
             <p className="text-xs text-theme-muted mt-1">{t('quizBuilder.buildEngaging')}</p>
           </div>
-          <button onClick={onClose} className="p-2 rounded-lg text-theme-muted hover:text-white hover:bg-neutral-800 transition-colors">
+          <button onClick={onClose} className="p-2 rounded-lg text-theme-muted hover:text-theme-text hover:bg-theme-secondary transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -286,7 +286,7 @@ export function QuizBuilderModal({ isOpen, onClose, targetId, type }: QuizBuilde
               {type === 'QUIZ' ? t('quizBuilder.quizTitleLabel') : t('quizBuilder.examTitleLabel')}
             </label>
             <input dir="auto"
-              className="input font-bold text-base w-full bg-neutral-900"
+              className="input font-bold text-base w-full bg-theme-card"
               value={quizTitle}
               onChange={(e) => setQuizTitle(e.target.value)}
               placeholder={t('quizBuilder.enterTitlePlaceholder')}
@@ -295,11 +295,11 @@ export function QuizBuilderModal({ isOpen, onClose, targetId, type }: QuizBuilde
 
           {type === 'QUIZ' && (
             <div className="flex flex-col gap-2">
-              <div className="flex items-center gap-1 p-1 rounded-xl bg-neutral-900 border border-neutral-800 w-fit">
+              <div className="flex items-center gap-1 p-1 rounded-xl bg-theme-card border border-theme-border w-fit">
                 <button
                   onClick={() => setActiveVersion('A')}
                   className={`px-5 py-2 rounded-lg text-sm font-bold transition-all ${
-                    activeVersion === 'A' ? 'bg-accent-500/20 text-accent-300 border border-accent-500/40' : 'text-theme-muted hover:text-white hover:bg-neutral-800'
+                    activeVersion === 'A' ? 'bg-accent-500/20 text-accent-300 border border-accent-500/40' : 'text-theme-muted hover:text-theme-text hover:bg-theme-secondary'
                   }`}
                 >
                   {t('quizBuilder.versionA')} <span className="ml-2 text-xs font-mono opacity-70">({versionACount})</span>
@@ -307,7 +307,7 @@ export function QuizBuilderModal({ isOpen, onClose, targetId, type }: QuizBuilde
                 <button
                   onClick={() => setActiveVersion('B')}
                   className={`px-5 py-2 rounded-lg text-sm font-bold transition-all ${
-                    activeVersion === 'B' ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40' : 'text-theme-muted hover:text-white hover:bg-neutral-800'
+                    activeVersion === 'B' ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40' : 'text-theme-muted hover:text-theme-text hover:bg-theme-secondary'
                   }`}
                 >
                   {t('quizBuilder.versionB')} <span className="ml-2 text-xs font-mono opacity-70">({versionBCount})</span>
@@ -326,7 +326,7 @@ export function QuizBuilderModal({ isOpen, onClose, targetId, type }: QuizBuilde
           ) : (
             <div className="space-y-6">
               {visibleQuestions.map((q, qIndex) => (
-                <div key={q.id} className="p-5 rounded-2xl border border-neutral-800 bg-neutral-900 relative group">
+                <div key={q.id} className="p-5 rounded-2xl border border-theme-border bg-theme-card relative group">
                   <div className="flex items-start justify-between gap-4 mb-4">
                     <div className="flex-1 space-y-3">
                       <div className="flex items-center justify-between">
@@ -339,7 +339,7 @@ export function QuizBuilderModal({ isOpen, onClose, targetId, type }: QuizBuilde
                         <select
                           value={q.type}
                           onChange={(e) => updateQuestion(q.id, { type: e.target.value as QuestionType })}
-                          className="bg-neutral-950 border border-neutral-800 rounded-lg text-sm px-3 py-1.5 outline-none focus:border-cyan-500"
+                          className="bg-theme-secondary border border-theme-border rounded-lg text-sm px-3 py-1.5 outline-none focus:border-cyan-500"
                         >
                           {QUESTION_TYPES.map(typeOpt => (
                             <option key={typeOpt.value} value={typeOpt.value}>{t(`quiz.questionTypes.${typeOpt.value}`)}</option>
@@ -351,7 +351,7 @@ export function QuizBuilderModal({ isOpen, onClose, targetId, type }: QuizBuilde
                         style={{ unicodeBidi: 'plaintext', textAlign: 'start' }}
                         value={q.text}
                         onChange={(e) => updateQuestion(q.id, { text: e.target.value })}
-                        className="w-full rounded-xl border border-neutral-800 bg-neutral-950 p-3 text-sm text-theme-text outline-none focus:border-cyan-500 transition-colors resize-none h-20"
+                        className="w-full rounded-xl border border-theme-border bg-theme-secondary p-3 text-sm text-theme-text outline-none focus:border-cyan-500 transition-colors resize-none h-20"
                         placeholder={t('quizBuilder.typeQuestionPrompt')}
                       />
                     </div>
@@ -370,7 +370,7 @@ export function QuizBuilderModal({ isOpen, onClose, targetId, type }: QuizBuilde
                   </div>
 
                   {/* Render based on Type */}
-                  <div className="space-y-2 pl-6 border-l-2 border-neutral-800 pt-2 mt-2">
+                  <div className="space-y-2 pl-6 border-l-2 border-theme-border pt-2 mt-2">
                     {['MCQ', 'TRUE_FALSE', 'MULTIPLE_CHOICE'].includes(q.type) && (
                       <>
                         {q.options.map((opt, optIdx) => (
@@ -385,7 +385,7 @@ export function QuizBuilderModal({ isOpen, onClose, targetId, type }: QuizBuilde
                               dir="auto"
                               style={{ unicodeBidi: 'plaintext', textAlign: 'start' }}
                               type="text" value={opt} onChange={(e) => updateOption(q.id, optIdx, e.target.value)}
-                              className={`flex-1 rounded-lg border ${q.correctOptionIndex === optIdx ? 'border-cyan-500/50 bg-cyan-500/5' : 'border-neutral-800 bg-neutral-950'} p-2 text-sm outline-none focus:border-cyan-500`}
+                              className={`flex-1 rounded-lg border ${q.correctOptionIndex === optIdx ? 'border-cyan-500/50 bg-cyan-500/5' : 'border-theme-border bg-theme-secondary'} p-2 text-sm outline-none focus:border-cyan-500`}
                               placeholder={`${t('quizBuilder.option')} ${optIdx + 1}`}
                             />
                             {q.options.length > 2 && (
@@ -419,9 +419,9 @@ export function QuizBuilderModal({ isOpen, onClose, targetId, type }: QuizBuilde
                         <label className="text-xs font-bold text-accent-400 uppercase tracking-wider">{t('quizBuilder.matchingPairs')}</label>
                         {(q.matchOptions || []).map((match, idx) => (
                           <div key={idx} className="flex items-center gap-3">
-                            <input dir="auto" style={{ unicodeBidi: 'plaintext', textAlign: 'start' }} type="text" value={match.left} onChange={(e) => updateMatchOption(q.id, idx, 'left', e.target.value)} className="flex-1 rounded-lg border border-neutral-800 bg-neutral-950 p-2 text-sm outline-none focus:border-cyan-500" placeholder={t('quizBuilder.matchLeft')} />
+                            <input dir="auto" style={{ unicodeBidi: 'plaintext', textAlign: 'start' }} type="text" value={match.left} onChange={(e) => updateMatchOption(q.id, idx, 'left', e.target.value)} className="flex-1 rounded-lg border border-theme-border bg-theme-secondary p-2 text-sm outline-none focus:border-cyan-500" placeholder={t('quizBuilder.matchLeft')} />
                             <span className="text-theme-muted font-bold">→</span>
-                            <input dir="auto" style={{ unicodeBidi: 'plaintext', textAlign: 'start' }} type="text" value={match.right} onChange={(e) => updateMatchOption(q.id, idx, 'right', e.target.value)} className="flex-1 rounded-lg border border-neutral-800 bg-neutral-950 p-2 text-sm outline-none focus:border-cyan-500" placeholder={t('quizBuilder.matchRight')} />
+                            <input dir="auto" style={{ unicodeBidi: 'plaintext', textAlign: 'start' }} type="text" value={match.right} onChange={(e) => updateMatchOption(q.id, idx, 'right', e.target.value)} className="flex-1 rounded-lg border border-theme-border bg-theme-secondary p-2 text-sm outline-none focus:border-cyan-500" placeholder={t('quizBuilder.matchRight')} />
                             {(q.matchOptions?.length || 0) > 2 && (
                               <button onClick={() => removeMatchOption(q.id, idx)} className="p-1.5 text-theme-muted hover:text-rose-400 rounded-lg"><Trash2 className="w-3.5 h-3.5" /></button>
                             )}
@@ -438,8 +438,8 @@ export function QuizBuilderModal({ isOpen, onClose, targetId, type }: QuizBuilde
                         <label className="text-xs font-bold text-amber-400 uppercase tracking-wider">{t('quizBuilder.correctSequence')}</label>
                         {(q.correctOrder || []).map((ord, idx) => (
                           <div key={idx} className="flex items-center gap-3">
-                            <span className="w-6 h-6 flex items-center justify-center bg-neutral-800 text-theme-muted rounded-md text-xs font-bold">{idx + 1}</span>
-                            <input dir="auto" style={{ unicodeBidi: 'plaintext', textAlign: 'start' }} type="text" value={ord} onChange={(e) => updateOrderOption(q.id, idx, e.target.value)} className="flex-1 rounded-lg border border-neutral-800 bg-neutral-950 p-2 text-sm outline-none focus:border-cyan-500" placeholder={`${t('quizBuilder.sequenceItem')} ${idx + 1}`} />
+                            <span className="w-6 h-6 flex items-center justify-center bg-theme-secondary text-theme-muted rounded-md text-xs font-bold">{idx + 1}</span>
+                            <input dir="auto" style={{ unicodeBidi: 'plaintext', textAlign: 'start' }} type="text" value={ord} onChange={(e) => updateOrderOption(q.id, idx, e.target.value)} className="flex-1 rounded-lg border border-theme-border bg-theme-secondary p-2 text-sm outline-none focus:border-cyan-500" placeholder={`${t('quizBuilder.sequenceItem')} ${idx + 1}`} />
                             {(q.correctOrder?.length || 0) > 2 && (
                               <button onClick={() => removeOrderOption(q.id, idx)} className="p-1.5 text-theme-muted hover:text-rose-400 rounded-lg"><Trash2 className="w-3.5 h-3.5" /></button>
                             )}
@@ -453,14 +453,14 @@ export function QuizBuilderModal({ isOpen, onClose, targetId, type }: QuizBuilde
                   </div>
                 </div>
               ))}
-              <button onClick={handleAddQuestion} className="w-full py-4 rounded-2xl border border-dashed border-neutral-700 text-theme-muted hover:text-white hover:border-neutral-500 hover:bg-neutral-800/50 transition-colors flex items-center justify-center gap-2 font-medium">
+              <button onClick={handleAddQuestion} className="w-full py-4 rounded-2xl border border-dashed border-theme-border text-theme-muted hover:text-theme-text hover:border-neutral-500 hover:bg-theme-secondary/50 transition-colors flex items-center justify-center gap-2 font-medium">
                 <Plus className="w-5 h-5" /> {t('quizBuilder.addAnotherQuestion')}
               </button>
             </div>
           )}
         </div>
 
-        <div className="shrink-0 border-t border-neutral-800 p-4 bg-neutral-900 flex items-center justify-between">
+        <div className="shrink-0 border-t border-theme-border p-4 bg-theme-card flex items-center justify-between">
           <div className="text-sm text-theme-muted font-medium">
             {type === 'QUIZ' ? (
               <span>Questions: <span className="text-theme-text font-mono font-bold">{versionACount}A</span> + <span className="text-cyan-400 font-mono font-bold">{versionBCount}B</span></span>
@@ -469,7 +469,7 @@ export function QuizBuilderModal({ isOpen, onClose, targetId, type }: QuizBuilde
             )}
           </div>
           <div className="flex gap-3">
-            <button onClick={onClose} className="px-5 py-2.5 rounded-xl font-bold text-theme-muted hover:text-white transition-colors">{t('common.cancel')}</button>
+            <button onClick={onClose} className="px-5 py-2.5 rounded-xl font-bold text-theme-muted hover:text-theme-text transition-colors">{t('common.cancel')}</button>
             <button onClick={handleSave} disabled={saveMutation.isPending || isLoading} className="btn-primary px-6 flex items-center gap-2">
               {saveMutation.isPending ? <Spinner className="w-4 h-4" /> : <Save className="w-4 h-4" />}
               {saveMutation.isPending ? t('common.loading') : t('quizBuilder.saveSync')}

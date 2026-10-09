@@ -1815,7 +1815,7 @@ function AdminGenerateCodesModal({
           <p className="text-sm text-theme-muted mb-4">Successfully generated {generatedCodes.length} code(s):</p>
           <div className="space-y-2 max-h-60 overflow-y-auto mb-6 glass rounded-xl p-2 border border-white/[0.04]">
             {generatedCodes.map((c) => (
-              <div key={c} className="flex items-center justify-between p-2 rounded-lg bg-neutral-900/50">
+              <div key={c} className="flex items-center justify-between p-2 rounded-lg bg-theme-card/50">
                 <code className="font-mono text-lg font-bold text-gold-200 tracking-wider">{c}</code>
                 <CopyButton text={c} />
               </div>
@@ -1843,7 +1843,7 @@ function AdminGenerateCodesModal({
           <div>
             <label className="label">Code Type</label>
             <select
-              className="input bg-neutral-900"
+              className="input bg-theme-card"
               value={targetType}
               onChange={(e) => setTargetType(e.target.value as 'LECTURE' | 'COURSE' | 'FILE' | 'COURSE_FILES')}
             >
@@ -1858,7 +1858,7 @@ function AdminGenerateCodesModal({
           <div>
             <label className="label">Target Audience</label>
             <select
-              className="input bg-neutral-900"
+              className="input bg-theme-card"
               value={educationLevel}
               onChange={(e) => setEducationLevel(e.target.value as 'HIGH_SCHOOL' | 'UNIVERSITY')}
             >
@@ -1874,7 +1874,7 @@ function AdminGenerateCodesModal({
               type="number"
               min={1}
               max={100}
-              className="input bg-neutral-900"
+              className="input bg-theme-card"
               value={count}
               onChange={(e) => setCount(parseInt(e.target.value) || 1)}
             />
@@ -1991,7 +1991,7 @@ export function AdminCourses() {
                       {c.thumbnailUrl ? (
                         <img src={c.thumbnailUrl} alt="" loading="lazy" className="w-10 h-10 rounded-lg object-cover" />
                       ) : (
-                        <div className="w-10 h-10 rounded-lg bg-neutral-800 flex items-center justify-center">
+                        <div className="w-10 h-10 rounded-lg bg-theme-secondary flex items-center justify-center">
                           <BookOpen className="w-4 h-4 text-theme-muted" />
                         </div>
                       )}

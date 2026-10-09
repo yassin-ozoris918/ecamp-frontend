@@ -28,7 +28,7 @@ export const Button = memo(function Button({
     secondary: 'bg-theme-card hover:bg-white/[0.1] text-theme-text border border-theme-border hover:border-white/[0.15]',
     danger: 'bg-error-500 hover:bg-error-400 text-theme-text shadow-lg shadow-error-500/20',
     success: 'bg-secondary-500 hover:bg-secondary-400 text-theme-text shadow-lg shadow-secondary-500/20',
-    ghost: 'text-theme-muted hover:text-white hover:bg-theme-card',
+    ghost: 'text-theme-muted hover:text-theme-text hover:bg-theme-card',
   };
 
   const sizes = {

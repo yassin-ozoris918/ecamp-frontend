@@ -101,7 +101,7 @@ export function FilesTab({ hideHeader = false }: { hideHeader?: boolean }) {
                   setRedeemCode(e.target.value);
                   setRedeemingTarget({ id: courseId, type: 'COURSE_FILES' });
                 }}
-                className="bg-base-900 border border-theme-border text-theme-text text-sm rounded-lg focus:ring-accent-500 focus:border-accent-500 block p-2.5 outline-none max-w-[200px]"
+                className="bg-theme-card border border-theme-border text-theme-text text-sm rounded-lg focus:ring-accent-500 focus:border-accent-500 block p-2.5 outline-none max-w-[200px]"
               />
               <Button
                 variant="primary"
@@ -127,7 +127,7 @@ export function FilesTab({ hideHeader = false }: { hideHeader?: boolean }) {
                 setRedeemCode(e.target.value);
                 setRedeemingTarget({ id: courseId, type: 'COURSE_FILES' });
               }}
-              className="bg-base-900 border border-theme-border text-theme-text text-sm rounded-lg focus:ring-accent-500 focus:border-accent-500 block p-2.5 outline-none max-w-[200px]"
+              className="bg-theme-card border border-theme-border text-theme-text text-sm rounded-lg focus:ring-accent-500 focus:border-accent-500 block p-2.5 outline-none max-w-[200px]"
             />
             <Button
               variant="primary"
@@ -147,14 +147,14 @@ export function FilesTab({ hideHeader = false }: { hideHeader?: boolean }) {
           <input dir="auto"
             type="text"
             placeholder={t('files.search', 'Search files...')}
-            className="bg-base-900 border border-theme-border text-theme-text text-sm rounded-lg focus:ring-accent-500 focus:border-accent-500 block p-2.5 outline-none w-full pl-10"
+            className="bg-theme-card border border-theme-border text-theme-text text-sm rounded-lg focus:ring-accent-500 focus:border-accent-500 block p-2.5 outline-none w-full pl-10"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
         
         <select
-          className="bg-base-900 border border-theme-border text-theme-text text-sm rounded-lg focus:ring-accent-500 focus:border-accent-500 block p-2.5 outline-none w-full sm:w-auto min-w-[200px]"
+          className="bg-theme-card border border-theme-border text-theme-text text-sm rounded-lg focus:ring-accent-500 focus:border-accent-500 block p-2.5 outline-none w-full sm:w-auto min-w-[200px]"
           value={courseId}
           onChange={(e) => setCourseId(e.target.value)}
         >
@@ -165,7 +165,7 @@ export function FilesTab({ hideHeader = false }: { hideHeader?: boolean }) {
         </select>
 
         <select
-          className="bg-base-900 border border-theme-border text-theme-text text-sm rounded-lg focus:ring-accent-500 focus:border-accent-500 block p-2.5 outline-none w-full sm:w-auto min-w-[150px]"
+          className="bg-theme-card border border-theme-border text-theme-text text-sm rounded-lg focus:ring-accent-500 focus:border-accent-500 block p-2.5 outline-none w-full sm:w-auto min-w-[150px]"
           value={accessFilter}
           onChange={(e) => setAccessFilter(e.target.value)}
         >
@@ -192,7 +192,7 @@ export function FilesTab({ hideHeader = false }: { hideHeader?: boolean }) {
           {files.map((file: any) => (
             <div 
               key={file.id} 
-              className={`group glass rounded-2xl p-6 transition-all hover:-translate-y-1 hover:shadow-2xl flex flex-col ${file.accessStatus === 'LOCKED' ? 'border-neutral-800 opacity-90' : 'border-accent-500/20 shadow-accent-500/5'}`}
+              className={`group glass rounded-2xl p-6 transition-all hover:-translate-y-1 hover:shadow-2xl flex flex-col ${file.accessStatus === 'LOCKED' ? 'border-theme-border opacity-90' : 'border-accent-500/20 shadow-accent-500/5'}`}
             >
               <div className="flex items-start justify-between mb-4">
                 <div className="flex-1 mr-4">
@@ -231,25 +231,28 @@ export function FilesTab({ hideHeader = false }: { hideHeader?: boolean }) {
               ) : (
                 <div className="flex flex-col gap-2 mt-auto">
                   {redeemingTarget?.id === file.id && redeemingTarget?.type === 'FILE' ? (
-                    <div className="flex gap-2">
+                    <div className="flex flex-col gap-2">
                       <input dir="auto"
                         type="text"
                         autoFocus
                         placeholder={t('files.enterCode', 'Enter Code')}
                         value={redeemCode}
                         onChange={(e) => setRedeemCode(e.target.value)}
-                        className="bg-base-900 border border-theme-border text-theme-text text-sm rounded-lg focus:ring-accent-500 focus:border-accent-500 block p-2.5 outline-none flex-1"
+                        className="bg-theme-card border border-theme-border text-theme-text text-sm rounded-lg focus:ring-accent-500 focus:border-accent-500 block p-2.5 outline-none w-full"
                       />
-                      <Button
-                        variant="primary"
-                        disabled={!redeemCode || redeemMutation.isPending}
-                        onClick={() => redeemMutation.mutate({ code: redeemCode, targetType: 'FILE', targetId: file.id })}
-                      >
-                        {redeemMutation.isPending ? '...' : t('files.unlock', 'Unlock')}
-                      </Button>
-                      <Button variant="ghost" onClick={() => { setRedeemingTarget(null); setRedeemCode(''); }}>
-                        Cancel
-                      </Button>
+                      <div className="flex gap-2 w-full">
+                        <Button
+                          variant="primary"
+                          className="flex-1"
+                          disabled={!redeemCode || redeemMutation.isPending}
+                          onClick={() => redeemMutation.mutate({ code: redeemCode, targetType: 'FILE', targetId: file.id })}
+                        >
+                          {redeemMutation.isPending ? '...' : t('files.unlock', 'Unlock')}
+                        </Button>
+                        <Button variant="ghost" className="flex-1" onClick={() => { setRedeemingTarget(null); setRedeemCode(''); }}>
+                          Cancel
+                        </Button>
+                      </div>
                     </div>
                   ) : (
                     <Button variant="secondary" className="w-full" onClick={() => { setRedeemingTarget({ id: file.id, type: 'FILE' }); setRedeemCode(''); }}>

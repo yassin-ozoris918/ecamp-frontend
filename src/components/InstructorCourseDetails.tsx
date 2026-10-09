@@ -52,10 +52,10 @@ export function InstructorCourseDetails({ courseId }: { courseId: string }) {
       </div>
 
       <div className="flex gap-4 border-b border-white/[0.05] pb-2 overflow-x-auto">
-        <button onClick={() => setTab('OVERVIEW')} className={`whitespace-nowrap px-4 py-2 rounded-t-lg font-bold transition-colors ${tab === 'OVERVIEW' ? 'bg-white/[0.05] text-accent-400' : 'text-theme-muted hover:text-white'}`}>Overview & Analytics</button>
-        <button onClick={() => setTab('STUDENTS')} className={`whitespace-nowrap px-4 py-2 rounded-t-lg font-bold transition-colors ${tab === 'STUDENTS' ? 'bg-white/[0.05] text-accent-400' : 'text-theme-muted hover:text-white'}`}>Students List</button>
-        <button onClick={() => setTab('LECTURES')} className={`whitespace-nowrap px-4 py-2 rounded-t-lg font-bold transition-colors ${tab === 'LECTURES' ? 'bg-white/[0.05] text-accent-400' : 'text-theme-muted hover:text-white'}`}>Lectures & Watchers</button>
-        <button onClick={() => setTab('FILES')} className={`whitespace-nowrap px-4 py-2 rounded-t-lg font-bold transition-colors ${tab === 'FILES' ? 'bg-white/[0.05] text-accent-400' : 'text-theme-muted hover:text-white'}`}>Course Files</button>
+        <button onClick={() => setTab('OVERVIEW')} className={`whitespace-nowrap px-4 py-2 rounded-t-lg font-bold transition-colors ${tab === 'OVERVIEW' ? 'bg-white/[0.05] text-accent-400' : 'text-theme-muted hover:text-theme-text'}`}>Overview & Analytics</button>
+        <button onClick={() => setTab('STUDENTS')} className={`whitespace-nowrap px-4 py-2 rounded-t-lg font-bold transition-colors ${tab === 'STUDENTS' ? 'bg-white/[0.05] text-accent-400' : 'text-theme-muted hover:text-theme-text'}`}>Students List</button>
+        <button onClick={() => setTab('LECTURES')} className={`whitespace-nowrap px-4 py-2 rounded-t-lg font-bold transition-colors ${tab === 'LECTURES' ? 'bg-white/[0.05] text-accent-400' : 'text-theme-muted hover:text-theme-text'}`}>Lectures & Watchers</button>
+        <button onClick={() => setTab('FILES')} className={`whitespace-nowrap px-4 py-2 rounded-t-lg font-bold transition-colors ${tab === 'FILES' ? 'bg-white/[0.05] text-accent-400' : 'text-theme-muted hover:text-theme-text'}`}>Course Files</button>
       </div>
 
       {tab === 'OVERVIEW' && analytics && (
@@ -162,15 +162,15 @@ export function InstructorCourseDetails({ courseId }: { courseId: string }) {
               <h3 className="text-lg font-bold mb-4">Quick Actions</h3>
               <div className="grid grid-cols-1 gap-2">
                 <Link to={`/instructor/course/${courseId}`} className="flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 transition-colors border border-transparent hover:border-white/10 group">
-                  <div className="w-10 h-10 rounded-lg bg-accent-500/20 text-accent-400 flex items-center justify-center group-hover:bg-accent-500 group-hover:text-white transition-colors"><Settings className="w-5 h-5" /></div>
+                  <div className="w-10 h-10 rounded-lg bg-accent-500/20 text-accent-400 flex items-center justify-center group-hover:bg-accent-500 group-hover:text-theme-text transition-colors"><Settings className="w-5 h-5" /></div>
                   <div className="text-left"><p className="font-bold text-sm">Course Builder</p><p className="text-xs text-theme-muted">Edit content & settings</p></div>
                 </Link>
                 <button onClick={() => setTab('STUDENTS')} className="flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 transition-colors border border-transparent hover:border-white/10 group w-full text-left">
-                  <div className="w-10 h-10 rounded-lg bg-secondary-500/20 text-secondary-400 flex items-center justify-center group-hover:bg-secondary-500 group-hover:text-white transition-colors"><Users className="w-5 h-5" /></div>
+                  <div className="w-10 h-10 rounded-lg bg-secondary-500/20 text-secondary-400 flex items-center justify-center group-hover:bg-secondary-500 group-hover:text-theme-text transition-colors"><Users className="w-5 h-5" /></div>
                   <div className="text-left"><p className="font-bold text-sm">Manage Students</p><p className="text-xs text-theme-muted">View student list</p></div>
                 </button>
                 <Link to={`/instructor/grading`} className="flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 transition-colors border border-transparent hover:border-white/10 group">
-                  <div className="w-10 h-10 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center group-hover:bg-emerald-500 group-hover:text-white transition-colors"><GraduationCap className="w-5 h-5" /></div>
+                  <div className="w-10 h-10 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center group-hover:bg-emerald-500 group-hover:text-theme-text transition-colors"><GraduationCap className="w-5 h-5" /></div>
                   <div className="text-left"><p className="font-bold text-sm">Grading Queue</p><p className="text-xs text-theme-muted">Review assignments</p></div>
                 </Link>
               </div>
@@ -260,7 +260,7 @@ export function InstructorCourseDetails({ courseId }: { courseId: string }) {
                       <p className="font-bold text-sm truncate">{file.title}</p>
                       <Badge variant="default" className="text-[10px] mt-1">{file.type}</Badge>
                     </div>
-                    <a href={file.fileUrl} target="_blank" rel="noreferrer" className="text-theme-muted hover:text-white p-2 bg-white/5 rounded-md opacity-0 group-hover:opacity-100 transition-opacity">
+                    <a href={file.fileUrl} target="_blank" rel="noreferrer" className="text-theme-muted hover:text-theme-text p-2 bg-white/5 rounded-md opacity-0 group-hover:opacity-100 transition-opacity">
                       <Download className="w-4 h-4" />
                     </a>
                   </div>
@@ -286,7 +286,7 @@ export function InstructorCourseDetails({ courseId }: { courseId: string }) {
                           <p className="font-bold text-sm truncate">{file.title}</p>
                           <Badge variant="default" className="text-[10px] mt-1">{file.type}</Badge>
                         </div>
-                        <a href={file.fileUrl} target="_blank" rel="noreferrer" className="text-theme-muted hover:text-white p-2 bg-white/5 rounded-md opacity-0 group-hover:opacity-100 transition-opacity">
+                        <a href={file.fileUrl} target="_blank" rel="noreferrer" className="text-theme-muted hover:text-theme-text p-2 bg-white/5 rounded-md opacity-0 group-hover:opacity-100 transition-opacity">
                           <Download className="w-4 h-4" />
                         </a>
                       </div>

@@ -67,8 +67,8 @@ export function AIQuestionReviewStudio({ examId, initialQuestions, onSaved, onCa
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-neutral-950/80 backdrop-blur-sm flex items-center justify-center p-6">
-      <div className="bg-neutral-900 border border-theme-border w-full max-w-6xl max-h-full rounded-3xl shadow-2xl flex flex-col">
+    <div className="fixed inset-0 z-50 bg-theme-secondary/80 backdrop-blur-sm flex items-center justify-center p-6">
+      <div className="bg-theme-card border border-theme-border w-full max-w-6xl max-h-full rounded-3xl shadow-2xl flex flex-col">
         <div className="p-6 border-b border-theme-border flex items-center justify-between shrink-0">
           <div>
             <h2 className="text-2xl font-display font-bold text-theme-text flex items-center gap-2">

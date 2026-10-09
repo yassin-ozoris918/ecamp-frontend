@@ -1011,8 +1011,8 @@ function LectureAttachments({ lectureId }: { lectureId: string }) {
   if (attachments.length === 0) return null;
 
   return (
-    <div className="mt-6 rounded-2xl border border-neutral-800 bg-neutral-900 p-4 text-theme-text">
-      <h3 className="text-md font-bold flex items-center gap-2 border-b border-neutral-800 pb-2 mb-3">
+    <div className="mt-6 rounded-2xl border border-theme-border bg-theme-card p-4 text-theme-text">
+      <h3 className="text-md font-bold flex items-center gap-2 border-b border-theme-border pb-2 mb-3">
         <Paperclip className="h-4 w-4 text-cyan-400" />
         <span>Lecture Attachments</span>
       </h3>
@@ -1021,21 +1021,21 @@ function LectureAttachments({ lectureId }: { lectureId: string }) {
           <div key={file.id} className="flex gap-2 w-full">
             <button 
               onClick={(e) => handleOpen(file.id, file.title, false, e)}
-              className="flex-1 flex items-center justify-between rounded-xl bg-neutral-950 p-3 text-xs border border-neutral-800 hover:border-cyan-500/40 transition group text-left"
+              className="flex-1 flex items-center justify-between rounded-xl bg-theme-secondary p-3 text-xs border border-theme-border hover:border-cyan-500/40 transition group text-left"
             >
               <div className="flex items-center gap-2 overflow-hidden max-w-[75%]">
-                <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-neutral-800 text-cyan-400 border border-neutral-700 shrink-0">
+                <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-theme-secondary text-cyan-400 border border-theme-border shrink-0">
                   {file.type || 'OTHER'}
                 </span>
                 <span className="font-semibold text-theme-muted group-hover:text-cyan-400 transition truncate">{file.title}</span>
               </div>
-              <span className="text-[10px] bg-neutral-900 px-2 py-1 rounded border border-neutral-800 uppercase tracking-wider text-cyan-400 font-bold shrink-0 flex items-center gap-1">
+              <span className="text-[10px] bg-theme-card px-2 py-1 rounded border border-theme-border uppercase tracking-wider text-cyan-400 font-bold shrink-0 flex items-center gap-1">
                 <ExternalLink className="w-3 h-3" /> Open
               </span>
             </button>
             <button 
               onClick={(e) => handleOpen(file.id, file.title, true, e)}
-              className="flex items-center justify-center rounded-xl bg-neutral-950 px-4 py-3 text-xs border border-neutral-800 hover:border-cyan-500/40 hover:text-cyan-400 transition group text-theme-muted"
+              className="flex items-center justify-center rounded-xl bg-theme-secondary px-4 py-3 text-xs border border-theme-border hover:border-cyan-500/40 hover:text-cyan-400 transition group text-theme-muted"
               title="Download File"
             >
               <Download className="w-4 h-4" />

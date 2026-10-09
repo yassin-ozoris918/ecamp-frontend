@@ -265,7 +265,7 @@ export function StudentDashboard() {
                           </p>
                           <div className="mt-1 flex -space-x-2">
                             {course.instructors?.map((inst: any) => (
-                              <div key={inst.instructor.id} className="w-6 h-6 rounded-full border-2 border-base-900 bg-neutral-800 flex items-center justify-center text-[10px] font-bold text-theme-text shadow-sm relative z-[1]" title={inst.instructor.fullName}>
+                              <div key={inst.instructor.id} className="w-6 h-6 rounded-full border-2 border-base-900 bg-theme-secondary flex items-center justify-center text-[10px] font-bold text-theme-text shadow-sm relative z-[1]" title={inst.instructor.fullName}>
                                 {inst.instructor?.profilePictureUrl ? (
                                   <img src={inst.instructor.profilePictureUrl} alt={inst.instructor.fullName} className="w-full h-full rounded-full object-cover" />
                                 ) : (
@@ -312,7 +312,7 @@ export function StudentDashboard() {
                           </p>
                           <div className="mt-1 flex -space-x-2">
                             {course.instructors?.map((inst: any) => (
-                              <div key={inst.instructor.id} className="w-6 h-6 rounded-full border-2 border-base-900 bg-neutral-800 flex items-center justify-center text-[10px] font-bold text-theme-text shadow-sm relative z-[1]" title={inst.instructor.fullName}>
+                              <div key={inst.instructor.id} className="w-6 h-6 rounded-full border-2 border-base-900 bg-theme-secondary flex items-center justify-center text-[10px] font-bold text-theme-text shadow-sm relative z-[1]" title={inst.instructor.fullName}>
                                 {inst.instructor?.profilePictureUrl ? (
                                   <img src={inst.instructor.profilePictureUrl} alt={inst.instructor.fullName} className="w-full h-full rounded-full object-cover" />
                                 ) : (

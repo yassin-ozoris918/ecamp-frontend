@@ -87,7 +87,7 @@ export function Routes({ routes }: { routes: Route[] }) {
     <div className="flex min-h-screen items-center justify-center">
       <div className="text-center">
         <p className="text-2xl font-bold text-neutral-100">Page not found</p>
-        <p className="mt-2 text-neutral-400">The page {path} doesn't exist.</p>
+        <p className="mt-2 text-theme-muted">The page {path} doesn't exist.</p>
       </div>
     </div>
   );

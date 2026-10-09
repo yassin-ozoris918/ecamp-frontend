@@ -58,7 +58,7 @@ export const Modal = memo(function Modal({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg p-1.5 text-theme-muted hover:text-white hover:bg-theme-card transition-colors"
+            className="rounded-lg p-1.5 text-theme-muted hover:text-theme-text hover:bg-theme-card transition-colors"
             aria-label="Close"
           >
             <X className="w-5 h-5" />

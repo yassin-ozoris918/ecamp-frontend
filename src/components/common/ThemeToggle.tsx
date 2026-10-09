@@ -9,7 +9,7 @@ export function ThemeToggle({ className = '' }: { className?: string }) {
       onClick={toggleTheme}
       className={`p-2 rounded-xl transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-accent-500/50 ${
         theme === 'dark' 
-          ? 'bg-theme-card text-theme-muted hover:text-white hover:bg-white/10' 
+          ? 'bg-theme-card text-theme-muted hover:text-theme-text hover:bg-white/10' 
           : 'bg-white shadow-sm text-slate-500 hover:text-slate-900 border border-slate-200'
       } ${className}`}
       aria-label="Toggle theme"

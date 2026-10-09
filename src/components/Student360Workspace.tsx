@@ -146,7 +146,7 @@ export function Student360Workspace() {
         <div className="flex-1 glass rounded-2xl flex flex-col overflow-hidden animate-fade-in relative border border-theme-border">
           <button
             onClick={() => setSelectedStudentId(null)}
-            className="absolute top-4 right-4 text-theme-muted hover:text-white z-10"
+            className="absolute top-4 right-4 text-theme-muted hover:text-theme-text z-10"
           >
             <X className="w-5 h-5" />
           </button>

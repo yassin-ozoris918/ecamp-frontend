@@ -307,7 +307,7 @@ export function CreateCourseModal({
           />
           <label htmlFor="isFreeCourse" className="flex flex-col cursor-pointer">
             <span className="font-semibold text-white">Make Course Free</span>
-            <span className="text-sm text-gray-400">Students will bypass activation codes and time limits.</span>
+            <span className="text-sm text-theme-muted">Students will bypass activation codes and time limits.</span>
           </label>
         </div>
 

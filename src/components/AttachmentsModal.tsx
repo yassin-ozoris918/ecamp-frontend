@@ -110,14 +110,14 @@ export function AttachmentsModal({ isOpen, onClose, targetId, targetType, title 
               <p className="text-sm text-theme-muted">{title}</p>
             </div>
           </div>
-          <button onClick={onClose} className="p-2 text-theme-muted hover:text-white rounded-lg hover:bg-white/5 transition-colors">
+          <button onClick={onClose} className="p-2 text-theme-muted hover:text-theme-text rounded-lg hover:bg-white/5 transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>
 
         <div className="p-6 overflow-y-auto space-y-6">
           {/* Upload Form */}
-          <form onSubmit={handleUploadSubmit} className="bg-neutral-900/50 p-4 rounded-xl border border-neutral-800 space-y-4">
+          <form onSubmit={handleUploadSubmit} className="bg-theme-card/50 p-4 rounded-xl border border-theme-border space-y-4">
             <div>
               <label className="block text-xs font-medium text-theme-muted mb-2">Select File</label>
               <input
@@ -140,7 +140,7 @@ export function AttachmentsModal({ isOpen, onClose, targetId, targetType, title 
                   <select
                     value={fileType}
                     onChange={(e) => setFileType(e.target.value)}
-                    className="input bg-neutral-950 max-w-[150px]"
+                    className="input bg-theme-secondary max-w-[150px]"
                   >
                     <option value="HOMEWORK">HOMEWORK</option>
                     <option value="PDF">PDF</option>
@@ -154,7 +154,7 @@ export function AttachmentsModal({ isOpen, onClose, targetId, targetType, title 
                     value={fileTitle}
                     onChange={(e) => setFileTitle(e.target.value)}
                     placeholder="Enter file display title..."
-                    className="input flex-1 bg-neutral-950"
+                    className="input flex-1 bg-theme-secondary"
                     required
                   />
                   <button
@@ -181,14 +181,14 @@ export function AttachmentsModal({ isOpen, onClose, targetId, targetType, title 
                 <Loader2 className="w-6 h-6 animate-spin text-cyan-400" />
               </div>
             ) : attachments.length === 0 ? (
-              <div className="text-center py-8 bg-neutral-900/30 rounded-xl border border-neutral-800/50 border-dashed">
+              <div className="text-center py-8 bg-theme-card/30 rounded-xl border border-theme-border/50 border-dashed">
                 <FileText className="w-8 h-8 text-neutral-600 mx-auto mb-2" />
                 <p className="text-sm text-theme-muted">No attachments uploaded yet</p>
               </div>
             ) : (
               <div className="space-y-2">
                 {attachments.map((att) => (
-                  <div key={att.id} className="flex items-center justify-between p-3 bg-neutral-900/50 rounded-xl border border-neutral-800 hover:border-neutral-700 transition-colors group">
+                  <div key={att.id} className="flex items-center justify-between p-3 bg-theme-card/50 rounded-xl border border-theme-border hover:border-theme-border transition-colors group">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-lg bg-cyan-500/10 flex flex-col items-center justify-center">
                         <FileText className="w-4 h-4 text-cyan-400" />

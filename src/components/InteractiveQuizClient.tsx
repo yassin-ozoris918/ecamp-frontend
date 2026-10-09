@@ -259,7 +259,7 @@ export function InteractiveQuizClient({
   if (!isStarted) {
     return (
       <div className="max-w-2xl mx-auto py-12">
-        <div className="bg-neutral-900 rounded-3xl p-8 sm:p-12 text-center border border-neutral-800 shadow-2xl relative overflow-hidden">
+        <div className="bg-theme-card rounded-3xl p-8 sm:p-12 text-center border border-theme-border shadow-2xl relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 via-transparent to-transparent opacity-50" />
           <div className="relative z-10">
             <h2 className="text-3xl font-display font-bold text-white mb-4">{quizDetails?.title || quiz.title}</h2>
@@ -267,16 +267,16 @@ export function InteractiveQuizClient({
             
             <div className="flex flex-col sm:flex-row items-center justify-center gap-6 mb-12">
               {quizDetails?.timeLimit && (
-                <div className="flex items-center gap-2 bg-neutral-950 px-4 py-2 rounded-xl border border-neutral-800">
+                <div className="flex items-center gap-2 bg-theme-secondary px-4 py-2 rounded-xl border border-theme-border">
                   <Clock className="w-5 h-5 text-cyan-400" />
                   <span className="font-bold font-mono text-white">{quizDetails.timeLimit} {t('quiz.minutes')}</span>
                 </div>
               )}
-              <div className="flex items-center gap-2 bg-neutral-950 px-4 py-2 rounded-xl border border-neutral-800">
+              <div className="flex items-center gap-2 bg-theme-secondary px-4 py-2 rounded-xl border border-theme-border">
                 <CheckCircle2 className="w-5 h-5 text-accent-400" />
                 <span className="font-bold text-white">{t('quiz.passGrade')}: {quizDetails?.passGrade || quiz.passGrade}%</span>
               </div>
-              <div className="flex items-center gap-2 bg-neutral-950 px-4 py-2 rounded-xl border border-neutral-800">
+              <div className="flex items-center gap-2 bg-theme-secondary px-4 py-2 rounded-xl border border-theme-border">
                 <span className="font-bold text-theme-muted">
                   {t('quiz.attempts')}: <span className="text-white">{quiz.attemptsCount}</span> / {quiz.maxAttempts}
                 </span>
@@ -300,7 +300,7 @@ export function InteractiveQuizClient({
               </button>
             ) : (
               <div className="space-y-4">
-                <div className="p-4 rounded-xl bg-neutral-950 border border-neutral-800 text-theme-muted font-medium">
+                <div className="p-4 rounded-xl bg-theme-secondary border border-theme-border text-theme-muted font-medium">
                   {quiz.isCompleted ? t('quiz.completedInfo') : t('quiz.exhaustedInfo')}
                 </div>
                 {pastResult && (
@@ -325,7 +325,7 @@ export function InteractiveQuizClient({
     return (
       <div className="max-w-4xl mx-auto py-8">
         {!reviewMode && (
-          <div className="mb-12 text-center bg-neutral-900 border border-neutral-800 rounded-3xl p-12 relative overflow-hidden shadow-2xl">
+          <div className="mb-12 text-center bg-theme-card border border-theme-border rounded-3xl p-12 relative overflow-hidden shadow-2xl">
              <div className={`absolute inset-0 bg-gradient-to-b ${isPassed ? 'from-accent-500/10' : isPending ? 'from-amber-500/10' : 'from-rose-500/10'} to-transparent opacity-50`} />
              <div className="relative z-10">
                 <div className={`w-24 h-24 mx-auto rounded-full flex items-center justify-center mb-6 shadow-xl ${isPassed ? 'bg-accent-500/20 text-accent-400' : isPending ? 'bg-amber-500/20 text-amber-400' : 'bg-rose-500/20 text-rose-400'}`}>
@@ -393,8 +393,8 @@ export function InteractiveQuizClient({
             
             {/* If backend hasn't provided correctAnswers, it means results are hidden for a pending retry */}
             {(!result.correctAnswers || Object.keys(result.correctAnswers).length === 0) && result.status === 'FAILED' && !quiz.isExhausted && !(result as any).isExhausted ? (
-               <div className="p-8 text-center border border-neutral-800 rounded-2xl bg-neutral-900/50 flex flex-col items-center gap-3">
-                 <div className="w-12 h-12 rounded-full bg-neutral-800/80 flex items-center justify-center mb-2">
+               <div className="p-8 text-center border border-theme-border rounded-2xl bg-theme-card/50 flex flex-col items-center gap-3">
+                 <div className="w-12 h-12 rounded-full bg-theme-secondary/80 flex items-center justify-center mb-2">
                    <CheckCircle2 className="w-6 h-6 text-theme-muted" />
                  </div>
                  <h4 className="text-xl font-bold text-white">Results Hidden</h4>
@@ -412,10 +412,10 @@ export function InteractiveQuizClient({
               const isWrongMCQ = (q.type === 'MCQ' || q.type === 'TRUE_FALSE') && stuAns?.selectedOptionIndex !== corAns;
               
               return (
-                <div key={q.id} className={`p-6 rounded-2xl border bg-neutral-900 relative overflow-hidden transition-all duration-300 ${isCorrectMCQ ? 'border-accent-500/30 shadow-[0_0_20px_rgba(34,197,94,0.05)]' : isWrongMCQ ? 'border-rose-500/30' : 'border-neutral-800'}`}>
+                <div key={q.id} className={`p-6 rounded-2xl border bg-theme-card relative overflow-hidden transition-all duration-300 ${isCorrectMCQ ? 'border-accent-500/30 shadow-[0_0_20px_rgba(34,197,94,0.05)]' : isWrongMCQ ? 'border-rose-500/30' : 'border-theme-border'}`}>
                   {/* ... Header logic similar to before ... */}
                   <div className="flex items-start gap-4 mb-6">
-                     <div className={`w-8 h-8 shrink-0 rounded-full flex items-center justify-center font-bold text-sm ${isCorrectMCQ ? 'bg-accent-500/20 text-accent-400' : isWrongMCQ ? 'bg-rose-500/20 text-rose-400' : 'bg-neutral-800 text-theme-muted'}`}>
+                     <div className={`w-8 h-8 shrink-0 rounded-full flex items-center justify-center font-bold text-sm ${isCorrectMCQ ? 'bg-accent-500/20 text-accent-400' : isWrongMCQ ? 'bg-rose-500/20 text-rose-400' : 'bg-theme-secondary text-theme-muted'}`}>
                        {idx + 1}
                      </div>
                      <BiDiText text={q.text} as="h4" className="text-lg font-medium text-white flex-1" />
@@ -428,9 +428,9 @@ export function InteractiveQuizClient({
                         const isSelected = stuAns?.selectedOptionIndex === optIdx;
                         const isActualCorrect = corAns === optIdx;
                         
-                        let stateClass = "border-neutral-800 bg-neutral-950 text-theme-muted";
+                        let stateClass = "border-theme-border bg-theme-secondary text-theme-muted";
                         if (isActualCorrect && isSelected) stateClass = "border-accent-500 bg-accent-500/10 text-accent-100 font-medium";
-                        else if (isActualCorrect && !isSelected) stateClass = "border-accent-500/50 bg-neutral-950 text-accent-200 border-dashed";
+                        else if (isActualCorrect && !isSelected) stateClass = "border-accent-500/50 bg-theme-secondary text-accent-200 border-dashed";
                         else if (!isActualCorrect && isSelected) stateClass = "border-rose-500 bg-rose-500/10 text-rose-100 font-medium";
                         
                         return (
@@ -446,7 +446,7 @@ export function InteractiveQuizClient({
 
                    {['ESSAY', 'SHORT_ANSWER'].includes(q.type) && (
                     <div className="space-y-3 pl-12">
-                       <div className="p-4 rounded-xl border border-neutral-800 bg-neutral-950 text-theme-text opacity-70">
+                       <div className="p-4 rounded-xl border border-theme-border bg-theme-secondary text-theme-text opacity-70">
                          <strong>Your Answer:</strong><br/>
                          {stuAns?.textResponse || <span className="text-theme-muted italic">No answer provided</span>}
                        </div>
@@ -518,7 +518,7 @@ export function InteractiveQuizClient({
       <ConfirmDialog {...confirmState} onConfirm={handleConfirm} onCancel={handleCancel} />
       
       {/* Sticky Header */}
-      <div className="sticky top-6 z-40 bg-neutral-900/80 backdrop-blur-xl border border-neutral-800 p-4 rounded-2xl flex items-center justify-between mb-8 shadow-2xl">
+      <div className="sticky top-6 z-40 bg-theme-card/80 backdrop-blur-xl border border-theme-border p-4 rounded-2xl flex items-center justify-between mb-8 shadow-2xl">
         <div className="flex items-center gap-4">
           <div className="flex flex-col gap-1">
              <span className="text-xs font-bold text-theme-muted uppercase tracking-wider">{t('quiz.progress')}</span>
@@ -531,14 +531,14 @@ export function InteractiveQuizClient({
         </div>
         
         {timeLeft !== null && (
-          <div className={`flex items-center gap-2 px-4 py-2 rounded-xl border ${timeLeft < 60 ? 'bg-rose-500/10 border-rose-500/30 text-rose-400 animate-pulse' : 'bg-neutral-950 border-neutral-800 text-white'}`}>
+          <div className={`flex items-center gap-2 px-4 py-2 rounded-xl border ${timeLeft < 60 ? 'bg-rose-500/10 border-rose-500/30 text-rose-400 animate-pulse' : 'bg-theme-secondary border-theme-border text-white'}`}>
             <Clock className="w-5 h-5" />
             <span className="font-bold font-mono text-lg">{formatTime(timeLeft)}</span>
           </div>
         )}
 
         <div className="flex items-center gap-3">
-          <button onClick={handleSurrender} className="text-sm font-bold text-theme-muted hover:text-rose-400 transition-colors px-3 py-2 rounded-lg hover:bg-neutral-800">
+          <button onClick={handleSurrender} className="text-sm font-bold text-theme-muted hover:text-rose-400 transition-colors px-3 py-2 rounded-lg hover:bg-theme-secondary">
             {t('quiz.surrender')}
           </button>
           <button 
@@ -553,9 +553,9 @@ export function InteractiveQuizClient({
 
       <div className="space-y-8 pb-32">
         {questions.map((q, idx) => (
-          <div key={q.id} id={`q-${q.id}`} className={`p-6 sm:p-8 rounded-3xl border bg-neutral-900 shadow-xl transition-all duration-300 ${isAnswered(q.id) ? 'border-cyan-500/30' : 'border-neutral-800'}`}>
+          <div key={q.id} id={`q-${q.id}`} className={`p-6 sm:p-8 rounded-3xl border bg-theme-card shadow-xl transition-all duration-300 ${isAnswered(q.id) ? 'border-cyan-500/30' : 'border-theme-border'}`}>
             <div className="flex items-start gap-4 mb-8">
-               <div className={`w-10 h-10 shrink-0 rounded-2xl flex items-center justify-center font-bold text-lg ${isAnswered(q.id) ? 'bg-cyan-500/20 text-cyan-400' : 'bg-neutral-800 text-theme-muted'}`}>
+               <div className={`w-10 h-10 shrink-0 rounded-2xl flex items-center justify-center font-bold text-lg ${isAnswered(q.id) ? 'bg-cyan-500/20 text-cyan-400' : 'bg-theme-secondary text-theme-muted'}`}>
                  {idx + 1}
                </div>
                <div>
@@ -575,9 +575,9 @@ export function InteractiveQuizClient({
                     <button
                       key={optIdx}
                       onClick={() => handleSelectOption(q.id, optIdx)}
-                      className={`text-left p-4 rounded-2xl border transition-all duration-200 flex items-center gap-4 group hover:-translate-y-0.5 ${isSelected ? 'bg-cyan-500/10 border-cyan-500/50 shadow-[0_0_15px_rgba(6,182,212,0.1)]' : 'bg-neutral-950 border-neutral-800 hover:border-neutral-700'}`}
+                      className={`text-left p-4 rounded-2xl border transition-all duration-200 flex items-center gap-4 group hover:-translate-y-0.5 ${isSelected ? 'bg-cyan-500/10 border-cyan-500/50 shadow-[0_0_15px_rgba(6,182,212,0.1)]' : 'bg-theme-secondary border-theme-border hover:border-theme-border'}`}
                     >
-                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${isSelected ? 'border-cyan-500' : 'border-neutral-700 group-hover:border-neutral-500'}`}>
+                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${isSelected ? 'border-cyan-500' : 'border-theme-border group-hover:border-neutral-500'}`}>
                         {isSelected && <div className="w-2.5 h-2.5 rounded-full bg-cyan-500" />}
                       </div>
                       <BiDiText text={opt} as="span" className={`text-base ${isSelected ? 'text-white font-medium' : 'text-theme-muted group-hover:text-theme-text'}`} />
@@ -594,7 +594,7 @@ export function InteractiveQuizClient({
                   style={{ unicodeBidi: 'plaintext', textAlign: 'start' }}
                   value={answers[q.id]?.textResponse || ''}
                   onChange={(e) => handleTextChange(q.id, e.target.value)}
-                  className="w-full rounded-2xl border border-neutral-800 bg-neutral-950 p-4 text-white placeholder-neutral-600 outline-none focus:border-cyan-500 transition-colors h-32 resize-none"
+                  className="w-full rounded-2xl border border-theme-border bg-theme-secondary p-4 text-white placeholder-neutral-600 outline-none focus:border-cyan-500 transition-colors h-32 resize-none"
                   placeholder="Type your answer here..."
                 />
               </div>
@@ -605,13 +605,13 @@ export function InteractiveQuizClient({
                 {(q.matchOptions || []).map((matchPair, idx) => {
                   const selectedRight = answers[q.id]?.matchAnswer?.find((m: any) => m.left === matchPair.left)?.right || '';
                   return (
-                    <div key={idx} className="flex flex-col sm:flex-row items-center gap-4 bg-neutral-950 p-4 rounded-2xl border border-neutral-800">
+                    <div key={idx} className="flex flex-col sm:flex-row items-center gap-4 bg-theme-secondary p-4 rounded-2xl border border-theme-border">
                       <BiDiText text={matchPair.left} className="flex-1 w-full text-center sm:text-start font-medium text-white" />
                       <ArrowRight className="w-5 h-5 text-theme-muted hidden sm:block" />
                       <select 
                         value={selectedRight}
                         onChange={(e) => handleMatchChange(q.id, matchPair.left, e.target.value)}
-                        className="flex-1 w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-white outline-none focus:border-cyan-500"
+                        className="flex-1 w-full bg-theme-card border border-theme-border rounded-xl px-4 py-3 text-white outline-none focus:border-cyan-500"
                       >
                         <option value="">Select a match...</option>
                         {q.matchOptions?.map(mo => (
@@ -627,12 +627,12 @@ export function InteractiveQuizClient({
             {q.type === 'ORDERING' && (
               <div className="grid gap-3 pl-0 sm:pl-14">
                 {(answers[q.id]?.orderAnswer || q.correctOrder || []).map((item: string, idx: number) => (
-                  <div key={idx} className="flex items-center gap-4 bg-neutral-950 p-4 rounded-2xl border border-neutral-800">
-                    <span className="w-8 h-8 shrink-0 flex items-center justify-center bg-neutral-900 text-theme-muted rounded-xl font-bold">{idx + 1}</span>
+                  <div key={idx} className="flex items-center gap-4 bg-theme-secondary p-4 rounded-2xl border border-theme-border">
+                    <span className="w-8 h-8 shrink-0 flex items-center justify-center bg-theme-card text-theme-muted rounded-xl font-bold">{idx + 1}</span>
                     <BiDiText text={item} as="span" className="flex-1 text-white font-medium" />
                     <div className="flex flex-col gap-1">
-                      <button disabled={idx === 0} onClick={() => handleOrderChange(q.id, idx, 'up')} className="p-1 rounded bg-neutral-900 text-theme-muted hover:text-white disabled:opacity-30"><ArrowDownUp className="w-4 h-4 rotate-180" /></button>
-                      <button disabled={idx === (q.correctOrder?.length || 0) - 1} onClick={() => handleOrderChange(q.id, idx, 'down')} className="p-1 rounded bg-neutral-900 text-theme-muted hover:text-white disabled:opacity-30"><ArrowDownUp className="w-4 h-4" /></button>
+                      <button disabled={idx === 0} onClick={() => handleOrderChange(q.id, idx, 'up')} className="p-1 rounded bg-theme-card text-theme-muted hover:text-theme-text disabled:opacity-30"><ArrowDownUp className="w-4 h-4 rotate-180" /></button>
+                      <button disabled={idx === (q.correctOrder?.length || 0) - 1} onClick={() => handleOrderChange(q.id, idx, 'down')} className="p-1 rounded bg-theme-card text-theme-muted hover:text-theme-text disabled:opacity-30"><ArrowDownUp className="w-4 h-4" /></button>
                     </div>
                   </div>
                 ))}
@@ -641,7 +641,7 @@ export function InteractiveQuizClient({
 
             {q.type === 'READ_ONLY_TEXT' && (
               <div className="pl-0 sm:pl-14">
-                 <div className="p-4 rounded-2xl bg-neutral-950 border border-neutral-800 text-theme-muted italic">
+                 <div className="p-4 rounded-2xl bg-theme-secondary border border-theme-border text-theme-muted italic">
                    Please read the text above carefully. No answer is required.
                  </div>
               </div>
