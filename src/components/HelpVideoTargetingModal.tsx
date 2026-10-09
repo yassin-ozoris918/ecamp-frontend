@@ -265,6 +265,10 @@ export function HelpVideoTargetingModal({
                   facultyId={group.targetFacultyId}
                   departmentId={group.targetDepartmentId}
                   programId={group.targetProgramId}
+                  otherUniversityName={null}
+                  otherFacultyName={null}
+                  otherDepartmentName={null}
+                  otherProgramName={null}
                   onChange={(data) => {
                     const newGroups = [...uniTargetGroups];
                     newGroups[index] = {
