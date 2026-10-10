@@ -134,9 +134,9 @@ function StatusBadge({ status }: { status: string }) {
 const PAGE_SIZE = 25;
 
 function AttemptsTable({
-  quizId,
+  quiz,
 }: {
-  quizId: string;
+  quiz: Quiz;
 }) {
   const [data, setData] = useState<QuizAttemptListResponse | null>(null);
   const [loading, setLoading] = useState(false);
@@ -160,7 +160,7 @@ function AttemptsTable({
       ...(debouncedSearch ? { search: debouncedSearch } : {}),
     });
     api
-      .get(`/admin/quizzes/${quizId}/attempts?${params}`)
+      .get(`/admin/quizzes/${quiz.id}/attempts?${params}`)
       .then((r: any) => setData(r.data))
       .catch((e: any) => setError(e?.response?.data?.message || 'Failed to load attempts'))
       .finally(() => setLoading(false));
@@ -168,17 +168,26 @@ function AttemptsTable({
 
   useEffect(() => {
     setPage(0);
-  }, [quizId, debouncedSearch, statusFilter]);
+  }, [quiz.id, debouncedSearch, statusFilter]);
 
   useEffect(() => {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [quizId, page, debouncedSearch, statusFilter]);
+  }, [quiz.id, page, debouncedSearch, statusFilter]);
 
   const totalPages = data ? Math.ceil(data.total / PAGE_SIZE) : 0;
 
   return (
     <div className="space-y-4">
+      {/* Selected Quiz Context */}
+      <div className="flex items-center gap-2 text-sm text-theme-muted mb-2">
+        <span className="font-semibold text-theme-text">{quiz.courseTitle}</span>
+        <ChevronRight className="w-3 h-3" />
+        <span className="font-semibold text-theme-text">{quiz.lectureTitle}</span>
+        <ChevronRight className="w-3 h-3" />
+        <span className="font-bold text-accent-400">{quiz.title}</span>
+      </div>
+
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
@@ -384,7 +393,7 @@ export function QuizAttemptsManager() {
 
       {/* Attempts table */}
       {selectedQuiz ? (
-        <AttemptsTable quizId={selectedQuiz.id} />
+        <AttemptsTable quiz={selectedQuiz} />
       ) : (
         <div className="glass rounded-2xl p-12 text-center border border-white/[0.06]">
           <Users className="w-10 h-10 text-theme-muted mx-auto mb-3" />

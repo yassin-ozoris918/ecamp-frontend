@@ -18,6 +18,7 @@ import {
 import { api } from '../lib/api';
 import type { QuizAttemptReview, QuizReviewQuestion } from '../lib/types';
 import { Badge, BiDiText } from './common';
+import { useAuth } from '../lib/authContext';
 import toast from 'react-hot-toast';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -202,9 +203,11 @@ function OrderingReview({ q }: { q: QuizReviewQuestion }) {
 function SubjectiveReview({
   q,
   onOverrideSaved,
+  readOnly,
 }: {
   q: QuizReviewQuestion;
   onOverrideSaved: (responseId: string, newPoints: number, newOverride: number) => void;
+  readOnly?: boolean;
 }) {
   const [override, setOverride] = useState<string>(
     q.instructorOverrideScore !== null ? String(q.instructorOverrideScore) : '',
@@ -273,34 +276,36 @@ function SubjectiveReview({
         </div>
 
         {/* Instructor Override */}
-        <div className="rounded-xl bg-purple-500/5 border border-purple-500/20 p-3">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400 mb-1">Instructor Override</p>
-          {q.instructorOverrideScore !== null && (
-            <p className="text-xs text-theme-muted mb-2">
-              Current: <span className="font-bold text-purple-400">{q.instructorOverrideScore} / {q.maxPoints}</span>
-            </p>
-          )}
-          <div className="flex gap-2 items-center">
-            <input dir="auto"
-              type="number"
-              min={0}
-              max={q.maxPoints}
-              step={0.5}
-              value={override}
-              onChange={(e) => setOverride(e.target.value)}
-              placeholder={`0 – ${q.maxPoints}`}
-              className="flex-1 rounded-lg border border-purple-500/30 bg-purple-500/10 px-3 py-2 text-sm text-theme-text focus:outline-none focus:border-purple-400"
-            />
-            <button
-              onClick={handleSave}
-              disabled={saving || override === ''}
-              className="flex items-center gap-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-white px-3 py-2 text-xs font-bold transition disabled:opacity-40"
-            >
-              {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />}
-              Save
-            </button>
+        {!readOnly && (
+          <div className="rounded-xl bg-purple-500/5 border border-purple-500/20 p-3">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400 mb-1">Instructor Override</p>
+            {q.instructorOverrideScore !== null && (
+              <p className="text-xs text-theme-muted mb-2">
+                Current: <span className="font-bold text-purple-400">{q.instructorOverrideScore} / {q.maxPoints}</span>
+              </p>
+            )}
+            <div className="flex gap-2 items-center">
+              <input dir="auto"
+                type="number"
+                min={0}
+                max={q.maxPoints}
+                step={0.5}
+                value={override}
+                onChange={(e) => setOverride(e.target.value)}
+                placeholder={`0 – ${q.maxPoints}`}
+                className="flex-1 rounded-lg border border-purple-500/30 bg-purple-500/10 px-3 py-2 text-sm text-theme-text focus:outline-none focus:border-purple-400"
+              />
+              <button
+                onClick={handleSave}
+                disabled={saving || override === ''}
+                className="flex items-center gap-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-white px-3 py-2 text-xs font-bold transition disabled:opacity-40"
+              >
+                {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />}
+                Save
+              </button>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Final Score */}
@@ -325,11 +330,13 @@ function QuestionCard({
   expanded,
   onToggle,
   onOverrideSaved,
+  readOnly,
 }: {
   q: QuizReviewQuestion;
   expanded: boolean;
   onToggle: () => void;
   onOverrideSaved: (responseId: string, newPoints: number, newOverride: number) => void;
+  readOnly?: boolean;
 }) {
   const isReadOnly = q.questionType === 'READ_ONLY_TEXT';
   const isSubjective = q.questionType === 'ESSAY' || q.questionType === 'SHORT_ANSWER';
@@ -388,7 +395,7 @@ function QuestionCard({
           {q.questionType === 'MATCHING' && <MatchingReview q={q} />}
           {q.questionType === 'ORDERING' && <OrderingReview q={q} />}
           {isSubjective && (
-            <SubjectiveReview q={q} onOverrideSaved={onOverrideSaved} />
+            <SubjectiveReview q={q} onOverrideSaved={onOverrideSaved} readOnly={readOnly} />
           )}
         </div>
       )}
@@ -408,6 +415,8 @@ export function QuizAttemptReviewModal({ attemptId, onClose }: QuizAttemptReview
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const { profile } = useAuth();
+  const isInstructor = profile?.role === 'INSTRUCTOR';
 
   useEffect(() => {
     setLoading(true);
@@ -553,6 +562,7 @@ export function QuizAttemptReviewModal({ attemptId, onClose }: QuizAttemptReview
                     expanded={expanded.has(q.questionId)}
                     onToggle={() => toggleQuestion(q.questionId)}
                     onOverrideSaved={handleOverrideSaved}
+                    readOnly={isInstructor}
                   />
                 ))}
               </div>
