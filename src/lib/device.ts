@@ -1,25 +1,32 @@
 // Hardware-based browser fingerprint generator.
 // Collects stable device-level signals (OS, CPU, GPU, screen, timezone) that are
-// identical across all browsers (Chrome, Edge, Firefox, Brave) on the same physical
-// machine — so a student can log in from any browser without being locked out.
+// identical across all browsers (Chrome, Edge, Firefox, Brave, Safari) on the same
+// physical machine — so a student can log in from any browser without being locked out.
 //
-// The random localStorage seed is intentionally EXCLUDED from the hash so that
-// different browsers on the same device produce the exact same Device ID.
-// The GPU renderer string (WebGL) is included as an extra discriminator to
-// distinguish devices that share the same OS, CPU count, and screen resolution.
+// Design decisions (each item below prevents a cross-browser mismatch):
+//  1. navigator.deviceMemory is EXCLUDED — Firefox & Safari intentionally return undefined
+//     (privacy protection), Chrome returns the real value. This creates a hash mismatch
+//     between browsers on the same machine.
+//  2. navigator.userAgent / language / languages are EXCLUDED — they change per browser.
+//  3. The GPU string is NORMALIZED to strip Chrome's ANGLE wrapper and Direct3D suffixes
+//     so Chrome and Firefox agree on the bare chip name (e.g. "Intel Iris Xe Graphics").
+//  4. The random localStorage UUID is EXCLUDED from the hash — it is per-browser and
+//     cannot be shared across browser sandboxes.
 
 function djb2(str: string): string {
   let hash = 5381;
   for (let i = 0; i < str.length; i++) {
     hash = (hash * 33) ^ str.charCodeAt(i);
   }
-  // Convert to unsigned 32-bit hex.
   return (hash >>> 0).toString(16);
 }
 
+// ─── Signal helpers ────────────────────────────────────────────────────────────
+
 /**
  * Returns a normalized OS family string that is browser-agnostic.
- * e.g. "Windows", "Android", "iOS", "macOS", "Linux"
+ * Derived from userAgent + platform patterns, not from the browser brand itself.
+ * Result: "Windows" | "Android" | "iOS" | "macOS" | "Linux" | "Unknown"
  */
 function getOSType(): string {
   if (typeof navigator === 'undefined') return 'Unknown';
@@ -27,21 +34,21 @@ function getOSType(): string {
   const ua       = navigator.userAgent || '';
   const platform = navigator.platform  || '';
 
-  // iPads running iOS 13+ report platform as "MacIntel" with touch support
+  // iPads on iOS 13+ lie and report "MacIntel" — distinguish via touch capability
   if (/iPad|iPhone|iPod/.test(ua) || (platform === 'MacIntel' && navigator.maxTouchPoints > 1)) {
     return 'iOS';
   }
-  if (/Android/i.test(ua))                                     return 'Android';
-  if (/Windows/i.test(ua)  || /Win/i.test(platform))          return 'Windows';
-  if (/Macintosh|MacIntel|MacPPC/i.test(ua) || /Mac/i.test(platform)) return 'macOS';
-  if (/Linux/i.test(ua)    || /Linux/i.test(platform))        return 'Linux';
+  if (/Android/i.test(ua))                                              return 'Android';
+  if (/Windows/i.test(ua)  || /Win/i.test(platform))                   return 'Windows';
+  if (/Macintosh|MacIntel|MacPPC/i.test(ua) || /Mac/i.test(platform))  return 'macOS';
+  if (/Linux/i.test(ua)    || /Linux/i.test(platform))                  return 'Linux';
   return 'Unknown';
 }
 
 /**
- * Returns a normalized platform string using either the modern
- * userAgentData API (Chrome/Edge) or the legacy navigator.platform.
- * Both produce the same family name on the same machine regardless of browser.
+ * Returns a normalized OS platform family, preferring the modern userAgentData
+ * API (Chromium) and falling back to the legacy navigator.platform.
+ * Both sources are normalized to the same family names on the same hardware.
  */
 function getPlatformInfo(): string {
   if (typeof navigator === 'undefined') return 'Unknown';
@@ -58,82 +65,134 @@ function getPlatformInfo(): string {
 }
 
 /**
- * Reads the unmasked GPU renderer string via WebGL.
- * This string identifies the physical graphics chip (e.g. "Intel Iris Xe Graphics",
- * "NVIDIA GeForce RTX 3050", "Apple M2", "Adreno 640") and is identical across
- * Chrome, Edge, and Firefox on the same machine.
- * Returns an empty string if WebGL is unavailable or blocked by the browser.
+ * Returns the raw UNMASKED_RENDERER_WEBGL string, or '' if unavailable.
+ * The raw string is passed to normalizeGpuRenderer() before use.
  */
-function getGpuRenderer(): string {
+function getRawGpuRenderer(): string {
   try {
     const canvas = document.createElement('canvas');
-    const gl = (canvas.getContext('webgl') || canvas.getContext('experimental-webgl')) as WebGLRenderingContext | null;
+    const gl = (
+      canvas.getContext('webgl') ||
+      canvas.getContext('experimental-webgl')
+    ) as WebGLRenderingContext | null;
     if (!gl) return '';
     const ext = gl.getExtension('WEBGL_debug_renderer_info');
     if (!ext) return '';
-    return gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) as string || '';
+    return (gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) as string) || '';
   } catch {
     return '';
   }
 }
 
 /**
- * Generates a stable, hardware-level device fingerprint that is:
- *  - Identical across Chrome, Edge, Firefox, and Brave on the same physical device.
- *  - Different from fingerprints generated on other devices (different GPU, screen, CPU).
- *  - Cached in localStorage per browser so it is only computed once.
- *  - Preserved for existing students via the 'ecamp_device_identity' key migration guard.
+ * Normalizes a raw WebGL renderer string to the bare hardware chip name so that
+ * Chrome, Edge, and Firefox produce the SAME string for the same physical GPU.
+ *
+ * Problem: Chrome/Edge wrap the chip name in an ANGLE descriptor:
+ *   "ANGLE (Intel, Intel(R) Iris(R) Xe Graphics (0x00009A49) Direct3D11 vs_5_0 ps_5_0, D3D11)"
+ * Firefox reports just the chip name:
+ *   "Intel(R) Iris(R) Xe Graphics"
+ *
+ * This function extracts the chip name from both formats and then strips
+ * trademark noise so both end up as: "Intel Iris Xe Graphics"
+ */
+function normalizeGpuRenderer(raw: string): string {
+  if (!raw) return '';
+
+  let chip = raw.trim();
+
+  // 1. Strip Chrome/Edge ANGLE wrapper:
+  //    "ANGLE (Vendor, Chip (0xHEX) Direct3D11 ..., D3D11)"
+  //    → extract the text after the first comma, up to any "(0x...)" or "Direct3D"
+  const angleMatch = chip.match(/^ANGLE\s*\([^,]+,\s*(.+?)(?:\s*\(0x[0-9a-fA-F]+\))?(?:\s+Direct3D\S+.*)?(?:,\s*D3D\S*)?\)\s*$/i);
+  if (angleMatch) {
+    chip = angleMatch[1].trim();
+  }
+
+  // 2. Strip any remaining hex hardware IDs like "(0x9A49)"
+  chip = chip.replace(/\s*\(0x[0-9a-fA-F]+\)/gi, '');
+
+  // 3. Strip "(R)", "(TM)", "®", "™" trademark markers
+  chip = chip.replace(/\s*\(R\)/gi, '').replace(/\s*\(TM\)/gi, '').replace(/[®™]/g, '');
+
+  // 4. Strip trailing Direct3D / OpenGL driver descriptors that may survive
+  chip = chip.replace(/\s+Direct3D\S+.*/i, '').replace(/\s+OpenGL\S+.*/i, '');
+
+  // 5. Collapse multiple spaces
+  chip = chip.trim().replace(/\s+/g, ' ');
+
+  return chip;
+}
+
+// ─── Main export ───────────────────────────────────────────────────────────────
+
+/**
+ * Generates a stable hardware-level Device ID that:
+ *  ✓ Is IDENTICAL across Chrome, Edge, Firefox, and Brave on the same device.
+ *  ✓ Is DIFFERENT on other physical devices (different GPU, screen, or CPU).
+ *  ✓ Is CACHED in localStorage so it is only computed once per browser.
+ *  ✓ Does NOT change when the user updates their browser or resizes the window.
+ *
+ * Signals used (all cross-browser safe):
+ *   OS type · CPU cores · Platform family · Screen resolution · Color depth · Timezone · GPU chip
+ *
+ * Signals intentionally excluded:
+ *   userAgent, language, languages → per-browser strings
+ *   deviceMemory                  → blocked by Firefox & Safari (privacy)
+ *   localStorage UUID seed        → per-browser, cannot cross sandbox boundaries
  */
 export function generateDeviceFingerprint(): string {
   const IDENTITY_KEY = 'ecamp_device_identity';
 
-  // Return the cached identity immediately — preserves existing students' bound Device IDs
-  // and avoids recomputing on every call in the same browser session.
+  // Return cached identity immediately.
+  // This also preserves existing students' Device IDs stored in the database.
   const cached = localStorage.getItem(IDENTITY_KEY);
   if (cached) return cached;
 
   const signals: string[] = [];
 
-  // 1. OS Type (Windows / Android / iOS / macOS / Linux)
+  // 1. OS family — parsed from UA pattern, browser-agnostic result
   signals.push(getOSType());
 
-  // 2. Logical CPU core count — hardware property, identical across all browsers
+  // 2. Logical CPU thread count — hardware property, same in every browser
   signals.push(String(navigator.hardwareConcurrency ?? 0));
 
-  // 3. Approximate device RAM in GB — Chromium standard; Safari/Firefox return undefined → "0"
-  const nav = navigator as Navigator & { deviceMemory?: number };
-  signals.push(String(nav.deviceMemory ?? 0));
+  // NOTE: navigator.deviceMemory is intentionally omitted.
+  // Firefox and Safari block it (returns undefined → "0"), while Chrome returns
+  // the real value (e.g. "8"). Including it would always mismatch between browsers.
 
-  // 4. Normalized platform family (Win32 → "Windows", MacIntel → "macOS", etc.)
+  // 3. Platform family — normalized from Win32/MacIntel/etc. to OS family name
   signals.push(getPlatformInfo());
 
-  // 5. Orientation-agnostic screen resolution — always max×min so portrait/landscape match
+  // 4. Orientation-agnostic screen resolution — max×min so portrait/landscape agree
   const screenW = Math.max(screen.width, screen.height);
   const screenH = Math.min(screen.width, screen.height);
   signals.push(`${screenW}x${screenH}`);
 
-  // 6. Screen color depth — display hardware property (almost always 24)
+  // 5. Screen color depth — display hardware property, same across browsers
   signals.push(String(screen.colorDepth ?? 24));
 
-  // 7. IANA time zone — system-level setting, browser-agnostic (e.g. "Africa/Cairo")
+  // 6. IANA timezone — OS-level setting, browser-agnostic (e.g. "Africa/Cairo")
   signals.push(Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC');
 
-  // 8. GPU renderer — physical chip string, identical across browsers on same machine.
-  //    Strongest signal for disambiguating identical-spec devices (same OS/CPU/screen).
-  const gpu = getGpuRenderer();
+  // 7. Normalized GPU chip name — extracts bare chip from Chrome's ANGLE wrapper
+  //    so Chrome and Firefox produce the same string (e.g. "Intel Iris Xe Graphics")
+  const gpu = normalizeGpuRenderer(getRawGpuRenderer());
   if (gpu) signals.push(gpu);
 
   const identity = djb2(signals.join('||'));
-
-  // Persist so all subsequent calls — even in other browser tabs — return the same value.
   localStorage.setItem(IDENTITY_KEY, identity);
   return identity;
 }
 
+// ─── In-app browser detection ─────────────────────────────────────────────────
+
 /**
- * Detects whether the user is inside a sandboxed in-app browser (Facebook, Instagram,
- * WhatsApp, Telegram, etc.). These webviews wipe localStorage between sessions, which
- * would cause device binding failures. Users should be redirected to a real browser.
+ * Returns true if the user is inside a sandboxed in-app browser
+ * (Facebook, Instagram, WhatsApp, Telegram, etc.).
+ *
+ * These webviews wipe localStorage between sessions, so the device fingerprint
+ * cannot be persisted. Students must be redirected to a real browser before login.
  */
 export function isInAppBrowser(): boolean {
   if (typeof navigator === 'undefined') return false;
@@ -142,14 +201,14 @@ export function isInAppBrowser(): boolean {
   if (!ua) return false;
 
   const rules = [
-    'FBAN', 'FBAV',      // Facebook
-    'Instagram',          // Instagram
-    'WhatsApp',           // WhatsApp
-    'Telegram',           // Telegram
-    'Line',               // Line
-    'MicroMessenger',     // WeChat
-    'Snapchat',           // Snapchat
-    'Viber',              // Viber
+    'FBAN', 'FBAV',   // Facebook
+    'Instagram',       // Instagram
+    'WhatsApp',        // WhatsApp
+    'Telegram',        // Telegram
+    'Line',            // Line
+    'MicroMessenger',  // WeChat
+    'Snapchat',        // Snapchat
+    'Viber',           // Viber
   ];
 
   const regex = new RegExp(`(${rules.join('|')})`, 'i');
