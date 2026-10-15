@@ -24,8 +24,8 @@ interface Props {
 export function UnrecognizedDeviceAlert({ email, registeredDevice, currentDevice }: Props) {
   const [activeLang, setActiveLang] = useState<'ar' | 'en'>('ar');
 
-  const supportNumber = '201064763583';
-  const displayPhone = '01064763583';
+  const supportNumber = '201221822703';
+  const displayPhone = '01221822703';
 
   // Fallback to client-detected device info if not returned by backend
   const clientFallback = getClientDeviceDetails();
