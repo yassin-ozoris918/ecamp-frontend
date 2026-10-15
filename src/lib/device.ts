@@ -214,3 +214,106 @@ export function isInAppBrowser(): boolean {
   const regex = new RegExp(`(${rules.join('|')})`, 'i');
   return Boolean(ua.match(regex));
 }
+
+export interface ClientDeviceDetails {
+  deviceType: string;
+  nameAr: string;
+  nameEn: string;
+  os: string;
+  browser: string;
+  category: 'desktop' | 'mobile' | 'tablet' | 'unknown';
+}
+
+/**
+ * Returns structured device details for the current client environment
+ * (OS, category, human-readable name in AR/EN, and browser).
+ */
+export function getClientDeviceDetails(): ClientDeviceDetails {
+  if (typeof navigator === 'undefined') {
+    return {
+      deviceType: 'Unknown Device',
+      nameAr: 'جهاز غير محدد',
+      nameEn: 'Unknown Device',
+      os: 'Unknown',
+      browser: 'Unknown',
+      category: 'unknown',
+    };
+  }
+
+  const ua = navigator.userAgent || '';
+  const platform = navigator.platform || '';
+  const osType = getOSType();
+
+  let category: 'desktop' | 'mobile' | 'tablet' | 'unknown' = 'desktop';
+  let deviceType = 'PC / Laptop';
+  let nameAr = 'كمبيوتر / لابتوب';
+  let nameEn = 'PC / Laptop';
+  let browser = 'Web Browser';
+
+  if (osType === 'iOS') {
+    if (/iPad/.test(ua) || (platform === 'MacIntel' && navigator.maxTouchPoints > 1)) {
+      category = 'tablet';
+      deviceType = 'iPad';
+      nameAr = 'جهاز لوحي آيباد (iPad)';
+      nameEn = 'iPad Tablet';
+    } else {
+      category = 'mobile';
+      deviceType = 'iPhone';
+      nameAr = 'هاتف آيفون (iPhone)';
+      nameEn = 'iPhone';
+    }
+  } else if (osType === 'Android') {
+    if (/Mobile/i.test(ua)) {
+      category = 'mobile';
+      deviceType = 'Android Phone';
+      nameAr = 'هاتف أندرويد (Android)';
+      nameEn = 'Android Phone';
+    } else {
+      category = 'tablet';
+      deviceType = 'Android Tablet';
+      nameAr = 'تابلت أندرويد (Android Tablet)';
+      nameEn = 'Android Tablet';
+    }
+  } else if (osType === 'Windows') {
+    category = 'desktop';
+    deviceType = 'Windows PC';
+    nameAr = 'كمبيوتر / لابتوب (Windows)';
+    nameEn = 'Windows PC / Laptop';
+  } else if (osType === 'macOS') {
+    category = 'desktop';
+    deviceType = 'Mac';
+    nameAr = 'كمبيوتر ماك (MacBook / Mac)';
+    nameEn = 'Mac / MacBook';
+  } else if (osType === 'Linux') {
+    category = 'desktop';
+    deviceType = 'Linux PC';
+    nameAr = 'كمبيوتر (Linux)';
+    nameEn = 'Linux PC';
+  }
+
+  if (/Edg\//i.test(ua)) {
+    browser = 'Microsoft Edge';
+  } else if (/SamsungBrowser\//i.test(ua)) {
+    browser = 'Samsung Internet';
+  } else if (/OPR\/|Opera\//i.test(ua)) {
+    browser = 'Opera';
+  } else if (/Firefox\/|FxiOS\//i.test(ua)) {
+    browser = 'Mozilla Firefox';
+  } else if (/Brave/i.test(ua)) {
+    browser = 'Brave';
+  } else if (/Chrome\/|CriOS\//i.test(ua)) {
+    browser = 'Google Chrome';
+  } else if (/Safari/i.test(ua) && !/Chrome|CriOS/i.test(ua)) {
+    browser = 'Apple Safari';
+  }
+
+  return {
+    deviceType,
+    nameAr,
+    nameEn,
+    os: osType,
+    browser,
+    category,
+  };
+}
+

@@ -9,6 +9,7 @@ import { useTranslation } from 'react-i18next';
 import { MaintenanceNotice } from './common/MaintenanceNotice';
 import { AcademicDropdowns } from './AcademicDropdowns';
 import { UnrecognizedDeviceAlert } from './UnrecognizedDeviceAlert';
+import type { DeviceInfo } from '../lib/auth';
 import {
   HighSchoolSystem,
   StudyMode,
@@ -29,6 +30,10 @@ export function AuthScreen() {
   const [busy, setBusy] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
   const [localErrorCode, setLocalErrorCode] = useState<string | null>(null);
+  const [deviceErrorDetails, setDeviceErrorDetails] = useState<{
+    registeredDevice?: DeviceInfo;
+    currentDevice?: DeviceInfo;
+  } | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [registrationPending, setRegistrationPending] = useState(false);
   const [maintenanceInterrupted, setMaintenanceInterrupted] = useState(() =>
@@ -39,12 +44,14 @@ export function AuthScreen() {
     setMode('register');
     setLocalError(null);
     setLocalErrorCode(null);
+    setDeviceErrorDetails(null);
   }
 
   function handleLoginTabClick() {
     setMode('login');
     setLocalError(null);
     setLocalErrorCode(null);
+    setDeviceErrorDetails(null);
   }
 
 
@@ -147,6 +154,7 @@ export function AuthScreen() {
   async function handleSubmit(e: React.FormEvent) {
     setLocalError(null);
     setLocalErrorCode(null);
+    setDeviceErrorDetails(null);
     setError(null);
     e.preventDefault();
     setBusy(true);
@@ -166,6 +174,12 @@ export function AuthScreen() {
           } else {
             setLocalError(error.message);
             setLocalErrorCode(error.code || null);
+            if (error.code === 'UNRECOGNIZED_DEVICE' || error.registeredDevice || error.currentDevice) {
+              setDeviceErrorDetails({
+                registeredDevice: error.registeredDevice,
+                currentDevice: error.currentDevice,
+              });
+            }
           }
         }
       } else {
@@ -259,6 +273,13 @@ export function AuthScreen() {
             setError(error);
           } else {
             setLocalError(error.message);
+            setLocalErrorCode(error.code || null);
+            if (error.code === 'UNRECOGNIZED_DEVICE' || error.registeredDevice || error.currentDevice) {
+              setDeviceErrorDetails({
+                registeredDevice: error.registeredDevice,
+                currentDevice: error.currentDevice,
+              });
+            }
           }
         } else if (status === 'PENDING_APPROVAL') {
           setRegistrationPending(true);
@@ -375,7 +396,11 @@ export function AuthScreen() {
             <p className="text-sm text-theme-muted mb-6">{t('auth.welcomeBackDesc')}</p>
 
             {isUnrecognizedDevice ? (
-              <UnrecognizedDeviceAlert email={email} />
+              <UnrecognizedDeviceAlert
+                email={email}
+                registeredDevice={deviceErrorDetails?.registeredDevice || error?.registeredDevice}
+                currentDevice={deviceErrorDetails?.currentDevice || error?.currentDevice}
+              />
             ) : errMsg && (
               <div className="mb-5 flex items-start gap-2 rounded-xl border border-error-500/30 bg-error-500/10 p-3 text-sm text-error-200">
                 <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
@@ -484,7 +509,11 @@ export function AuthScreen() {
                   </div>
 
                   {isUnrecognizedDevice ? (
-                    <UnrecognizedDeviceAlert email={email} />
+                    <UnrecognizedDeviceAlert
+                      email={email}
+                      registeredDevice={deviceErrorDetails?.registeredDevice || error?.registeredDevice}
+                      currentDevice={deviceErrorDetails?.currentDevice || error?.currentDevice}
+                    />
                   ) : errMsg && (
                     <div className="mb-5 flex items-start gap-2 rounded-xl border border-error-500/30 bg-error-500/10 p-3 text-sm text-error-200">
                       <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />

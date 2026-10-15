@@ -3,7 +3,23 @@ import { api } from './api';
 import type { Profile, UserRole } from './types';
 import i18n from './i18n';
 
-type AuthError = { message: string; code?: string };
+export interface DeviceInfo {
+  deviceType?: string;
+  nameAr?: string;
+  nameEn?: string;
+  os?: string;
+  browser?: string;
+  category?: 'desktop' | 'mobile' | 'tablet' | 'unknown';
+  model?: string;
+  date?: string;
+}
+
+export type AuthError = {
+  message: string;
+  code?: string;
+  registeredDevice?: DeviceInfo;
+  currentDevice?: DeviceInfo;
+};
 
 interface RegisterInput {
   fullName: string;
@@ -88,8 +104,14 @@ export function useAuth() {
       } catch (err: any) {
         const errorData = err.response?.data;
         const msgs = Array.isArray(errorData?.message) ? errorData.message : [errorData?.message || 'auth.errors.default'];
-        const translatedMsg = msgs.map((m: string) => i18n.t(m)).join(' - ');
-        return { error: { message: translatedMsg, code: errorData?.code } };
+        return {
+          error: {
+            message: translatedMsg,
+            code: errorData?.code,
+            registeredDevice: errorData?.registeredDevice,
+            currentDevice: errorData?.currentDevice,
+          },
+        };
       }
     },
     [],
@@ -121,7 +143,14 @@ export function useAuth() {
         const msgs = Array.isArray(errorData?.message) ? errorData.message : [errorData?.message || 'auth.errors.default'];
         const translatedMsg = msgs.map((m: string) => i18n.t(m)).join(' - ');
         const code = errorData?.code || (rawMessage === 'auth.errors.unrecognizedDevice' ? 'UNRECOGNIZED_DEVICE' : undefined);
-        return { error: { message: translatedMsg, code } };
+        return {
+          error: {
+            message: translatedMsg,
+            code,
+            registeredDevice: errorData?.registeredDevice,
+            currentDevice: errorData?.currentDevice,
+          },
+        };
       }
     },
     [],
