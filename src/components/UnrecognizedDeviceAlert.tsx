@@ -11,8 +11,6 @@ import {
   CheckCircle2,
   XCircle,
   Clock,
-  ArrowRight,
-  ArrowLeft,
 } from 'lucide-react';
 import { DeviceInfo } from '../lib/auth';
 import { getClientDeviceDetails } from '../lib/device';
@@ -40,10 +38,10 @@ export function UnrecognizedDeviceAlert({ email, registeredDevice, currentDevice
     category: clientFallback.category,
   };
 
-  const registeredNameAr = registeredDevice?.nameAr || registeredDevice?.deviceType || 'الجهاز المسجل مسبقاً (جهازك الأساسي)';
-  const registeredNameEn = registeredDevice?.nameEn || registeredDevice?.deviceType || 'Previously Authorized Device';
+  const registeredNameAr = registeredDevice?.nameAr || registeredDevice?.deviceType || 'الجهاز المسجل مسبقاً';
+  const registeredNameEn = registeredDevice?.nameEn || registeredDevice?.deviceType || 'Previously Registered Device';
 
-  const currentNameAr = effectiveCurrent.nameAr || effectiveCurrent.deviceType || 'جهاز مختلف';
+  const currentNameAr = effectiveCurrent.nameAr || effectiveCurrent.deviceType || 'جهاز غير مطابق';
   const currentNameEn = effectiveCurrent.nameEn || effectiveCurrent.deviceType || 'Different Device';
 
   const waMessageAr = `مرحباً، أواجه مشكلة في تسجيل الدخول على منصة E.Camp (تم حظر الدخول لأن الحساب مقيد بجهاز آخر).
@@ -88,127 +86,124 @@ Please assist with a device reset for my account.`;
       dir={activeLang === 'ar' ? 'rtl' : 'ltr'}
       className="mb-6 rounded-2xl border border-rose-500/30 bg-gradient-to-b from-rose-950/40 via-theme-card/90 to-theme-card/95 p-4 sm:p-5 shadow-xl shadow-rose-950/20 backdrop-blur-md transition-all text-theme-text"
     >
-      {/* ── Top Bar: Icon + Title + Language Switcher ── */}
-      <div className="flex items-center justify-between gap-2 pb-3 mb-3.5 border-b border-rose-500/20">
-        <div className="flex items-center gap-2.5">
+      {/* ── Top Bar: Badge + Language Switcher / Title ── */}
+      <div className="pb-3.5 mb-3.5 border-b border-rose-500/20">
+        <div className="flex items-center justify-between gap-2 mb-2">
+          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold tracking-wide uppercase bg-rose-500/20 text-rose-300 border border-rose-500/30">
+            {activeLang === 'ar' ? 'سياسة الجهاز الواحد' : 'Single-Device Policy'}
+          </span>
+
+          {/* In-Card Language Toggle */}
+          <div className="flex items-center p-0.5 rounded-lg bg-theme-bg/80 border border-theme-border text-xs shrink-0">
+            <button
+              type="button"
+              onClick={() => setActiveLang('ar')}
+              className={`px-2 py-1 rounded-md font-medium transition-all ${
+                activeLang === 'ar'
+                  ? 'bg-rose-500/20 text-rose-300 font-bold border border-rose-500/30 shadow-sm'
+                  : 'text-theme-muted hover:text-theme-text'
+              }`}
+            >
+              عربي
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveLang('en')}
+              className={`px-2 py-1 rounded-md font-medium transition-all ${
+                activeLang === 'en'
+                  ? 'bg-rose-500/20 text-rose-300 font-bold border border-rose-500/30 shadow-sm'
+                  : 'text-theme-muted hover:text-theme-text'
+              }`}
+            >
+              EN
+            </button>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-rose-500/20 border border-rose-500/30 flex items-center justify-center shrink-0 shadow-inner">
             <ShieldAlert className="w-5 h-5 text-rose-400" />
           </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold tracking-wide uppercase bg-rose-500/20 text-rose-300 border border-rose-500/30">
-                {activeLang === 'ar' ? 'سياسة الجهاز الواحد' : 'Single-Device Policy'}
-              </span>
-            </div>
-            <h3 className="text-base sm:text-lg font-bold text-theme-text mt-0.5">
-              {activeLang === 'ar' ? 'تم تقييد تسجيل الدخول (جهاز غير مصرّح به)' : 'Access Restricted (Unrecognized Device)'}
-            </h3>
-          </div>
-        </div>
-
-        {/* In-Card Language Toggle */}
-        <div className="flex items-center p-1 rounded-lg bg-theme-bg/80 border border-theme-border text-xs shrink-0">
-          <button
-            type="button"
-            onClick={() => setActiveLang('ar')}
-            className={`px-2 py-1 rounded-md font-medium transition-all ${
-              activeLang === 'ar'
-                ? 'bg-rose-500/20 text-rose-300 font-bold border border-rose-500/30 shadow-sm'
-                : 'text-theme-muted hover:text-theme-text'
-            }`}
-          >
-            عربي
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveLang('en')}
-            className={`px-2 py-1 rounded-md font-medium transition-all ${
-              activeLang === 'en'
-                ? 'bg-rose-500/20 text-rose-300 font-bold border border-rose-500/30 shadow-sm'
-                : 'text-theme-muted hover:text-theme-text'
-            }`}
-          >
-            EN
-          </button>
+          <h3 className="text-base sm:text-lg font-bold text-theme-text leading-snug">
+            {activeLang === 'ar' ? 'تم تقييد تسجيل الدخول (جهاز غير مصرّح به)' : 'Access Restricted (Unrecognized Device)'}
+          </h3>
         </div>
       </div>
 
-      {/* ── Visual Device Comparison: Registered vs. Current ── */}
-      <div className="mb-3.5">
-        <div className="text-[11px] font-semibold uppercase tracking-wider text-theme-muted mb-2 flex items-center gap-1.5">
+      {/* ── Visual Device Comparison: Stacked Full-Width Cards for Complete Readability ── */}
+      <div className="space-y-2.5 mb-3.5">
+        <div className="text-[11px] font-semibold uppercase tracking-wider text-theme-muted flex items-center gap-1.5">
           <span>{activeLang === 'ar' ? 'مقارنة الأجهزة المكتشفة' : 'Detected Device Comparison'}</span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-          {/* 1. Initial / Registered Device Card */}
-          <div className="relative p-3 rounded-xl border border-emerald-500/30 bg-emerald-950/20 flex flex-col justify-between">
-            <div>
-              <div className="flex items-center justify-between gap-1.5 mb-1.5">
-                <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-400">
-                  <CheckCircle2 className="w-3.5 h-3.5" />
-                  {activeLang === 'ar' ? 'الجهاز الأصلي المسجل' : 'Initial Registered Device'}
-                </span>
-                {registeredDateFormatted && (
-                  <span className="inline-flex items-center gap-1 text-[10px] text-emerald-300/80">
-                    <Clock className="w-3 h-3" />
-                    {registeredDateFormatted}
-                  </span>
-                )}
-              </div>
+        {/* 1. Initial / Registered Device Card */}
+        <div className="p-3.5 rounded-xl border border-emerald-500/30 bg-emerald-950/25 space-y-2">
+          <div className="flex items-center justify-between gap-2">
+            <span className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-400">
+              <CheckCircle2 className="w-4 h-4 shrink-0" />
+              {activeLang === 'ar' ? 'الجهاز الأصلي المسجل' : 'Initial Registered Device'}
+            </span>
+            {registeredDateFormatted ? (
+              <span className="inline-flex items-center gap-1 text-[11px] text-emerald-300/80 font-medium">
+                <Clock className="w-3 h-3" />
+                {registeredDateFormatted}
+              </span>
+            ) : (
+              <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                {activeLang === 'ar' ? 'معتمد' : 'Authorized'}
+              </span>
+            )}
+          </div>
 
-              <div className="flex items-center gap-2 mt-1">
-                <div className="w-8 h-8 rounded-lg bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center shrink-0 text-emerald-400">
-                  {renderDeviceIcon(registeredDevice?.category)}
-                </div>
-                <div className="min-w-0">
-                  <p className="font-bold text-sm text-theme-text truncate">
-                    {activeLang === 'ar' ? registeredNameAr : registeredNameEn}
-                  </p>
-                  <p className="text-[11px] text-theme-muted truncate">
-                    {[registeredDevice?.os, registeredDevice?.browser].filter(Boolean).join(' • ') ||
-                      (activeLang === 'ar' ? 'جهازك المصرح به مسبقاً' : 'Your authorized device')}
-                  </p>
-                </div>
-              </div>
+          <div className="flex items-start gap-3 pt-0.5">
+            <div className="w-9 h-9 rounded-lg bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center shrink-0 text-emerald-400 mt-0.5">
+              {renderDeviceIcon(registeredDevice?.category, 'w-5 h-5')}
             </div>
-
-            <div className="mt-2.5 pt-2 border-t border-emerald-500/15 text-[11px] text-emerald-300/90 font-medium flex items-center gap-1">
-              <span>{activeLang === 'ar' ? '✓ مسموح بالدخول من هذا الجهاز فقط' : '✓ Access is allowed from this device only'}</span>
+            <div className="flex-1 min-w-0">
+              <p className="font-bold text-sm text-theme-text leading-snug break-words">
+                {activeLang === 'ar' ? registeredNameAr : registeredNameEn}
+              </p>
+              <p className="text-xs text-theme-muted mt-0.5 leading-normal break-words">
+                {[registeredDevice?.os, registeredDevice?.browser].filter(Boolean).join(' • ') ||
+                  (activeLang === 'ar' ? 'جهازك الأساسي المعتمد على المنصة' : 'Your primary authorized device')}
+              </p>
             </div>
           </div>
 
-          {/* 2. Current Device Card */}
-          <div className="relative p-3 rounded-xl border border-rose-500/35 bg-rose-950/30 flex flex-col justify-between">
-            <div>
-              <div className="flex items-center justify-between gap-1.5 mb-1.5">
-                <span className="inline-flex items-center gap-1 text-[11px] font-bold text-rose-400">
-                  <XCircle className="w-3.5 h-3.5" />
-                  {activeLang === 'ar' ? 'الجهاز الحالي (المحاولة الآن)' : 'Current Device (Attempted Now)'}
-                </span>
-                <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30">
-                  {activeLang === 'ar' ? 'محظور' : 'Blocked'}
-                </span>
-              </div>
+          <div className="pt-2 border-t border-emerald-500/15 text-xs text-emerald-300/90 font-medium flex items-center gap-1.5">
+            <span>{activeLang === 'ar' ? '✓ مسموح بالدخول فقط من هذا الجهاز' : '✓ Access is allowed from this device only'}</span>
+          </div>
+        </div>
 
-              <div className="flex items-center gap-2 mt-1">
-                <div className="w-8 h-8 rounded-lg bg-rose-500/20 border border-rose-500/30 flex items-center justify-center shrink-0 text-rose-400">
-                  {renderDeviceIcon(effectiveCurrent.category)}
-                </div>
-                <div className="min-w-0">
-                  <p className="font-bold text-sm text-theme-text truncate">
-                    {activeLang === 'ar' ? currentNameAr : currentNameEn}
-                  </p>
-                  <p className="text-[11px] text-theme-muted truncate">
-                    {[effectiveCurrent.os, effectiveCurrent.browser].filter(Boolean).join(' • ') ||
-                      (activeLang === 'ar' ? 'جهازك الحالي غير مطابق' : 'Current device does not match')}
-                  </p>
-                </div>
-              </div>
-            </div>
+        {/* 2. Current Device Card */}
+        <div className="p-3.5 rounded-xl border border-rose-500/35 bg-rose-950/30 space-y-2">
+          <div className="flex items-center justify-between gap-2">
+            <span className="inline-flex items-center gap-1.5 text-xs font-bold text-rose-400">
+              <XCircle className="w-4 h-4 shrink-0" />
+              {activeLang === 'ar' ? 'الجهاز الحالي (المحاولة الآن)' : 'Current Device (Attempted Now)'}
+            </span>
+            <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30">
+              {activeLang === 'ar' ? 'محظور' : 'Blocked'}
+            </span>
+          </div>
 
-            <div className="mt-2.5 pt-2 border-t border-rose-500/15 text-[11px] text-rose-300 font-medium flex items-center gap-1">
-              <span>{activeLang === 'ar' ? '✕ تم رفض الدخول لأن البصمة لا تطابق الجهاز المسجل' : '✕ Access rejected: Hardware fingerprint mismatch'}</span>
+          <div className="flex items-start gap-3 pt-0.5">
+            <div className="w-9 h-9 rounded-lg bg-rose-500/20 border border-rose-500/30 flex items-center justify-center shrink-0 text-rose-400 mt-0.5">
+              {renderDeviceIcon(effectiveCurrent.category, 'w-5 h-5')}
             </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-bold text-sm text-theme-text leading-snug break-words">
+                {activeLang === 'ar' ? currentNameAr : currentNameEn}
+              </p>
+              <p className="text-xs text-theme-muted mt-0.5 leading-normal break-words">
+                {[effectiveCurrent.os, effectiveCurrent.browser].filter(Boolean).join(' • ') ||
+                  (activeLang === 'ar' ? 'جهازك الحالي غير مطابق' : 'Current device does not match')}
+              </p>
+            </div>
+          </div>
+
+          <div className="pt-2 border-t border-rose-500/15 text-xs text-rose-300 font-medium flex items-center gap-1.5">
+            <span>{activeLang === 'ar' ? '✕ تم رفض الدخول لأن البصمة لا تطابق الجهاز المسجل' : '✕ Access rejected: Hardware fingerprint mismatch'}</span>
           </div>
         </div>
       </div>
@@ -228,7 +223,7 @@ Please assist with a device reset for my account.`;
               <p className="text-theme-muted leading-relaxed mt-0.5">
                 {activeLang === 'ar' ? (
                   <>
-                    حسابك مسجل ومعتمد على جهاز <strong className="text-emerald-300">{registeredNameAr}</strong>. بينما تحاول الآن تسجيل الدخول من جهاز <strong className="text-rose-300">{currentNameAr}</strong>. تنص شروط المنصة على تقييد الحساب بجهاز واحد فقط لحماية المحتوى ومنع مشاركة الحسابات.
+                    حسابك مسجل ومعتمد على <strong className="text-emerald-300">{registeredNameAr}</strong>. بينما تحاول الآن تسجيل الدخول من <strong className="text-rose-300">{currentNameAr}</strong>. تنص شروط المنصة على تقييد الحساب بجهاز واحد فقط لحماية المحتوى ومنع مشاركة الحسابات.
                   </>
                 ) : (
                   <>
