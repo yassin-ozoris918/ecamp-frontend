@@ -117,9 +117,11 @@ export function useAuth() {
         return { error: null };
       } catch (err: any) {
         const errorData = err.response?.data;
+        const rawMessage = Array.isArray(errorData?.message) ? errorData.message[0] : errorData?.message;
         const msgs = Array.isArray(errorData?.message) ? errorData.message : [errorData?.message || 'auth.errors.default'];
         const translatedMsg = msgs.map((m: string) => i18n.t(m)).join(' - ');
-        return { error: { message: translatedMsg, code: errorData?.code } };
+        const code = errorData?.code || (rawMessage === 'auth.errors.unrecognizedDevice' ? 'UNRECOGNIZED_DEVICE' : undefined);
+        return { error: { message: translatedMsg, code } };
       }
     },
     [],

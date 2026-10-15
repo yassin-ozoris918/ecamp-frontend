@@ -8,6 +8,7 @@ import { LanguageToggle } from './common/LanguageToggle';
 import { useTranslation } from 'react-i18next';
 import { MaintenanceNotice } from './common/MaintenanceNotice';
 import { AcademicDropdowns } from './AcademicDropdowns';
+import { UnrecognizedDeviceAlert } from './UnrecognizedDeviceAlert';
 import {
   HighSchoolSystem,
   StudyMode,
@@ -27,6 +28,7 @@ export function AuthScreen() {
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [busy, setBusy] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
+  const [localErrorCode, setLocalErrorCode] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [registrationPending, setRegistrationPending] = useState(false);
   const [maintenanceInterrupted, setMaintenanceInterrupted] = useState(() =>
@@ -36,11 +38,13 @@ export function AuthScreen() {
   function handleRegisterTabClick() {
     setMode('register');
     setLocalError(null);
+    setLocalErrorCode(null);
   }
 
   function handleLoginTabClick() {
     setMode('login');
     setLocalError(null);
+    setLocalErrorCode(null);
   }
 
 
@@ -96,6 +100,20 @@ export function AuthScreen() {
   };
 
   const errMsg = localError ?? error?.message ?? null;
+  const isUnrecognizedDevice = Boolean(
+    localErrorCode === 'UNRECOGNIZED_DEVICE' ||
+    error?.code === 'UNRECOGNIZED_DEVICE' ||
+    errMsg === 'auth.errors.unrecognizedDevice' ||
+    errMsg === t('auth.errors.unrecognizedDevice') ||
+    errMsg === t('auth.unrecognizedDevice') ||
+    (errMsg && (
+      errMsg.toLowerCase().includes('different device') ||
+      errMsg.toLowerCase().includes('unrecognized device') ||
+      errMsg.includes('مرتبط بجهاز') ||
+      errMsg.includes('جهاز غير مُعرَّف') ||
+      errMsg.includes('جهاز مختلف')
+    ))
+  );
 
   async function handleAvatarUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -128,6 +146,7 @@ export function AuthScreen() {
 
   async function handleSubmit(e: React.FormEvent) {
     setLocalError(null);
+    setLocalErrorCode(null);
     setError(null);
     e.preventDefault();
     setBusy(true);
@@ -146,6 +165,7 @@ export function AuthScreen() {
             setError(error);
           } else {
             setLocalError(error.message);
+            setLocalErrorCode(error.code || null);
           }
         }
       } else {
@@ -354,35 +374,8 @@ export function AuthScreen() {
             <h2 className="text-2xl font-display font-bold text-theme-text mb-1">{t('auth.welcomeBack')}</h2>
             <p className="text-sm text-theme-muted mb-6">{t('auth.welcomeBackDesc')}</p>
 
-            {errMsg === 'auth.errors.unrecognizedDevice' || errMsg?.includes('Unrecognized Device') ? (
-              <div className="mb-5 rounded-xl border border-warning-500/40 bg-warning-500/10 p-5">
-                {/* Header */}
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="flex-shrink-0 w-10 h-10 rounded-full bg-warning-500/20 flex items-center justify-center">
-                    <AlertCircle className="w-5 h-5 text-warning-400" />
-                  </div>
-                  <h3 className="text-base font-bold text-theme-text">{t('auth.unrecognizedDevice')}</h3>
-                </div>
-                {/* Short description */}
-                <p className="text-sm text-theme-text font-medium mb-2">{t('auth.unrecognizedDeviceDesc')}</p>
-                {/* Detailed explanation */}
-                <p className="text-sm text-theme-muted mb-2">{t('auth.unrecognizedDeviceDetail1')}</p>
-                <p className="text-sm text-theme-muted mb-4">{t('auth.unrecognizedDeviceDetail2')}</p>
-                {/* Contact support button */}
-                <a
-                  href={import.meta.env.VITE_SUPPORT_URL || import.meta.env.VITE_REGISTRATION_HELP_URL || 'https://www.facebook.com/'}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-2 w-full px-4 py-2.5 bg-warning-500/20 hover:bg-warning-500/30 border border-warning-500/40 text-warning-300 font-semibold text-sm rounded-lg transition-colors mb-3"
-                >
-                  <AlertCircle className="w-4 h-4" />
-                  {t('auth.unrecognizedDeviceSupport')}
-                </a>
-                {/* Security note */}
-                <p className="text-xs text-theme-muted/70 text-center border-t border-warning-500/20 pt-3">
-                  🔒 {t('auth.unrecognizedDeviceNote')}
-                </p>
-              </div>
+            {isUnrecognizedDevice ? (
+              <UnrecognizedDeviceAlert email={email} />
             ) : errMsg && (
               <div className="mb-5 flex items-start gap-2 rounded-xl border border-error-500/30 bg-error-500/10 p-3 text-sm text-error-200">
                 <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
@@ -490,35 +483,8 @@ export function AuthScreen() {
                     </a>
                   </div>
 
-                  {errMsg === 'auth.errors.unrecognizedDevice' || errMsg?.includes('Unrecognized Device') ? (
-                    <div className="mb-5 rounded-xl border border-warning-500/40 bg-warning-500/10 p-5">
-                      {/* Header */}
-                      <div className="flex items-center gap-3 mb-3">
-                        <div className="flex-shrink-0 w-10 h-10 rounded-full bg-warning-500/20 flex items-center justify-center">
-                          <AlertCircle className="w-5 h-5 text-warning-400" />
-                        </div>
-                        <h3 className="text-base font-bold text-theme-text">{t('auth.unrecognizedDevice')}</h3>
-                      </div>
-                      {/* Short description */}
-                      <p className="text-sm text-theme-text font-medium mb-2">{t('auth.unrecognizedDeviceDesc')}</p>
-                      {/* Detailed explanation */}
-                      <p className="text-sm text-theme-muted mb-2">{t('auth.unrecognizedDeviceDetail1')}</p>
-                      <p className="text-sm text-theme-muted mb-4">{t('auth.unrecognizedDeviceDetail2')}</p>
-                      {/* Contact support button */}
-                      <a
-                        href={import.meta.env.VITE_SUPPORT_URL || import.meta.env.VITE_REGISTRATION_HELP_URL || 'https://www.facebook.com/'}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center justify-center gap-2 w-full px-4 py-2.5 bg-warning-500/20 hover:bg-warning-500/30 border border-warning-500/40 text-warning-300 font-semibold text-sm rounded-lg transition-colors mb-3"
-                      >
-                        <AlertCircle className="w-4 h-4" />
-                        {t('auth.unrecognizedDeviceSupport')}
-                      </a>
-                      {/* Security note */}
-                      <p className="text-xs text-theme-muted/70 text-center border-t border-warning-500/20 pt-3">
-                        🔒 {t('auth.unrecognizedDeviceNote')}
-                      </p>
-                    </div>
+                  {isUnrecognizedDevice ? (
+                    <UnrecognizedDeviceAlert email={email} />
                   ) : errMsg && (
                     <div className="mb-5 flex items-start gap-2 rounded-xl border border-error-500/30 bg-error-500/10 p-3 text-sm text-error-200">
                       <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
