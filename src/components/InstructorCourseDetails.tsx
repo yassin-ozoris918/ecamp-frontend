@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { api } from '../lib/api';
 import { Link } from '../lib/router';
-import { Users, PlayCircle, BarChart2, Layout, User, Settings, GraduationCap, Clock, MessageSquare, TrendingUp, Trophy, File, Download, Folder } from 'lucide-react';
-import { Badge, Skeleton, EmptyState } from './ui';
+import { Users, PlayCircle, BarChart2, Layout, User, Settings, GraduationCap, Clock, TrendingUp, Trophy, File, Download, Folder, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Badge, Skeleton, EmptyState, Spinner } from './ui';
 
 export function InstructorCourseDetails({ courseId }: { courseId: string }) {
   const [course, setCourse] = useState<any>(null);
@@ -12,6 +12,28 @@ export function InstructorCourseDetails({ courseId }: { courseId: string }) {
   const [tab, setTab] = useState<'OVERVIEW' | 'STUDENTS' | 'LECTURES' | 'FILES'>('OVERVIEW');
   const [loading, setLoading] = useState(true);
 
+  // Students pagination state
+  const [studentsPage, setStudentsPage] = useState(1);
+  const [studentsLimit, setStudentsLimit] = useState(20);
+  const [studentsTotal, setStudentsTotal] = useState(0);
+  const [studentsLoading, setStudentsLoading] = useState(false);
+  const isInitialMount = useRef(true);
+
+  const loadStudents = useCallback(async (page: number, limit: number) => {
+    setStudentsLoading(true);
+    try {
+      const res = await api.get(`/instructor/courses/${courseId}/students`, {
+        params: { page, limit }
+      });
+      setStudents(res.data.data || []);
+      setStudentsTotal(res.data.total || 0);
+    } catch (err) {
+      console.error('Failed to load students:', err);
+    } finally {
+      setStudentsLoading(false);
+    }
+  }, [courseId]);
+
   useEffect(() => {
     (async () => {
       setLoading(true);
@@ -19,12 +41,13 @@ export function InstructorCourseDetails({ courseId }: { courseId: string }) {
         const [courseRes, statsRes, studentsRes, lecturesRes] = await Promise.all([
           api.get(`/instructor/courses/${courseId}`),
           api.get(`/instructor/courses/${courseId}/analytics`),
-          api.get(`/instructor/courses/${courseId}/students`),
+          api.get(`/instructor/courses/${courseId}/students`, { params: { page: 1, limit: studentsLimit } }),
           api.get(`/instructor/courses/${courseId}/lectures`)
         ]);
         setCourse(courseRes.data);
         setAnalytics(statsRes.data);
-        setStudents(studentsRes.data.data);
+        setStudents(studentsRes.data.data || []);
+        setStudentsTotal(studentsRes.data.total || 0);
         setLectures(lecturesRes.data);
       } catch (err) {
         console.error(err);
@@ -33,12 +56,51 @@ export function InstructorCourseDetails({ courseId }: { courseId: string }) {
     })();
   }, [courseId]);
 
+  // When page or limit changes after initial mount, refetch students only
+  useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+    loadStudents(studentsPage, studentsLimit);
+  }, [studentsPage, studentsLimit, loadStudents]);
+
   if (loading) {
     return <div className="p-8"><Skeleton className="h-64 w-full" /></div>;
   }
   if (!course) {
     return <div className="p-8 text-center text-error-400">Course not found or access denied.</div>;
   }
+
+  const totalPages = Math.max(1, Math.ceil(studentsTotal / studentsLimit));
+  const startItem = studentsTotal === 0 ? 0 : (studentsPage - 1) * studentsLimit + 1;
+  const endItem = Math.min(studentsPage * studentsLimit, studentsTotal);
+
+  const getPageNumbers = () => {
+    const pages: (number | string)[] = [];
+    if (totalPages <= 7) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      if (studentsPage <= 4) {
+        for (let i = 1; i <= 5; i++) pages.push(i);
+        pages.push('...');
+        pages.push(totalPages);
+      } else if (studentsPage >= totalPages - 3) {
+        pages.push(1);
+        pages.push('...');
+        for (let i = totalPages - 4; i <= totalPages; i++) pages.push(i);
+      } else {
+        pages.push(1);
+        pages.push('...');
+        pages.push(studentsPage - 1);
+        pages.push(studentsPage);
+        pages.push(studentsPage + 1);
+        pages.push('...');
+        pages.push(totalPages);
+      }
+    }
+    return pages;
+  };
 
   return (
     <div className="space-y-6 animate-fade-up">
@@ -53,7 +115,14 @@ export function InstructorCourseDetails({ courseId }: { courseId: string }) {
 
       <div className="flex gap-4 border-b border-white/[0.05] pb-2 overflow-x-auto">
         <button onClick={() => setTab('OVERVIEW')} className={`whitespace-nowrap px-4 py-2 rounded-t-lg font-bold transition-colors ${tab === 'OVERVIEW' ? 'bg-white/[0.05] text-accent-400' : 'text-theme-muted hover:text-theme-text'}`}>Overview & Analytics</button>
-        <button onClick={() => setTab('STUDENTS')} className={`whitespace-nowrap px-4 py-2 rounded-t-lg font-bold transition-colors ${tab === 'STUDENTS' ? 'bg-white/[0.05] text-accent-400' : 'text-theme-muted hover:text-theme-text'}`}>Students List</button>
+        <button onClick={() => setTab('STUDENTS')} className={`whitespace-nowrap px-4 py-2 rounded-t-lg font-bold transition-colors flex items-center gap-2 ${tab === 'STUDENTS' ? 'bg-white/[0.05] text-accent-400' : 'text-theme-muted hover:text-theme-text'}`}>
+          Students List
+          {studentsTotal > 0 && (
+            <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${tab === 'STUDENTS' ? 'bg-accent-500/20 text-accent-400' : 'bg-white/10 text-theme-muted'}`}>
+              {studentsTotal}
+            </span>
+          )}
+        </button>
         <button onClick={() => setTab('LECTURES')} className={`whitespace-nowrap px-4 py-2 rounded-t-lg font-bold transition-colors ${tab === 'LECTURES' ? 'bg-white/[0.05] text-accent-400' : 'text-theme-muted hover:text-theme-text'}`}>Lectures & Watchers</button>
         <button onClick={() => setTab('FILES')} className={`whitespace-nowrap px-4 py-2 rounded-t-lg font-bold transition-colors ${tab === 'FILES' ? 'bg-white/[0.05] text-accent-400' : 'text-theme-muted hover:text-theme-text'}`}>Course Files</button>
       </div>
@@ -200,30 +269,134 @@ export function InstructorCourseDetails({ courseId }: { courseId: string }) {
       )}
 
       {tab === 'STUDENTS' && (
-        <div className="glass rounded-xl overflow-hidden">
-          {students.length === 0 ? <EmptyState icon={<User className="w-8 h-8" />} title="No students" description="No students have been assigned to this course yet." /> : (
-            <table className="w-full text-sm">
-              <thead className="bg-white/[0.02]">
-                <tr className="text-left text-theme-muted">
-                  <th className="p-4">Student</th>
-                  <th className="p-4">Email</th>
-                  <th className="p-4">Enrollment Date</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/[0.02]">
-                {students.map((s: any) => (
-                  <tr key={s.id} className="hover:bg-white/[0.02]">
-                    <td className="p-4 flex items-center gap-3">
-                      {s.profilePictureUrl ? <img src={s.profilePictureUrl} className="w-8 h-8 rounded-full" /> : <div className="w-8 h-8 rounded-full bg-accent-500/20 flex items-center justify-center text-accent-400">{s.fullName[0]}</div>}
-                      {s.fullName}
-                    </td>
-                    <td className="p-4">{s.email}</td>
-                    <td className="p-4">{new Date(s.enrollmentDate).toLocaleDateString()}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
+        <div className="space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-4 px-1">
+            <div className="flex items-center gap-3">
+              <h2 className="text-xl font-bold font-display">Enrolled Students</h2>
+              <span className="text-xs px-2.5 py-0.5 rounded-full bg-accent-500/10 text-accent-400 border border-accent-500/20 font-semibold">
+                {studentsTotal} total
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2 text-sm text-theme-muted">
+              <span>Show</span>
+              <select
+                value={studentsLimit}
+                onChange={(e) => {
+                  const newLimit = Number(e.target.value);
+                  setStudentsLimit(newLimit);
+                  setStudentsPage(1);
+                }}
+                className="bg-white/[0.05] border border-white/10 rounded-lg px-2.5 py-1 text-sm text-theme-text focus:outline-none focus:border-accent-500/50"
+              >
+                <option value={10} className="bg-neutral-900 text-white">10 per page</option>
+                <option value={20} className="bg-neutral-900 text-white">20 per page</option>
+                <option value={50} className="bg-neutral-900 text-white">50 per page</option>
+                <option value={100} className="bg-neutral-900 text-white">100 per page</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="glass rounded-xl overflow-hidden relative">
+            {studentsLoading && (
+              <div className="absolute inset-0 bg-neutral-950/40 backdrop-blur-[1px] flex items-center justify-center z-10 transition-opacity">
+                <Spinner className="w-6 h-6 text-accent-400" />
+              </div>
+            )}
+
+            {students.length === 0 ? (
+              <EmptyState icon={<User className="w-8 h-8" />} title="No students" description="No students have been assigned to this course yet." />
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-white/[0.02]">
+                    <tr className="text-left text-theme-muted">
+                      <th className="p-4 w-12 text-center">#</th>
+                      <th className="p-4">Student</th>
+                      <th className="p-4">Email</th>
+                      <th className="p-4">Enrollment Date</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/[0.02]">
+                    {students.map((s: any, idx: number) => (
+                      <tr key={s.id} className="hover:bg-white/[0.02] transition-colors">
+                        <td className="p-4 text-center text-xs text-theme-muted font-mono">
+                          {startItem + idx}
+                        </td>
+                        <td className="p-4 flex items-center gap-3">
+                          {s.profilePictureUrl ? (
+                            <img src={s.profilePictureUrl} className="w-8 h-8 rounded-full object-cover" />
+                          ) : (
+                            <div className="w-8 h-8 rounded-full bg-accent-500/20 flex items-center justify-center text-accent-400 font-bold text-xs">
+                              {s.fullName?.[0] || 'S'}
+                            </div>
+                          )}
+                          <span className="font-medium">{s.fullName}</span>
+                        </td>
+                        <td className="p-4 text-theme-muted">{s.email}</td>
+                        <td className="p-4 text-theme-muted">
+                          {s.enrollmentDate ? new Date(s.enrollmentDate).toLocaleDateString() : '—'}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {studentsTotal > 0 && (
+              <div className="flex flex-wrap items-center justify-between gap-4 p-4 border-t border-white/[0.05] bg-white/[0.01] text-xs text-theme-muted">
+                <div>
+                  Showing <span className="font-medium text-theme-text">{startItem}</span>–<span className="font-medium text-theme-text">{endItem}</span> of <span className="font-medium text-theme-text">{studentsTotal}</span> students
+                </div>
+
+                {totalPages > 1 && (
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={() => setStudentsPage((p) => Math.max(1, p - 1))}
+                      disabled={studentsPage <= 1 || studentsLoading}
+                      aria-label="Previous page"
+                      className="p-1.5 rounded-lg border border-white/5 bg-white/[0.02] hover:bg-white/[0.06] text-theme-muted hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition"
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                    </button>
+
+                    <div className="flex items-center gap-1">
+                      {getPageNumbers().map((num, i) =>
+                        typeof num === 'number' ? (
+                          <button
+                            key={i}
+                            onClick={() => setStudentsPage(num)}
+                            disabled={studentsLoading}
+                            className={`min-w-[32px] h-8 px-2 rounded-lg text-xs font-semibold transition ${
+                              studentsPage === num
+                                ? 'bg-accent-500 text-white shadow-sm'
+                                : 'border border-white/5 bg-white/[0.02] hover:bg-white/[0.06] text-theme-muted hover:text-white'
+                            }`}
+                          >
+                            {num}
+                          </button>
+                        ) : (
+                          <span key={i} className="px-1 text-theme-muted">
+                            {num}
+                          </span>
+                        )
+                      )}
+                    </div>
+
+                    <button
+                      onClick={() => setStudentsPage((p) => Math.min(totalPages, p + 1))}
+                      disabled={studentsPage >= totalPages || studentsLoading}
+                      aria-label="Next page"
+                      className="p-1.5 rounded-lg border border-white/5 bg-white/[0.02] hover:bg-white/[0.06] text-theme-muted hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition"
+                    >
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       )}
 

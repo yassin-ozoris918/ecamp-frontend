@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api } from '../lib/api';
-import { PlayCircle, Eye, Users, Search, User } from 'lucide-react';
-import { Badge, Skeleton, EmptyState } from './ui';
+import { PlayCircle, Eye, Users, User } from 'lucide-react';
+import { Skeleton, EmptyState } from './ui';
 
 export function InstructorLectureDetails({ courseId, lectureId }: { courseId: string; lectureId: string }) {
   const [analytics, setAnalytics] = useState<any>(null);
@@ -17,8 +17,8 @@ export function InstructorLectureDetails({ courseId, lectureId }: { courseId: st
       try {
         const [statsRes, watchersRes, unwatchedRes, sessionsRes] = await Promise.all([
           api.get(`/instructor/courses/${courseId}/lectures/${lectureId}/analytics`),
-          api.get(`/instructor/courses/${courseId}/lectures/${lectureId}/students`),
-          api.get(`/instructor/courses/${courseId}/lectures/${lectureId}/unwatched-students`),
+          api.get(`/instructor/courses/${courseId}/lectures/${lectureId}/students`, { params: { limit: 100 } }),
+          api.get(`/instructor/courses/${courseId}/lectures/${lectureId}/unwatched-students`, { params: { limit: 100 } }),
           api.get(`/sessions/lecture/${lectureId}`) // Instructor needs to view sessions
         ]);
         setAnalytics(statsRes.data);
@@ -96,8 +96,8 @@ export function InstructorLectureDetails({ courseId, lectureId }: { courseId: st
       </div>
 
       <div className="flex gap-4 border-b border-white/[0.05] pb-2 mt-8">
-        <button onClick={() => setTab('WATCHERS')} className={`px-4 py-2 rounded-t-lg font-bold ${tab === 'WATCHERS' ? 'bg-white/[0.05] text-accent-400' : 'text-theme-muted'}`}>Watched ({watchers.length})</button>
-        <button onClick={() => setTab('UNWATCHED')} className={`px-4 py-2 rounded-t-lg font-bold ${tab === 'UNWATCHED' ? 'bg-white/[0.05] text-accent-400' : 'text-theme-muted'}`}>Not Watched ({unwatched.length})</button>
+        <button onClick={() => setTab('WATCHERS')} className={`px-4 py-2 rounded-t-lg font-bold ${tab === 'WATCHERS' ? 'bg-white/[0.05] text-accent-400' : 'text-theme-muted'}`}>Watched ({analytics.watchedStudents ?? watchers.length})</button>
+        <button onClick={() => setTab('UNWATCHED')} className={`px-4 py-2 rounded-t-lg font-bold ${tab === 'UNWATCHED' ? 'bg-white/[0.05] text-accent-400' : 'text-theme-muted'}`}>Not Watched ({analytics.unwatchedStudents ?? unwatched.length})</button>
       </div>
 
       {tab === 'WATCHERS' && (
