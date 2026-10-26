@@ -4,11 +4,16 @@ import { api } from '../lib/api';
 import { Modal } from './Modal';
 import { Spinner } from './ui';
 import { ZoomIn, ZoomOut, RefreshCw } from 'lucide-react';
+import PdfWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?worker';
 
-// Configure PDF.js worker. First priority is local worker in public/, with unpkg CDN fallback.
-if (typeof window !== 'undefined') {
-  const base = import.meta.env.BASE_URL || '/';
-  pdfjs.GlobalWorkerOptions.workerSrc = `${base.endsWith('/') ? base : base + '/'}pdf.worker.min.mjs`;
+// Configure PDF.js worker using Vite-bundled Web Worker (no external URL fetch required)
+if (typeof window !== 'undefined' && 'Worker' in window) {
+  try {
+    pdfjs.GlobalWorkerOptions.workerPort = new PdfWorker();
+  } catch (e) {
+    console.warn('Failed to start bundled PDF worker, using unpkg fallback:', e);
+    pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
+  }
 }
 
 interface SecureFileViewerProps {
@@ -27,6 +32,7 @@ export function SecureFileViewer({ open, onClose, title, attachmentId }: SecureF
   const [baseWidth, setBaseWidth] = useState<number>(800);
   const [scale, setScale] = useState<number>(1);
   const [loading, setLoading] = useState<boolean>(false);
+  const [docKey, setDocKey] = useState<number>(1);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -189,16 +195,18 @@ export function SecureFileViewer({ open, onClose, title, attachmentId }: SecureF
           </div>
         ) : documentFile ? (
           <Document
+            key={docKey}
             file={documentFile}
             onLoadSuccess={({ numPages: n }) => setNumPages(n)}
             onLoadError={(err: any) => {
               console.error('PDF display error:', err);
-              // Fallback to unpkg CDN worker if local worker path had issue
+              // Fallback to unpkg CDN worker if bundled worker had any issue
               const currentSrc = pdfjs.GlobalWorkerOptions.workerSrc || '';
               if (!currentSrc.includes('unpkg.com')) {
+                pdfjs.GlobalWorkerOptions.workerPort = null as any;
                 pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
-                // Re-trigger load
-                if (fileData) setFileData(new Uint8Array(fileData));
+                // Force remount
+                setDocKey((prev) => prev + 1);
                 return;
               }
               setError(err?.message || 'This file could not be displayed.');
