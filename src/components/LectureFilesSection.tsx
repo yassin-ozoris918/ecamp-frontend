@@ -14,6 +14,8 @@ export function LectureFilesSection({ lectureId }: LectureFilesSectionProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [fileType, setFileType] = useState('OTHER');
   const [isUploading, setIsUploading] = useState(false);
+  // 'inherit' = follow course policy, 'true' = always downloadable, 'false' = view only
+  const [downloadPolicy, setDownloadPolicy] = useState<'inherit' | 'true' | 'false'>('inherit');
 
   const { data: files = [], isLoading } = useQuery({
     queryKey: ['attachments', lectureId],
@@ -51,6 +53,22 @@ export function LectureFilesSection({ lectureId }: LectureFilesSectionProps) {
     }
   });
 
+  const policyMutation = useMutation({
+    mutationFn: async ({ id, policy }: { id: string; policy: 'inherit' | 'true' | 'false' }) => {
+      return api.patch(`/attachments/${id}/download-policy`, {
+        allowDownload: policy === 'inherit' ? null : policy === 'true',
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['attachments', lectureId] });
+      toast.success('Download policy updated.');
+    },
+    onError: (err: unknown) => {
+      const axiosErr = err as { response?: { data?: { message?: string } } };
+      toast.error(axiosErr.response?.data?.message || 'Failed to update download policy.');
+    }
+  });
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
@@ -69,6 +87,7 @@ export function LectureFilesSection({ lectureId }: LectureFilesSectionProps) {
     formData.append('title', fileTitle.trim());
     formData.append('lectureId', lectureId);
     formData.append('type', fileType);
+    formData.append('allowDownload', downloadPolicy);
 
     uploadMutation.mutate(formData);
   };
@@ -87,17 +106,33 @@ export function LectureFilesSection({ lectureId }: LectureFilesSectionProps) {
           {files.length === 0 ? (
             <p className="text-xs text-theme-muted italic">No resources attached to this lecture yet.</p>
           ) : (
-            files.map((file: { id: string; title: string; type?: string }) => (
+            files.map((file: { id: string; title: string; type?: string; allowDownload?: boolean | null; canDownload?: boolean }) => (
               <div key={file.id} className="flex items-center justify-between rounded-lg bg-theme-card p-2 text-xs border border-theme-border/50">
                 <div className="flex items-center gap-2 overflow-hidden">
                   <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-theme-secondary text-cyan-400 border border-theme-border">
                     {file.type || 'OTHER'}
                   </span>
                   <span className="font-medium text-theme-muted truncate max-w-[200px] sm:max-w-xs">{file.title}</span>
+                  <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold border ${file.canDownload ? 'text-emerald-400 border-emerald-400/20 bg-emerald-500/10' : 'text-red-400 border-red-400/20 bg-red-500/10'}`}>
+                    {file.canDownload ? 'Downloadable' : 'View only'}
+                  </span>
                 </div>
-                <button type="button" onClick={() => deleteMutation.mutate(file.id)} className="text-theme-muted hover:text-red-400 transition ml-2">
-                  <Trash2 className="h-3.5 w-3.5" />
-                </button>
+                <div className="flex items-center gap-2 ml-2">
+                  <select
+                    aria-label="Download policy"
+                    value={file.allowDownload === true ? 'true' : file.allowDownload === false ? 'false' : 'inherit'}
+                    onChange={(e) => policyMutation.mutate({ id: file.id, policy: e.target.value as 'inherit' | 'true' | 'false' })}
+                    disabled={policyMutation.isPending}
+                    className="rounded-lg border border-theme-border bg-theme-secondary p-1 text-[11px] outline-none focus:border-cyan-500 text-theme-muted"
+                  >
+                    <option value="inherit">Follow course</option>
+                    <option value="true">Allow download</option>
+                    <option value="false">View only</option>
+                  </select>
+                  <button type="button" onClick={() => deleteMutation.mutate(file.id)} className="text-theme-muted hover:text-red-400 transition">
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </div>
               </div>
             ))
           )}
@@ -112,6 +147,11 @@ export function LectureFilesSection({ lectureId }: LectureFilesSectionProps) {
           <option value="REFERENCE">REFERENCE</option>
           <option value="ASSIGNMENT">ASSIGNMENT</option>
           <option value="OTHER">OTHER</option>
+        </select>
+        <select value={downloadPolicy} onChange={(e) => setDownloadPolicy(e.target.value as 'inherit' | 'true' | 'false')} aria-label="Download policy" className="rounded-lg border border-theme-border bg-theme-card p-2 text-xs outline-none focus:border-cyan-500 text-theme-muted">
+          <option value="inherit">Follow course policy</option>
+          <option value="true">Allow download</option>
+          <option value="false">View only</option>
         </select>
         <input dir="auto" type="text" placeholder="Custom File Title" value={fileTitle} onChange={(e) => setFileTitle(e.target.value)} className="flex-1 rounded-lg border border-theme-border bg-theme-card p-2 text-xs outline-none focus:border-cyan-500 text-theme-muted" />
         <div className="relative flex items-center justify-center rounded-lg border border-dashed border-theme-border bg-theme-card p-2 hover:bg-theme-secondary transition cursor-pointer">

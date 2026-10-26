@@ -19,6 +19,7 @@ import {
   Settings,
   ArrowUp,
   ArrowDown,
+  Download,
 } from 'lucide-react';
 import { api } from '../lib/api';
 import { useAuth } from '../lib/authContext';
@@ -83,6 +84,25 @@ export function CourseSettingsPanel({ courseId }: { courseId: string }) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['course', courseId] });
       setFeedback('Course pricing status updated.');
+    },
+    onError: (err: unknown) => {
+      setFeedback((err as any)?.response?.data?.message || 'Failed to update course.');
+    }
+  });
+
+  const toggleDownloadMutation = useMutation({
+    mutationFn: async (allowFileDownload: boolean) => {
+      return api.put(`/courses/${courseId}`, {
+        title: courseDetails.title,
+        description: courseDetails.description,
+        audienceType: courseDetails.audienceType,
+        allowFileDownload
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['course', courseId] });
+      queryClient.invalidateQueries({ queryKey: ['attachments'] });
+      setFeedback('Course file download policy updated.');
     },
     onError: (err: unknown) => {
       setFeedback((err as any)?.response?.data?.message || 'Failed to update course.');
@@ -178,6 +198,29 @@ export function CourseSettingsPanel({ courseId }: { courseId: string }) {
             className={`btn-ghost py-1 px-3 text-xs border ${courseDetails?.isFree ? 'border-emerald-500/30 hover:bg-emerald-500/10' : 'border-theme-border hover:bg-theme-secondary'}`}
           >
             {courseDetails?.isFree ? 'Make Paid' : 'Make Free'}
+          </button>
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between border-b border-theme-border pb-4">
+        <div className="flex items-center gap-2">
+          <Download className="h-5 w-5 text-amber-400" />
+          <div>
+            <h3 className="text-md font-bold">File Downloads</h3>
+            <p className="text-xs text-theme-muted">Default for all lecture files in this course. Individual files can override it.</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          <span className={`rounded-full border px-3 py-1 text-xs font-bold uppercase tracking-wider ${courseDetails?.allowFileDownload === false ? 'bg-red-500/10 border-red-400/20 text-red-400' : 'bg-emerald-500/10 border-emerald-400/20 text-emerald-400'}`}>
+            {courseDetails?.allowFileDownload === false ? 'View only' : 'Downloadable'}
+          </span>
+          <button
+            id="toggle-course-file-download"
+            onClick={() => toggleDownloadMutation.mutate(courseDetails?.allowFileDownload === false)}
+            disabled={!courseDetails || toggleDownloadMutation.isPending}
+            className="btn-ghost py-1 px-3 text-xs border border-theme-border hover:bg-theme-secondary"
+          >
+            {courseDetails?.allowFileDownload === false ? 'Allow Downloads' : 'Disable Downloads'}
           </button>
         </div>
       </div>

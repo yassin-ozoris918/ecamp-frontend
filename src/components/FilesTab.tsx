@@ -18,6 +18,7 @@ export function FilesTab({ hideHeader = false }: { hideHeader?: boolean }) {
   const [accessFilter, setAccessFilter] = useState(''); // '' | 'UNLOCKED' | 'LOCKED'
   const [redeemCode, setRedeemCode] = useState('');
   const [redeemingTarget, setRedeemingTarget] = useState<{ id: string, type: 'FILE' | 'COURSE_FILES' } | null>(null);
+  const [viewer, setViewer] = useState<{ title: string; url: string } | null>(null);
 
   // Fetch student courses to populate the course filter dropdown
   const { data: courses } = useQuery({
@@ -58,11 +59,16 @@ export function FilesTab({ hideHeader = false }: { hideHeader?: boolean }) {
     }
   });
 
-  const handleOpen = async (id: string, title: string, download = false) => {
+  const handleOpen = async (id: string, title: string, download = false, canDownload = true) => {
     try {
       const res = await api.get(`/attachments/${id}/view${download ? '?download=true' : ''}`);
       if (res.data.url) {
-        window.open(res.data.url, '_blank', 'noopener,noreferrer');
+        if (!canDownload) {
+          // View-only files stay inside the platform (embedded viewer, no new tab).
+          setViewer({ title, url: res.data.url });
+        } else {
+          window.open(res.data.url, '_blank', 'noopener,noreferrer');
+        }
       }
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Failed to open file.');
@@ -219,14 +225,16 @@ export function FilesTab({ hideHeader = false }: { hideHeader?: boolean }) {
 
               {file.accessStatus === 'UNLOCKED' ? (
                 <div className="flex gap-2 w-full">
-                  <Button variant="primary" className="flex-1" onClick={() => handleOpen(file.id, file.title)}>
+                  <Button variant="primary" className="flex-1" onClick={() => handleOpen(file.id, file.title, false, file.canDownload !== false)}>
                     <ExternalLink className="w-4 h-4 mr-2" />
-                    {t('files.open', 'Open')}
+                    {file.canDownload === false ? t('files.view', 'View') : t('files.open', 'Open')}
                   </Button>
-                  <Button variant="secondary" className="flex-1" onClick={() => handleOpen(file.id, file.title, true)}>
-                    <Download className="w-4 h-4 mr-2" />
-                    {t('files.download', 'Download')}
-                  </Button>
+                  {file.canDownload !== false && (
+                    <Button variant="secondary" className="flex-1" onClick={() => handleOpen(file.id, file.title, true)}>
+                      <Download className="w-4 h-4 mr-2" />
+                      {t('files.download', 'Download')}
+                    </Button>
+                  )}
                 </div>
               ) : (
                 <div className="flex flex-col gap-2 mt-auto">
@@ -266,6 +274,7 @@ export function FilesTab({ hideHeader = false }: { hideHeader?: boolean }) {
           ))}
         </div>
       )}
+      <FileViewerModal open={!!viewer} onClose={() => setViewer(null)} title={viewer?.title} url={viewer?.url} />
     </div>
   );
 }
