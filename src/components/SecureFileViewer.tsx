@@ -1,119 +1,240 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import { api } from '../lib/api';
 import { Modal } from './Modal';
 import { Spinner } from './ui';
+import { ZoomIn, ZoomOut, RefreshCw } from 'lucide-react';
 
-pdfjs.GlobalWorkerOptions.workerSrc = new URL('pdfjs-dist/build/pdf.worker.min.mjs', import.meta.url).toString();
+// Configure PDF.js worker. First priority is local worker in public/, with unpkg CDN fallback.
+if (typeof window !== 'undefined') {
+  const base = import.meta.env.BASE_URL || '/';
+  pdfjs.GlobalWorkerOptions.workerSrc = `${base.endsWith('/') ? base : base + '/'}pdf.worker.min.mjs`;
+}
 
 interface SecureFileViewerProps {
   open: boolean;
   onClose: () => void;
   title: string | undefined;
-  /** Attachment id; the file is fetched through the authenticated /attachments/:id/stream endpoint. */
+  /** Attachment id; fetched through authenticated /attachments/:id/stream */
   attachmentId: string | undefined;
 }
 
-/**
- * Renders view-only files on <canvas>/<img> instead of the browser's built-in viewer,
- * so no native Download / Print / Save controls exist. The file bytes are loaded as a blob
- * through the API (no direct or signed storage URL is ever exposed).
- */
 export function SecureFileViewer({ open, onClose, title, attachmentId }: SecureFileViewerProps) {
-  const [blob, setBlob] = useState<Blob | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [numPages, setNumPages] = useState(0);
-  const [width, setWidth] = useState(800);
+  const [fileData, setFileData] = useState<Uint8Array | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [numPages, setNumPages] = useState<number>(0);
+  const [baseWidth, setBaseWidth] = useState<number>(800);
+  const [scale, setScale] = useState<number>(1);
+  const [loading, setLoading] = useState<boolean>(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!open || !attachmentId) return;
+
     let cancelled = false;
-    setBlob(null);
+    setFileData(null);
+    setImageUrl(null);
     setError(null);
     setNumPages(0);
+    setScale(1);
+    setLoading(true);
+
     api
-      .get(`/attachments/${attachmentId}/stream`, { responseType: 'blob' })
+      .get(`/attachments/${attachmentId}/stream`, { responseType: 'arraybuffer' })
       .then((res) => {
-        if (!cancelled) setBlob(res.data as Blob);
+        if (cancelled) return;
+        const uint8 = new Uint8Array(res.data as ArrayBuffer);
+
+        if (uint8.length === 0) {
+          setError('The requested file is empty.');
+          setLoading(false);
+          return;
+        }
+
+        // Check if image by extension
+        const isImage = title?.match(/\.(png|jpe?g|webp|gif|svg)$/i);
+        if (isImage) {
+          const blob = new Blob([uint8]);
+          const url = URL.createObjectURL(blob);
+          setImageUrl(url);
+        } else {
+          setFileData(uint8);
+        }
+        setLoading(false);
       })
-      .catch(() => {
-        if (!cancelled) setError('Failed to load this file.');
+      .catch((err) => {
+        if (!cancelled) {
+          console.error('Failed to load attachment stream:', err);
+          const msg = err.response?.data?.message || 'Failed to load this file.';
+          setError(typeof msg === 'string' ? msg : 'Failed to load this file.');
+          setLoading(false);
+        }
       });
+
     return () => {
       cancelled = true;
     };
-  }, [open, attachmentId]);
+  }, [open, attachmentId, title]);
 
   useEffect(() => {
-    if (!blob || !blob.type.startsWith('image/')) {
-      setImageUrl(null);
-      return;
-    }
-    const url = URL.createObjectURL(blob);
-    setImageUrl(url);
-    return () => URL.revokeObjectURL(url);
-  }, [blob]);
+    return () => {
+      if (imageUrl) URL.revokeObjectURL(imageUrl);
+    };
+  }, [imageUrl]);
 
+  // Adjust page width to container
   useEffect(() => {
     if (!open) return;
-    const measure = () => {
-      if (containerRef.current) setWidth(Math.max(280, containerRef.current.clientWidth - 32));
+    const updateWidth = () => {
+      if (containerRef.current) {
+        setBaseWidth(Math.max(300, containerRef.current.clientWidth - 48));
+      }
     };
-    const t = setTimeout(measure, 50);
-    window.addEventListener('resize', measure);
+    const t = setTimeout(updateWidth, 100);
+    window.addEventListener('resize', updateWidth);
     return () => {
       clearTimeout(t);
-      window.removeEventListener('resize', measure);
+      window.removeEventListener('resize', updateWidth);
     };
-  }, [open, blob]);
+  }, [open, fileData]);
 
-  const isPdf = !!blob && (blob.type === 'application/pdf' || blob.type === 'application/octet-stream');
-  const isImage = !!blob && blob.type.startsWith('image/');
+  const documentFile = useMemo(() => {
+    return fileData ? { data: fileData } : null;
+  }, [fileData]);
+
+  const computedWidth = useMemo(() => {
+    return Math.round(baseWidth * scale);
+  }, [baseWidth, scale]);
+
+  const handleZoomIn = () => setScale((prev) => Math.min(2.5, +(prev + 0.15).toFixed(2)));
+  const handleZoomOut = () => setScale((prev) => Math.max(0.6, +(prev - 0.15).toFixed(2)));
+  const handleResetZoom = () => setScale(1);
 
   return (
     <Modal open={open} onClose={onClose} title={title} size="xl">
       <style>{'@media print { .secure-viewer { display: none !important; } }'}</style>
+
+      {/* Control bar */}
+      <div className="flex items-center justify-between px-3 py-2 bg-theme-secondary/80 border-b border-theme-border text-xs rounded-t-xl select-none">
+        <div className="flex items-center gap-2 text-theme-muted">
+          {numPages > 0 && (
+            <span className="px-2 py-0.5 rounded bg-theme-card border border-theme-border font-medium">
+              {numPages} {numPages === 1 ? 'page' : 'pages'}
+            </span>
+          )}
+          <span className="text-[11px] text-amber-400/90 font-medium">Protected View</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={handleZoomOut}
+            disabled={scale <= 0.6}
+            className="p-1.5 rounded-lg bg-theme-card border border-theme-border hover:border-cyan-500/40 text-theme-text disabled:opacity-40 transition"
+            title="Zoom Out"
+          >
+            <ZoomOut className="w-3.5 h-3.5" />
+          </button>
+          <span className="w-12 text-center font-mono text-[11px] text-theme-muted">
+            {Math.round(scale * 100)}%
+          </span>
+          <button
+            type="button"
+            onClick={handleZoomIn}
+            disabled={scale >= 2.5}
+            className="p-1.5 rounded-lg bg-theme-card border border-theme-border hover:border-cyan-500/40 text-theme-text disabled:opacity-40 transition"
+            title="Zoom In"
+          >
+            <ZoomIn className="w-3.5 h-3.5" />
+          </button>
+          <button
+            type="button"
+            onClick={handleResetZoom}
+            className="p-1.5 rounded-lg bg-theme-card border border-theme-border hover:border-cyan-500/40 text-theme-text transition ml-1"
+            title="Reset Zoom"
+          >
+            <RefreshCw className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      </div>
+
+      {/* Main View Area */}
       <div
         ref={containerRef}
-        className="secure-viewer w-full h-[80vh] bg-[#222] rounded-xl overflow-auto select-none"
+        className="secure-viewer w-full h-[76vh] bg-[#1a1a1a] rounded-b-xl overflow-auto select-none relative"
         onContextMenu={(e) => e.preventDefault()}
         onDragStart={(e) => e.preventDefault()}
       >
-        {error ? (
-          <p className="text-center text-red-400 py-20">{error}</p>
-        ) : !blob ? (
-          <div className="flex justify-center py-20">
-            <Spinner className="w-8 h-8 text-accent-400" />
+        {loading ? (
+          <div className="flex flex-col items-center justify-center h-full gap-3 py-20 text-theme-muted">
+            <Spinner className="w-8 h-8 text-cyan-400" />
+            <p className="text-xs">Loading document...</p>
           </div>
-        ) : isPdf ? (
+        ) : error ? (
+          <div className="flex flex-col items-center justify-center h-full gap-2 py-20 px-4 text-center">
+            <p className="text-red-400 text-sm font-semibold">{error}</p>
+            <p className="text-xs text-theme-muted max-w-sm">
+              Please contact the course instructor if you believe you should have access to this document.
+            </p>
+          </div>
+        ) : imageUrl ? (
+          <div className="flex justify-center p-6">
+            <img
+              src={imageUrl}
+              alt={title || 'Document preview'}
+              draggable={false}
+              style={{ width: computedWidth }}
+              className="max-w-none h-auto rounded shadow-2xl transition-all"
+            />
+          </div>
+        ) : documentFile ? (
           <Document
-            file={blob}
+            file={documentFile}
             onLoadSuccess={({ numPages: n }) => setNumPages(n)}
-            onLoadError={() => setError('This file could not be displayed.')}
-            loading={<div className="flex justify-center py-20"><Spinner className="w-8 h-8 text-accent-400" /></div>}
-            className="flex flex-col items-center gap-3 p-4"
+            onLoadError={(err: any) => {
+              console.error('PDF display error:', err);
+              // Fallback to unpkg CDN worker if local worker path had issue
+              const currentSrc = pdfjs.GlobalWorkerOptions.workerSrc || '';
+              if (!currentSrc.includes('unpkg.com')) {
+                pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
+                // Re-trigger load
+                if (fileData) setFileData(new Uint8Array(fileData));
+                return;
+              }
+              setError(err?.message || 'This file could not be displayed.');
+            }}
+            loading={
+              <div className="flex flex-col items-center justify-center py-20 gap-2 text-theme-muted">
+                <Spinner className="w-8 h-8 text-cyan-400" />
+                <p className="text-xs">Rendering PDF pages...</p>
+              </div>
+            }
+            className="flex flex-col items-center gap-4 p-4"
           >
             {Array.from({ length: numPages }, (_, i) => (
-              <Page
+              <div
                 key={i + 1}
-                pageNumber={i + 1}
-                width={width}
-                renderTextLayer={false}
-                renderAnnotationLayer={false}
-              />
+                className="bg-white rounded shadow-2xl overflow-hidden transition-all duration-150"
+                style={{ width: computedWidth }}
+              >
+                <Page
+                  pageNumber={i + 1}
+                  width={computedWidth}
+                  renderTextLayer={false}
+                  renderAnnotationLayer={false}
+                  loading={
+                    <div
+                      className="bg-neutral-800 animate-pulse flex items-center justify-center text-xs text-neutral-500"
+                      style={{ height: Math.round(computedWidth * 1.4) }}
+                    >
+                      Loading page {i + 1}...
+                    </div>
+                  }
+                />
+              </div>
             ))}
           </Document>
-        ) : isImage && imageUrl ? (
-          <div className="flex justify-center p-4">
-            <img src={imageUrl} alt={title} draggable={false} className="max-w-full h-auto" />
-          </div>
-        ) : (
-          <p className="text-center text-theme-muted py-20 px-6">
-            This file type can't be previewed online, and downloading is disabled for it.
-          </p>
-        )}
+        ) : null}
       </div>
     </Modal>
   );
