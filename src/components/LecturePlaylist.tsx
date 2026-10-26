@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 import { api } from '../lib/api';
 import { useAuth } from '../lib/authContext';
-import { FileViewerModal } from './FileViewerModal';
+import { SecureFileViewer } from './SecureFileViewer';
 import { Link, useRouter } from '../lib/router';
 import type {
   Course,
@@ -996,19 +996,17 @@ function LectureAttachments({ lectureId }: { lectureId: string }) {
     enabled: !!lectureId
   });
 
-  const [viewer, setViewer] = useState<{ title: string; url: string } | null>(null);
+  const [viewer, setViewer] = useState<{ id: string; title: string } | null>(null);
 
-  const handleOpen = async (id: string, title: string, download: boolean, canDownload: boolean, e: React.MouseEvent) => {
+  const handleOpen = async (id: string, title: string, download: boolean, e: React.MouseEvent) => {
     e.preventDefault();
     try {
       const res = await api.get(`/attachments/${id}/view${download ? '?download=true' : ''}`);
-      if (res.data.url) {
-        if (!canDownload) {
-          // View-only files stay inside the platform (embedded viewer, no new tab).
-          setViewer({ title, url: res.data.url });
-        } else {
-          window.open(res.data.url, '_blank', 'noopener,noreferrer');
-        }
+      if (res.data.viewOnly) {
+        // View-only files are rendered in-app via the authenticated stream (no URL, no native toolbar).
+        setViewer({ id, title });
+      } else if (res.data.url) {
+        window.open(res.data.url, '_blank', 'noopener,noreferrer');
       }
     } catch (err: any) {
       alert(err.response?.data?.message || 'Failed to open file.');
@@ -1027,7 +1025,7 @@ function LectureAttachments({ lectureId }: { lectureId: string }) {
         {attachments.map((file: any) => (
           <div key={file.id} className="flex gap-2 w-full">
             <button 
-              onClick={(e) => handleOpen(file.id, file.title, false, file.canDownload !== false, e)}
+              onClick={(e) => handleOpen(file.id, file.title, false, e)}
               className="flex-1 flex items-center justify-between rounded-xl bg-theme-secondary p-3 text-xs border border-theme-border hover:border-cyan-500/40 transition group text-left"
             >
               <div className="flex items-center gap-2 overflow-hidden max-w-[75%]">
@@ -1042,7 +1040,7 @@ function LectureAttachments({ lectureId }: { lectureId: string }) {
             </button>
             {file.canDownload !== false && (
               <button 
-                onClick={(e) => handleOpen(file.id, file.title, true, true, e)}
+                onClick={(e) => handleOpen(file.id, file.title, true, e)}
                 className="flex items-center justify-center rounded-xl bg-theme-secondary px-4 py-3 text-xs border border-theme-border hover:border-cyan-500/40 hover:text-cyan-400 transition group text-theme-muted"
                 title="Download File"
               >
@@ -1052,7 +1050,7 @@ function LectureAttachments({ lectureId }: { lectureId: string }) {
           </div>
         ))}
       </div>
-      <FileViewerModal open={!!viewer} onClose={() => setViewer(null)} title={viewer?.title} url={viewer?.url} />
+      <SecureFileViewer open={!!viewer} onClose={() => setViewer(null)} title={viewer?.title} attachmentId={viewer?.id} />
     </div>
   );
 }

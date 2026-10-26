@@ -4,7 +4,7 @@ import { api } from '../lib/api';
 import { BookOpen, Search, Lock, Unlock, KeyRound, ExternalLink, Download } from 'lucide-react';
 import { useAuth } from '../lib/authContext';
 import { Spinner, Badge, EmptyState, ErrorMessage, Button } from './ui';
-import { FileViewerModal } from './FileViewerModal';
+import { SecureFileViewer } from './SecureFileViewer';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 
@@ -18,7 +18,7 @@ export function FilesTab({ hideHeader = false }: { hideHeader?: boolean }) {
   const [accessFilter, setAccessFilter] = useState(''); // '' | 'UNLOCKED' | 'LOCKED'
   const [redeemCode, setRedeemCode] = useState('');
   const [redeemingTarget, setRedeemingTarget] = useState<{ id: string, type: 'FILE' | 'COURSE_FILES' } | null>(null);
-  const [viewer, setViewer] = useState<{ title: string; url: string } | null>(null);
+  const [viewer, setViewer] = useState<{ id: string; title: string } | null>(null);
 
   // Fetch student courses to populate the course filter dropdown
   const { data: courses } = useQuery({
@@ -59,16 +59,14 @@ export function FilesTab({ hideHeader = false }: { hideHeader?: boolean }) {
     }
   });
 
-  const handleOpen = async (id: string, title: string, download = false, canDownload = true) => {
+  const handleOpen = async (id: string, title: string, download = false) => {
     try {
       const res = await api.get(`/attachments/${id}/view${download ? '?download=true' : ''}`);
-      if (res.data.url) {
-        if (!canDownload) {
-          // View-only files stay inside the platform (embedded viewer, no new tab).
-          setViewer({ title, url: res.data.url });
-        } else {
-          window.open(res.data.url, '_blank', 'noopener,noreferrer');
-        }
+      if (res.data.viewOnly) {
+        // View-only files are rendered in-app via the authenticated stream (no URL, no native toolbar).
+        setViewer({ id, title });
+      } else if (res.data.url) {
+        window.open(res.data.url, '_blank', 'noopener,noreferrer');
       }
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Failed to open file.');
@@ -225,7 +223,7 @@ export function FilesTab({ hideHeader = false }: { hideHeader?: boolean }) {
 
               {file.accessStatus === 'UNLOCKED' ? (
                 <div className="flex gap-2 w-full">
-                  <Button variant="primary" className="flex-1" onClick={() => handleOpen(file.id, file.title, false, file.canDownload !== false)}>
+                  <Button variant="primary" className="flex-1" onClick={() => handleOpen(file.id, file.title)}>
                     <ExternalLink className="w-4 h-4 mr-2" />
                     {file.canDownload === false ? t('files.view', 'View') : t('files.open', 'Open')}
                   </Button>
@@ -274,7 +272,7 @@ export function FilesTab({ hideHeader = false }: { hideHeader?: boolean }) {
           ))}
         </div>
       )}
-      <FileViewerModal open={!!viewer} onClose={() => setViewer(null)} title={viewer?.title} url={viewer?.url} />
+      <SecureFileViewer open={!!viewer} onClose={() => setViewer(null)} title={viewer?.title} attachmentId={viewer?.id} />
     </div>
   );
 }
