@@ -196,15 +196,15 @@ export function FilesTab({ hideHeader = false }: { hideHeader?: boolean }) {
           {files.map((file: any) => (
             <div 
               key={file.id} 
-              className={`group glass rounded-2xl p-6 transition-all hover:-translate-y-1 hover:shadow-2xl flex flex-col ${file.accessStatus === 'LOCKED' ? 'border-theme-border opacity-90' : 'border-accent-500/20 shadow-accent-500/5'}`}
+              className={`group glass rounded-2xl p-6 overflow-hidden min-w-0 transition-all hover:-translate-y-1 hover:shadow-2xl flex flex-col ${file.accessStatus === 'LOCKED' ? 'border-theme-border opacity-90' : 'border-accent-500/20 shadow-accent-500/5'}`}
             >
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex-1 mr-4">
+              <div className="flex items-start justify-between gap-4 mb-4">
+                <div className="flex-1 min-w-0">
                   <Badge variant={file.accessStatus === 'UNLOCKED' ? 'success' : 'default'} className="mb-2">
                     {file.accessStatus === 'UNLOCKED' ? <Unlock className="w-3 h-3 mr-1" /> : <Lock className="w-3 h-3 mr-1" />}
                     {file.accessStatus === 'UNLOCKED' ? t('files.unlocked', 'Unlocked') : t('files.locked', 'Locked')}
                   </Badge>
-                  <h3 className="font-bold text-theme-text text-lg line-clamp-2" title={file.title}>
+                  <h3 className="font-bold text-theme-text text-lg line-clamp-2 break-words [overflow-wrap:anywhere]" title={file.title}>
                     {file.title}
                   </h3>
                 </div>
