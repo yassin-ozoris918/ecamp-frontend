@@ -17,21 +17,18 @@ import { MyStats } from './components/MyStats';
 import { ContactScreen } from './components/ContactScreen';
 import { InstructorsScreen } from './components/InstructorsScreen';
 import { FilesTab } from './components/FilesTab';
+import { clearChunkReloadState, tryAutoReloadOnChunkError } from './lib/chunkReload';
 
-// Helper to auto-refresh on chunk load failures (e.g. after a new deployment)
+// Helper to auto-refresh on chunk load failures across all browsers (Chrome, iOS Safari/WebKit, Firefox)
 const lazyImport = (factory: () => Promise<any>) => {
   return lazy(async () => {
     try {
       const component = await factory();
-      sessionStorage.removeItem('retry_lazy_import');
+      clearChunkReloadState();
       return component;
     } catch (error) {
-      if (error instanceof TypeError && error.message.includes('Failed to fetch dynamically imported module')) {
-        if (!sessionStorage.getItem('retry_lazy_import')) {
-          sessionStorage.setItem('retry_lazy_import', 'true');
-          window.location.reload();
-          return new Promise(() => {}); // Keep in pending state during reload
-        }
+      if (tryAutoReloadOnChunkError(error)) {
+        return new Promise(() => {}); // Keep in pending state during reload
       }
       throw error;
     }
@@ -67,6 +64,10 @@ import { useTranslation } from 'react-i18next';
 
 export default function App() {
   const { i18n } = useTranslation();
+
+  useEffect(() => {
+    clearChunkReloadState();
+  }, []);
 
   useEffect(() => {
     const isArabic = i18n.language.startsWith('ar');

@@ -6,14 +6,11 @@ import { Spinner } from './ui';
 import { ZoomIn, ZoomOut, RefreshCw } from 'lucide-react';
 import PdfWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?worker';
 
-// Configure PDF.js worker using Vite-bundled Web Worker (no external URL fetch required)
-if (typeof window !== 'undefined' && 'Worker' in window) {
-  try {
-    pdfjs.GlobalWorkerOptions.workerPort = new PdfWorker();
-  } catch (e) {
-    console.warn('Failed to start bundled PDF worker, using unpkg fallback:', e);
-    pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
-  }
+const CDN_WORKER_SRC = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
+
+// Always ensure workerSrc points to a valid module URL rather than react-pdf's relative 'pdf.worker.mjs'
+if (typeof window !== 'undefined') {
+  pdfjs.GlobalWorkerOptions.workerSrc = CDN_WORKER_SRC;
 }
 
 interface SecureFileViewerProps {
@@ -34,6 +31,45 @@ export function SecureFileViewer({ open, onClose, title, attachmentId }: SecureF
   const [loading, setLoading] = useState<boolean>(false);
   const [docKey, setDocKey] = useState<number>(1);
   const containerRef = useRef<HTMLDivElement>(null);
+  const workerRef = useRef<Worker | null>(null);
+
+  // Manage a fresh bundled PDF worker per viewer session with automatic CDN fallback on error
+  useEffect(() => {
+    if (!open || !fileData) return;
+
+    if (typeof window !== 'undefined' && 'Worker' in window) {
+      try {
+        const worker = new PdfWorker();
+        workerRef.current = worker;
+        worker.onerror = (evt) => {
+          evt.preventDefault();
+          console.warn('Bundled PDF worker failed to load, switching to CDN fallback.');
+          if (pdfjs.GlobalWorkerOptions.workerPort === worker) {
+            pdfjs.GlobalWorkerOptions.workerPort = null as any;
+          }
+          pdfjs.GlobalWorkerOptions.workerSrc = CDN_WORKER_SRC;
+          worker.terminate();
+          workerRef.current = null;
+          setDocKey((prev) => prev + 1);
+        };
+        pdfjs.GlobalWorkerOptions.workerPort = worker;
+      } catch (e) {
+        console.warn('Failed to start bundled PDF worker, using CDN fallback:', e);
+        pdfjs.GlobalWorkerOptions.workerPort = null as any;
+        pdfjs.GlobalWorkerOptions.workerSrc = CDN_WORKER_SRC;
+      }
+    }
+
+    return () => {
+      if (workerRef.current) {
+        if (pdfjs.GlobalWorkerOptions.workerPort === workerRef.current) {
+          pdfjs.GlobalWorkerOptions.workerPort = null as any;
+        }
+        workerRef.current.terminate();
+        workerRef.current = null;
+      }
+    };
+  }, [open, fileData]);
 
   useEffect(() => {
     if (!open || !attachmentId) return;
@@ -201,11 +237,9 @@ export function SecureFileViewer({ open, onClose, title, attachmentId }: SecureF
             onLoadError={(err: any) => {
               console.error('PDF display error:', err);
               // Fallback to unpkg CDN worker if bundled worker had any issue
-              const currentSrc = pdfjs.GlobalWorkerOptions.workerSrc || '';
-              if (!currentSrc.includes('unpkg.com')) {
+              if (pdfjs.GlobalWorkerOptions.workerPort) {
                 pdfjs.GlobalWorkerOptions.workerPort = null as any;
-                pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
-                // Force remount
+                pdfjs.GlobalWorkerOptions.workerSrc = CDN_WORKER_SRC;
                 setDocKey((prev) => prev + 1);
                 return;
               }
