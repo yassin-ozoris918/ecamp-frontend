@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { HelpCircle, Plus, Edit2, Trash2, Video, Eye, EyeOff } from 'lucide-react';
+import axios from 'axios';
+import { HelpCircle, Plus, Edit2, Trash2, Video } from 'lucide-react';
 import { api } from '../lib/api';
 import { Badge, Modal, ProgressBar, Skeleton } from './ui';
 import { HelpVideoTargetingModal } from './HelpVideoTargetingModal';
@@ -112,6 +113,7 @@ export function AdminHelpCenterManager() {
     
     try {
       setUploading(true);
+      setUploadProgress(0);
       let vidId = editVideo?.id;
       if (vidId) {
         await api.patch(`/tutorials/${vidId}`, data);
@@ -120,26 +122,47 @@ export function AdminHelpCenterManager() {
         vidId = res.data.id;
       }
 
-      // If there's a file, upload it to R2
+      // If there's a file, upload it to Cloudflare Stream (or R2 fallback)
       if (videoFile && vidId && data.sourceType === 'CLOUDFLARE') {
         const initRes = await api.post(`/tutorials/${vidId}/video/upload/init`, {
           filename: videoFile.name,
           mimetype: videoFile.type || 'video/mp4',
           fileSize: videoFile.size,
         });
-        const { uploadUrl, objectKey, assetUrl } = initRes.data;
+        const { uploadUrl, objectKey, assetUrl, provider } = initRes.data;
 
-        await fetch(uploadUrl, {
-          method: 'PUT',
-          body: videoFile,
-          headers: { 'Content-Type': videoFile.type || 'video/mp4' }
-        });
+        const isCloudflareStream =
+          provider === 'CLOUDFLARE_STREAM' ||
+          uploadUrl.includes('cloudflarestream.com') ||
+          uploadUrl.includes('videodelivery.net');
+
+        if (isCloudflareStream) {
+          const cfFormData = new FormData();
+          cfFormData.append('file', videoFile);
+          await axios.post(uploadUrl, cfFormData, {
+            onUploadProgress: (evt) => {
+              if (evt.total) {
+                setUploadProgress(Math.round((evt.loaded * 100) / evt.total));
+              }
+            },
+          });
+        } else {
+          await axios.put(uploadUrl, videoFile, {
+            headers: { 'Content-Type': videoFile.type || 'video/mp4' },
+            onUploadProgress: (evt) => {
+              if (evt.total) {
+                setUploadProgress(Math.round((evt.loaded * 100) / evt.total));
+              }
+            },
+          });
+        }
 
         await api.post(`/tutorials/${vidId}/video/upload/complete`, { objectKey, assetUrl });
       }
 
       setVidModalOpen(false);
       setVideoFile(null);
+      setUploadProgress(0);
       loadData();
     } catch (err) {
       alert('Error saving video');
@@ -200,9 +223,9 @@ export function AdminHelpCenterManager() {
                 <div>
                   <h4 className="font-semibold text-theme-text">{vid.titleEn} / {vid.titleAr}</h4>
                   <div className="flex gap-2 text-xs text-theme-muted mt-1">
-                    <Badge variant="outline">{vid.sourceType}</Badge>
+                    <Badge variant="default">{vid.sourceType}</Badge>
                     {vid.isPublic ? <Badge variant="success">Public</Badge> : <Badge variant="warning">Targeted</Badge>}
-                    {!vid.isActive && <Badge variant="outline">Inactive</Badge>}
+                    {!vid.isActive && <Badge variant="default">Inactive</Badge>}
                   </div>
                 </div>
                 <div className="flex gap-2">
@@ -255,7 +278,7 @@ export function AdminHelpCenterManager() {
             <div><label className="label">Source Type</label><select name="sourceType" defaultValue={editVideo?.sourceType || 'CLOUDFLARE'} className="input" onChange={e => {
               if (e.target.value === 'EXTERNAL') setVideoFile(null);
             }}>
-              <option value="CLOUDFLARE">Direct Upload (Cloudflare R2)</option>
+              <option value="CLOUDFLARE">Direct Upload (Cloudflare Stream / R2)</option>
               <option value="EXTERNAL">External Link (Facebook, YouTube, etc)</option>
             </select></div>
             <div><label className="label">Sort Order</label><input name="sortOrder" type="number" defaultValue={editVideo?.sortOrder ?? 0} className="input" /></div>
@@ -277,7 +300,15 @@ export function AdminHelpCenterManager() {
             <label className="flex items-center gap-2"><input name="isPublic" type="checkbox" defaultChecked={editVideo?.isPublic ?? true} /> Is Public (No target groups)</label>
           </div>
 
-          {uploading && <ProgressBar progress={uploadProgress} label="Uploading..." color="bg-accent-500" />}
+          {uploading && (
+            <div className="space-y-1">
+              <div className="flex justify-between text-xs text-theme-muted">
+                <span>Uploading...</span>
+                <span>{uploadProgress}%</span>
+              </div>
+              <ProgressBar value={uploadProgress} variant="accent" />
+            </div>
+          )}
           
           <div className="flex justify-end pt-4"><button disabled={uploading} className="btn-primary" type="submit">{uploading ? 'Saving...' : 'Save Video'}</button></div>
         </form>

@@ -46,6 +46,7 @@ interface AmaanPlayerStatic {
 declare global {
   interface Window {
     AmaanPlayer?: AmaanPlayerStatic;
+    Stream?: (iframe: HTMLIFrameElement) => any;
   }
 }
 
@@ -614,6 +615,8 @@ function VideoPlayer({
   const [loadingToken, setLoadingToken] = useState(true);
   const [amaanError, setAmaanError] = useState<string | null>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const cfIframeRef = useRef<HTMLIFrameElement>(null);
+  const cfPlayerRef = useRef<any>(null);
   const playerInstanceRef = useRef<any>(null);
 
   // View-limit tracking
@@ -635,6 +638,13 @@ function VideoPlayer({
     setPlaybackSpeed(nextSpeed);
     if (videoRef.current) {
       videoRef.current.playbackRate = nextSpeed;
+    }
+    if (cfPlayerRef.current) {
+      try {
+        cfPlayerRef.current.playbackRate = nextSpeed;
+      } catch {
+        // Ignore if player is not ready yet
+      }
     }
   };
 
@@ -793,6 +803,101 @@ function VideoPlayer({
     };
   }, [streamData]);
 
+  // Cloudflare Stream Player SDK integration for view-limit tracking, speed control, and auto-completion
+  useEffect(() => {
+    if (
+      !streamData ||
+      streamData.provider === 'AMAAN' ||
+      (!streamData.playbackUrl.includes('cloudflarestream.com') &&
+        !streamData.playbackUrl.includes('videodelivery.net')) ||
+      !cfIframeRef.current
+    ) {
+      cfPlayerRef.current = null;
+      return;
+    }
+
+    let mounted = true;
+    let cfPlayer: any = null;
+
+    const handleCfTimeUpdate = () => {
+      if (!mounted || !cfPlayer || cfPlayer.paused || cfPlayer.ended) return;
+      const now = Number(cfPlayer.currentTime || 0);
+      const prev = lastTimeRef.current;
+      lastTimeRef.current = now;
+
+      if (prev !== null) {
+        const delta = now - prev;
+        if (delta > 0 && delta <= 2) {
+          accumulatedPlaySecondsRef.current += delta;
+          if (
+            !viewConsumedRef.current &&
+            accumulatedPlaySecondsRef.current >= VIEW_THRESHOLD_SECONDS
+          ) {
+            handleConsumeView();
+          }
+        }
+      }
+    };
+
+    const handleCfEnded = () => {
+      if (!mounted) return;
+      handleMarkComplete();
+    };
+
+    const initCloudflarePlayer = async () => {
+      if (!window.Stream) {
+        const scriptId = 'cf-stream-sdk-script';
+        let script = document.getElementById(scriptId) as HTMLScriptElement | null;
+        if (!script) {
+          script = document.createElement('script');
+          script.id = scriptId;
+          script.src = 'https://embed.cloudflarestream.com/embed/sdk.latest.js';
+          script.async = true;
+          document.head.appendChild(script);
+        }
+        await new Promise<void>((resolve, reject) => {
+          if (window.Stream) {
+            resolve();
+          } else {
+            script!.addEventListener('load', () => resolve());
+            script!.addEventListener('error', () =>
+              reject(new Error('Failed to load Cloudflare Stream SDK')),
+            );
+          }
+        });
+      }
+
+      if (!mounted || !cfIframeRef.current || !window.Stream) return;
+
+      try {
+        cfPlayer = window.Stream(cfIframeRef.current);
+        cfPlayerRef.current = cfPlayer;
+        cfPlayer.playbackRate = playbackSpeed;
+        cfPlayer.addEventListener('timeupdate', handleCfTimeUpdate);
+        cfPlayer.addEventListener('ended', handleCfEnded);
+      } catch (err) {
+        console.warn('Cloudflare Stream SDK attach warning:', err);
+      }
+    };
+
+    initCloudflarePlayer().catch((err) => {
+      console.warn('Could not load Cloudflare Stream SDK:', err);
+    });
+
+    return () => {
+      mounted = false;
+      if (cfPlayer) {
+        try {
+          cfPlayer.removeEventListener('timeupdate', handleCfTimeUpdate);
+          cfPlayer.removeEventListener('ended', handleCfEnded);
+        } catch {
+          // Ignore cleanup errors
+        }
+      }
+      cfPlayerRef.current = null;
+    };
+  }, [streamData]);
+
   async function handleMarkComplete() {
     if (completedRef.current || isCompleting) return;
     setIsCompleting(true);
@@ -916,6 +1021,7 @@ function VideoPlayer({
               className="w-full h-full object-contain"
               controls
               controlsList="nofullscreen nodownload"
+              preload="metadata"
               onEnded={handleMarkComplete}
               onTimeUpdate={handleTimeUpdate}
               onLoadedMetadata={() => {
@@ -926,6 +1032,7 @@ function VideoPlayer({
             />
           ) : (
             <iframe
+              ref={cfIframeRef}
               src={streamData.playbackUrl}
               className="w-full h-full border-0"
               allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"

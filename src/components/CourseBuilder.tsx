@@ -1107,10 +1107,26 @@ function AddItemModal({
             mimetype: videoFile.type || 'video/mp4',
             fileSize: videoFile.size,
           });
-          const { uploadUrl, objectKey, assetUrl } = initRes.data;
+          const { uploadUrl, objectKey, assetUrl, provider } = initRes.data;
+          const isCloudflareStream =
+            provider === 'CLOUDFLARE_STREAM' ||
+            uploadUrl.includes('cloudflarestream.com') ||
+            uploadUrl.includes('videodelivery.net');
+          const cfFormData = isCloudflareStream ? new FormData() : null;
+          if (cfFormData) cfFormData.append('file', videoFile);
 
           // 2. Direct R2 Upload via presigned URL
-          await axios.put(uploadUrl, videoFile, {
+          if (isCloudflareStream) {
+            await axios.post(uploadUrl, cfFormData, {
+              onUploadProgress: (progressEvent) => {
+                if (progressEvent.total) {
+                  const pct = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+                  setUploadProgress(pct);
+                  if (pct >= 100) setUploadStatus('processing');
+                }
+              },
+            });
+          } else await axios.put(uploadUrl, videoFile, {
             headers: {
               'Content-Type': videoFile.type || 'video/mp4'
             },
