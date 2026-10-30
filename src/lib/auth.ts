@@ -104,6 +104,7 @@ export function useAuth() {
       } catch (err: any) {
         const errorData = err.response?.data;
         const msgs = Array.isArray(errorData?.message) ? errorData.message : [errorData?.message || 'auth.errors.default'];
+        const translatedMsg = msgs.map((m: string) => i18n.t(m)).join(' - ');
         return {
           error: {
             message: translatedMsg,
