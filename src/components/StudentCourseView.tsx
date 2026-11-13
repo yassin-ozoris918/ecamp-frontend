@@ -41,13 +41,13 @@ export function StudentCourseView({ courseId }: { courseId: string }) {
 
   const [showExpiredModal, setShowExpiredModal] = useState(false);
 
-  const loadData = useCallback(async () => {
+  const loadData = useCallback(async (silent = false) => {
     if (!profile) {
       navigate('/auth');
       return;
     }
 
-    setLoading(true);
+    if (!silent) setLoading(true);
     try {
       const { data } = await api.get(`/progress/course/${courseId}/syllabus`);
       setCourse(data?.course || null);
@@ -55,14 +55,16 @@ export function StudentCourseView({ courseId }: { courseId: string }) {
       setStandaloneLectures(Array.isArray(data?.standaloneLectures) ? data.standaloneLectures : []);
       setExams(Array.isArray(data?.exams) ? data.exams : []);
     } catch (e: unknown) {
-      setError((e as any)?.response?.data?.message || t('courseView.failedLoadSyllabus'));
+      if (!silent) setError((e as any)?.response?.data?.message || t('courseView.failedLoadSyllabus'));
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }, [profile, courseId, navigate]);
 
   useEffect(() => {
     loadData();
+    const poll = setInterval(() => loadData(true), 20000);
+    return () => clearInterval(poll);
   }, [loadData]);
 
   async function handleRedeem(e: React.FormEvent) {

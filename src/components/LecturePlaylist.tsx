@@ -96,7 +96,13 @@ export function LecturePlaylist({ lectureId }: { lectureId: string }) {
       setAllLectures(Array.isArray(data.allLectures) ? data.allLectures : []);
       const playlistData = Array.isArray(data.playlist) ? data.playlist : [];
       setItems(playlistData);
-      setIsFullyLocked(data.isLocked ?? false);
+      setIsFullyLocked((prev) => {
+        const nextLocked = data.isLocked ?? false;
+        if (nextLocked && !prev && document.fullscreenElement) {
+          document.exitFullscreen?.().catch(() => {});
+        }
+        return nextLocked;
+      });
       setIsStarted(data.isStarted ?? true);
       
       const compIds = new Set<string>();
@@ -135,6 +141,15 @@ export function LecturePlaylist({ lectureId }: { lectureId: string }) {
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  // Re-verify access every 15s so relocked courses immediately kick active viewers out of the player
+  useEffect(() => {
+    if (isFullyLocked || !isStarted) return;
+    const accessPoll = setInterval(() => {
+      loadData(true);
+    }, 15000);
+    return () => clearInterval(accessPoll);
+  }, [isFullyLocked, isStarted, loadData]);
 
   // Countdown ticker
   useEffect(() => {
