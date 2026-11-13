@@ -27,6 +27,7 @@ import {
   Settings,
   Printer,
   HelpCircle,
+  Lock,
 } from 'lucide-react';
 import { api } from '../lib/api';
 import type { Profile, UserListItem, ActivationCode, Course, CourseInstructor } from '../lib/types';
@@ -1948,6 +1949,27 @@ export function AdminCourses() {
     }
   }
 
+  async function handleRelock(course: Course) {
+    const ok = await confirm(
+      'Relock Course',
+      `Lock "${course.title}" for ALL students?\n\nEvery student will lose access to this course's lectures, videos and files, and must redeem a NEW code to regain access. Previously used codes will not work again.\n\nStudent progress (completed videos, quiz/exam results, view counts) is kept.`,
+    );
+    if (!ok) return;
+    setBusy(true);
+    try {
+      const { data } = await api.post(`/admin/courses/${course.id}/relock`);
+      toast.success(
+        `Course relocked: ${data.courseAccessRemoved} course, ${data.lectureAccessRemoved} lecture and ${data.fileAccessRemoved} file access grants removed.`,
+        { duration: 6000 },
+      );
+    } catch (e: any) {
+      console.error(e);
+      toast.error(e?.response?.data?.message || 'Failed to relock course.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
     <div className="space-y-6 animate-fade-up">
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
@@ -2020,6 +2042,17 @@ export function AdminCourses() {
                   </td>
                   <td className="p-4 text-theme-muted">{new Date(c.createdAt ?? '').toLocaleDateString()}</td>
                   <td className="p-4 text-end space-x-2">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleRelock(c);
+                      }}
+                      disabled={busy}
+                      className="p-2 rounded-lg text-theme-muted hover:bg-amber-500/10 hover:text-amber-300 transition-colors"
+                      title="Relock Course (all students must redeem a new code)"
+                    >
+                      <Lock className="w-4 h-4" />
+                    </button>
                     <button
                       onClick={(e) => {
                         e.stopPropagation();

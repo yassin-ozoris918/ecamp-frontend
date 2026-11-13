@@ -27,7 +27,7 @@ export function ConfirmDialog({ open, title, message, infoMessage, confirmText, 
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60" onClick={onCancel}>
       <div className="bg-theme-card border border-theme-border rounded-2xl p-6 max-w-md w-full mx-4 shadow-2xl" onClick={(e) => e.stopPropagation()}>
         <h3 className="text-lg font-bold text-white mb-2">{title}</h3>
-        <div className="text-theme-muted text-sm mb-6">{message}</div>
+        <div className="text-theme-muted text-sm mb-6 whitespace-pre-line">{message}</div>
         {infoMessage && (
           <div className="mb-6 p-4 rounded-xl bg-orange-500/10 border border-orange-500/20 text-orange-400 text-sm leading-relaxed">
             {infoMessage}
