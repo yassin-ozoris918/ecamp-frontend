@@ -1903,6 +1903,18 @@ function AdminGenerateCodesModal({
 }
 
 // --- Admin Courses Page ---
+interface CourseRelockRecord {
+  id: string;
+  createdAt: string;
+  actorName: string | null;
+  courseAccessRemoved: number;
+  lectureAccessRemoved: number;
+  fileAccessRemoved: number;
+  codesRevoked?: number;
+  restoreMode: 'EXACT' | 'FROM_CODES';
+  restoredAt: string | null;
+}
+
 export function AdminCourses() {
   const { navigate } = useRouter();
   const [courses, setCourses] = useState<Course[]>([]);
@@ -1911,6 +1923,9 @@ export function AdminCourses() {
   const [busy, setBusy] = useState(false);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
+  const [restoreModalCourse, setRestoreModalCourse] = useState<Course | null>(null);
+  const [relocks, setRelocks] = useState<CourseRelockRecord[]>([]);
+  const [relocksLoading, setRelocksLoading] = useState(false);
   const { confirm, state: confirmState, handleConfirm, handleCancel } = useConfirm();
 
   const loadCourses = useCallback(async () => {
@@ -1952,7 +1967,7 @@ export function AdminCourses() {
   async function handleRelock(course: Course) {
     const ok = await confirm(
       'Relock Course',
-      `Lock "${course.title}" for ALL students?\n\nEvery student will lose access to this course's lectures, videos and files, and must redeem a NEW code to regain access. Previously used codes will not work again.\n\nStudent progress (completed videos, quiz/exam results, view counts) is kept.`,
+      `Lock "${course.title}" for ALL students?\n\nEvery student will lose access to this course's lectures, videos and files, and must redeem a NEW code to regain access. Previously used codes will not work again.\n\nStudent progress (completed videos, quiz/exam results, view counts) is kept. A snapshot is saved so you can undo an accidental relock via the Restore button.`,
     );
     if (!ok) return;
     setBusy(true);
@@ -1965,6 +1980,48 @@ export function AdminCourses() {
     } catch (e: any) {
       console.error(e);
       toast.error(e?.response?.data?.message || 'Failed to relock course.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function openRestoreModal(course: Course) {
+    setRestoreModalCourse(course);
+    setRelocks([]);
+    setRelocksLoading(true);
+    try {
+      const { data } = await api.get(`/admin/courses/${course.id}/relocks`);
+      setRelocks(Array.isArray(data) ? data : []);
+    } catch (e: any) {
+      console.error(e);
+      toast.error(e?.response?.data?.message || 'Failed to load relock history.');
+    } finally {
+      setRelocksLoading(false);
+    }
+  }
+
+  async function handleRestoreRelock(relock: CourseRelockRecord) {
+    if (!restoreModalCourse) return;
+    const modeNote =
+      relock.restoreMode === 'EXACT'
+        ? 'This will restore the exact course, lecture and file access snapshot from before this relock.'
+        : 'This relock was created before full snapshots were enabled, so access will be reconstructed from the redeemed activation codes that were revoked during this relock.';
+    const ok = await confirm(
+      'Restore Previous Access',
+      `Reopen "${restoreModalCourse.title}" ONLY for the students who were enrolled before this relock?\n\n${modeNote}\n\nStudents who never had access will remain locked out, and any student who already redeemed a new code keeps their new access.`,
+    );
+    if (!ok) return;
+    setBusy(true);
+    try {
+      const { data } = await api.post(`/admin/course-relocks/${relock.id}/restore`);
+      toast.success(
+        `Access restored: ${data.courseAccessRestored} course, ${data.lectureAccessRestored} lecture and ${data.fileAccessRestored} file access grants restored.`,
+        { duration: 6000 },
+      );
+      await openRestoreModal(restoreModalCourse);
+    } catch (e: any) {
+      console.error(e);
+      toast.error(e?.response?.data?.message || 'Failed to restore course access.');
     } finally {
       setBusy(false);
     }
@@ -2045,6 +2102,17 @@ export function AdminCourses() {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
+                        openRestoreModal(c);
+                      }}
+                      disabled={busy}
+                      className="p-2 rounded-lg text-theme-muted hover:bg-emerald-500/10 hover:text-emerald-300 transition-colors"
+                      title="Restore Previous Access (undo an accidental relock)"
+                    >
+                      <RotateCcw className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
                         handleRelock(c);
                       }}
                       disabled={busy}
@@ -2080,6 +2148,72 @@ export function AdminCourses() {
           navigate(`/instructor/course/${newCourseId}`);
         }}
       />
+      <Modal
+        open={!!restoreModalCourse}
+        onClose={() => setRestoreModalCourse(null)}
+        title="Restore Previous Course Access"
+        description={
+          restoreModalCourse
+            ? `Undo an accidental relock on "${restoreModalCourse.title}" by restoring access only for the students who were enrolled before that relock.`
+            : ''
+        }
+        size="lg"
+      >
+        {relocksLoading ? (
+          <div className="py-8 flex justify-center">
+            <Spinner />
+          </div>
+        ) : relocks.length === 0 ? (
+          <div className="py-6 text-center text-sm text-theme-muted">
+            No relock history found for this course.
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {relocks.map((r) => (
+              <div
+                key={r.id}
+                className="p-4 rounded-xl bg-theme-secondary/50 border border-theme-border flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+              >
+                <div className="space-y-1">
+                  <div className="text-sm font-semibold text-theme-text flex items-center gap-2 flex-wrap">
+                    <span>{new Date(r.createdAt).toLocaleString()}</span>
+                    {r.actorName && (
+                      <span className="text-xs font-normal text-theme-muted">by {r.actorName}</span>
+                    )}
+                    {r.restoredAt ? (
+                      <Badge variant="success">
+                        Restored {new Date(r.restoredAt).toLocaleDateString()}
+                      </Badge>
+                    ) : (
+                      <Badge variant="warning">
+                        {r.restoreMode === 'EXACT' ? 'Full Snapshot' : 'Code History Backup'}
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="text-xs text-theme-muted">
+                    Removed: <strong className="text-theme-text">{r.courseAccessRemoved}</strong> course,{' '}
+                    <strong className="text-theme-text">{r.lectureAccessRemoved}</strong> lecture, and{' '}
+                    <strong className="text-theme-text">{r.fileAccessRemoved}</strong> file access grants
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 self-end sm:self-center">
+                  {r.restoredAt ? (
+                    <span className="text-xs text-emerald-400 font-medium">Already restored</span>
+                  ) : (
+                    <button
+                      onClick={() => handleRestoreRelock(r)}
+                      disabled={busy}
+                      className="btn-primary text-xs py-2 px-3 flex items-center gap-1.5 whitespace-nowrap"
+                    >
+                      <RotateCcw className="w-3.5 h-3.5" /> Restore Access
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </Modal>
       <ConfirmDialog
         open={confirmState.open}
         title={confirmState.title}
