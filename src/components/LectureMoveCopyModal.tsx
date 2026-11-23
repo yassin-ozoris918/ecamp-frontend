@@ -116,9 +116,9 @@ export function LectureMoveCopyModal({
                 <option value="">
                   No chapter (unassigned lectures){!crossCourse && !lecture?.chapterId ? ' — current' : ''}
                 </option>
-                {course?.chapters.map((ch, i) => (
+                {course?.chapters.map((ch) => (
                   <option key={ch.id} value={ch.id}>
-                    Chapter {i + 1}: {ch.title}
+                    {ch.title}
                     {!crossCourse && ch.id === lecture?.chapterId ? ' — current' : ''}
                   </option>
                 ))}

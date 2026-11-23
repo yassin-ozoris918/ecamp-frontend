@@ -591,7 +591,7 @@ export function CourseBuilder({ courseId }: { courseId: string }) {
           ) : (
             <div className="space-y-4">
               {/* Render Chapters */}
-              {chapters.map((chapter: BuilderChapter, cIdx: number) => {
+              {chapters.map((chapter: BuilderChapter) => {
                 const expandedChap = expandedChapters.has(chapter.id);
                 return (
                   <div key={chapter.id} className="border border-white/[0.04] bg-white/[0.01] rounded-2xl overflow-hidden">
@@ -610,14 +610,11 @@ export function CourseBuilder({ courseId }: { courseId: string }) {
                       className="w-full p-4 flex items-center gap-3 hover:bg-theme-card transition-colors cursor-pointer"
                     >
                       {expandedChap ? <ChevronDown className="w-4 h-4 text-theme-muted" /> : <ChevronRight className="w-4 h-4 text-theme-muted" />}
-                      <div className="font-display font-bold text-accent-400 text-lg">
-                        Chapter {cIdx + 1}
-                      </div>
                       <div className="flex-1 text-start min-w-0">
                         <InlineRename
                           value={chapter.title}
                           label="Rename chapter"
-                          className="font-bold text-theme-text"
+                          className="font-display font-bold text-lg text-theme-text"
                           onSave={async (title) => {
                             await api.put(`/chapters/${chapter.id}`, { title });
                             await load();
@@ -735,7 +732,7 @@ export function CourseBuilder({ courseId }: { courseId: string }) {
                             onClick={() => {
                               setAttachmentsTargetType('CHAPTER');
                               setAttachmentsTargetId(chapter.id);
-                              setAttachmentsTitle(`Chapter ${cIdx + 1} Files`);
+                              setAttachmentsTitle(`${chapter.title} — files`);
                               setAttachmentsModalOpen(true);
                             }} 
                             className="btn-secondary text-xs flex-1 py-2"

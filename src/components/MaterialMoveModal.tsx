@@ -100,9 +100,9 @@ export function MaterialMoveModal({
                   ))}
                 </optgroup>
                 <optgroup label="Staff-only files">
-                  {course?.chapters.map((ch, i) => (
+                  {course?.chapters.map((ch) => (
                     <option key={ch.id} value={`chapter:${ch.id}`} disabled={`chapter:${ch.id}` === current}>
-                      Chapter {i + 1} files: {ch.title}
+                      Chapter files: {ch.title}
                       {`chapter:${ch.id}` === current ? ' (current)' : ''}
                     </option>
                   ))}
