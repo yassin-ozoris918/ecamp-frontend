@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 import { AlertTriangle, Copy, Loader2, MoveRight } from 'lucide-react';
 import { Modal } from './Modal';
@@ -26,12 +26,16 @@ export function LectureMoveCopyModal({
   const [busy, setBusy] = useState(false);
   const tree = useContentTree(open);
 
+  // Pre-fill the current location only when the dialog OPENS. Re-running this on every parent
+  // re-render would wipe out the course/chapter the admin just picked.
+  const wasOpen = useRef(false);
   useEffect(() => {
-    if (open && lecture) {
+    if (open && !wasOpen.current && lecture) {
       setMode('move');
       setCourseId(lecture.courseId);
       setChapterId(lecture.chapterId ?? '');
     }
+    wasOpen.current = open;
   }, [open, lecture]);
 
   const course = useMemo(() => tree.data?.find((c) => c.id === courseId), [tree.data, courseId]);

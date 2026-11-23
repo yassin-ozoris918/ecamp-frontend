@@ -1053,20 +1053,24 @@ function LectureActions({ lecture, onUpdated }: { lecture: BuilderLecture; onUpd
         </button>
       </div>
 
-      <LectureMoveCopyModal
-        open={moveOpen}
-        lecture={lecture.courseId ? { id: lecture.id, title: lecture.title, courseId: lecture.courseId, chapterId: lecture.chapterId } : null}
-        onClose={() => setMoveOpen(false)}
-        onDone={onUpdated}
-      />
+      {/* The dialogs render in a portal, but React still bubbles their clicks to this lecture row
+          (which toggles open/closed on click). Stop them here so using a dialog never toggles the row. */}
+      <div className="contents" onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
+        <LectureMoveCopyModal
+          open={moveOpen}
+          lecture={lecture.courseId ? { id: lecture.id, title: lecture.title, courseId: lecture.courseId, chapterId: lecture.chapterId } : null}
+          onClose={() => setMoveOpen(false)}
+          onDone={onUpdated}
+        />
 
-      <ConfirmDialog
-        open={confirmState.open}
-        title={confirmState.title}
-        message={confirmState.message}
-        onConfirm={handleConfirm}
-        onCancel={handleCancel}
-      />
+        <ConfirmDialog
+          open={confirmState.open}
+          title={confirmState.title}
+          message={confirmState.message}
+          onConfirm={handleConfirm}
+          onCancel={handleCancel}
+        />
+      </div>
     </>
   );
 }
