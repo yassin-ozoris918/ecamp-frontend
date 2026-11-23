@@ -503,6 +503,7 @@
     "viewCourses": "View Courses"
   },
   "courseView": {
+    "ownCodeRequired": "Needs its own lecture code",
     "failedLoadSyllabus": "Failed to load course syllabus.",
     "failedRedeem": "Failed to redeem code.",
     "startLecture": "Start Lecture",
@@ -561,5 +562,23 @@
     "stillNeedHelp": "Still Need Help?",
     "supportDesc": "If you couldn't find the answer to your question, our support team is here to help.",
     "contactSupport": "Contact Support"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "open": "Open notifications",
+    "unreadAria_one": "{{count}} unread notification",
+    "unreadAria_other": "{{count}} unread notifications",
+    "markAllRead": "Mark all as read",
+    "empty": "You're all caught up",
+    "emptyDesc": "We'll let you know here when new lectures, sessions or materials are added to your courses.",
+    "loadMore": "Load more",
+    "loadError": "Couldn't load notifications.",
+    "retry": "Try again",
+    "justNow": "Just now",
+    "lectureAdded": "A new lecture has been added to {{courseTitle}}",
+    "sessionAdded_one": "A new session has been added to {{lectureTitle}} in {{courseTitle}}",
+    "sessionAdded_other": "{{count}} new sessions have been added to {{lectureTitle}} in {{courseTitle}}",
+    "materialAdded_one": "New material has been added to {{lectureTitle}} in {{courseTitle}}",
+    "materialAdded_other": "{{count}} new files have been added to {{lectureTitle}} in {{courseTitle}}"
   }
 }

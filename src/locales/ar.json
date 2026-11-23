@@ -498,6 +498,7 @@
     "viewCourses": "عرض المقررات"
   },
   "courseView": {
+    "ownCodeRequired": "تتطلب كود محاضرة خاص بها",
     "failedLoadSyllabus": "فشل تحميل منهج الدورة.",
     "failedRedeem": "فشل استرداد الرمز.",
     "startLecture": "بدء المحاضرة",
@@ -556,5 +557,35 @@
     "stillNeedHelp": "هل ما زلت بحاجة للمساعدة؟",
     "supportDesc": "إذا لم تتمكن من العثور على إجابة لسؤالك، فريق الدعم الخاص بنا هنا لمساعدتك.",
     "contactSupport": "تواصل مع الدعم"
+  },
+  "notifications": {
+    "title": "الإشعارات",
+    "open": "فتح الإشعارات",
+    "unreadAria_zero": "لا توجد إشعارات غير مقروءة",
+    "unreadAria_one": "إشعار واحد غير مقروء",
+    "unreadAria_two": "إشعاران غير مقروءين",
+    "unreadAria_few": "{{count}} إشعارات غير مقروءة",
+    "unreadAria_many": "{{count}} إشعارًا غير مقروء",
+    "unreadAria_other": "{{count}} إشعار غير مقروء",
+    "markAllRead": "تحديد الكل كمقروء",
+    "empty": "لا توجد إشعارات جديدة",
+    "emptyDesc": "سنُعلمك هنا عند إضافة محاضرات أو جلسات أو مواد جديدة إلى مقرراتك.",
+    "loadMore": "عرض المزيد",
+    "loadError": "تعذّر تحميل الإشعارات.",
+    "retry": "حاول مرة أخرى",
+    "justNow": "الآن",
+    "lectureAdded": "تمت إضافة محاضرة جديدة إلى {{courseTitle}}",
+    "sessionAdded_zero": "تمت إضافة جلسة جديدة إلى {{lectureTitle}} في {{courseTitle}}",
+    "sessionAdded_one": "تمت إضافة جلسة جديدة إلى {{lectureTitle}} في {{courseTitle}}",
+    "sessionAdded_two": "تمت إضافة جلستين جديدتين إلى {{lectureTitle}} في {{courseTitle}}",
+    "sessionAdded_few": "تمت إضافة {{count}} جلسات جديدة إلى {{lectureTitle}} في {{courseTitle}}",
+    "sessionAdded_many": "تمت إضافة {{count}} جلسة جديدة إلى {{lectureTitle}} في {{courseTitle}}",
+    "sessionAdded_other": "تمت إضافة {{count}} جلسة جديدة إلى {{lectureTitle}} في {{courseTitle}}",
+    "materialAdded_zero": "تمت إضافة مادة جديدة إلى {{lectureTitle}} في {{courseTitle}}",
+    "materialAdded_one": "تمت إضافة مادة جديدة إلى {{lectureTitle}} في {{courseTitle}}",
+    "materialAdded_two": "تمت إضافة ملفين جديدين إلى {{lectureTitle}} في {{courseTitle}}",
+    "materialAdded_few": "تمت إضافة {{count}} ملفات جديدة إلى {{lectureTitle}} في {{courseTitle}}",
+    "materialAdded_many": "تمت إضافة {{count}} ملفًا جديدًا إلى {{lectureTitle}} في {{courseTitle}}",
+    "materialAdded_other": "تمت إضافة {{count}} ملف جديد إلى {{lectureTitle}} في {{courseTitle}}"
   }
 }

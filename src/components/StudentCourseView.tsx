@@ -250,6 +250,9 @@ export function StudentCourseView({ courseId }: { courseId: string }) {
                           {!lecture.isUnlocked && !lecture.isExpired && (
                             <Badge variant="default">{t('courseView.unowned')}</Badge>
                           )}
+                          {lecture.requiresOwnCode && !lecture.isUnlocked && (
+                            <Badge variant="warning">{t('courseView.ownCodeRequired')}</Badge>
+                          )}
                         </div>
                         {lecture.description && (
                           <p className="text-sm text-theme-muted truncate">{lecture.description}</p>
@@ -300,6 +303,9 @@ export function StudentCourseView({ courseId }: { courseId: string }) {
                         )}
                         {!lecture.isUnlocked && !lecture.isExpired && (
                           <Badge variant="default">Unowned</Badge>
+                        )}
+                        {lecture.requiresOwnCode && !lecture.isUnlocked && (
+                          <Badge variant="warning">{t('courseView.ownCodeRequired')}</Badge>
                         )}
                       </div>
                       {lecture.description && (

@@ -26,6 +26,7 @@ import { ThemeToggle } from './common/ThemeToggle';
 import { useTranslation } from 'react-i18next';
 import { LanguageToggle } from './common/LanguageToggle';
 import { AboutPlatformModal } from './AboutPlatformModal';
+import { NotificationBell } from './NotificationBell';
 
 interface NavItem {
   to: string;
@@ -81,6 +82,8 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   const role = profile?.role ?? 'STUDENT';
   const nav = NAV[role];
+  // In-app content notifications are for students only.
+  const showNotifications = profile?.role === 'STUDENT';
 
   return (
     <div className="min-h-screen lg:flex">
@@ -129,14 +132,17 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
           <span className="font-display font-bold text-theme-text">E.Camp</span>
         </Link>
-        <button
-          type="button"
-          onClick={() => setMobileOpen(true)}
-          className="p-2 rounded-lg text-theme-muted hover:bg-theme-card"
-          aria-label="Open menu"
-        >
-          <Menu className="w-6 h-6" />
-        </button>
+        <div className="flex items-center gap-1">
+          {showNotifications && <NotificationBell />}
+          <button
+            type="button"
+            onClick={() => setMobileOpen(true)}
+            className="p-2 rounded-lg text-theme-muted hover:bg-theme-card"
+            aria-label="Open menu"
+          >
+            <Menu className="w-6 h-6" />
+          </button>
+        </div>
       </div>
 
       {/* Mobile sidebar */}
@@ -176,6 +182,11 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       {/* Main content */}
       <main className="lg:ms-64 flex-1 min-w-0">
+        {showNotifications && (
+          <div className="hidden lg:flex sticky top-0 z-30 justify-end items-center h-14 px-8 border-b border-theme-border bg-theme-bg/80 backdrop-blur-xl">
+            <NotificationBell />
+          </div>
+        )}
         <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">{children}</div>
       </main>
     </div>

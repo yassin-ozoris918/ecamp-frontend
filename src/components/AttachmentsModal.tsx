@@ -2,7 +2,9 @@ import toast from 'react-hot-toast';
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../lib/api';
-import { X, Upload, Trash2, Paperclip, FileText, Loader2 } from 'lucide-react';
+import { X, Upload, Trash2, Paperclip, FileText, Loader2, FolderInput } from 'lucide-react';
+import { InlineRename } from './common/InlineRename';
+import { MaterialMoveModal } from './MaterialMoveModal';
 
 interface Attachment {
   id: string;
@@ -18,14 +20,18 @@ interface AttachmentsModalProps {
   targetId: string;
   targetType: 'COURSE' | 'CHAPTER';
   title: string;
+  /** The course these files belong to (pre-selected in the "move file" dialog). */
+  courseId?: string;
 }
 
-export function AttachmentsModal({ isOpen, onClose, targetId, targetType, title }: AttachmentsModalProps) {
+export function AttachmentsModal({ isOpen, onClose, targetId, targetType, title, courseId }: AttachmentsModalProps) {
   const queryClient = useQueryClient();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [fileTitle, setFileTitle] = useState('');
   const [fileType, setFileType] = useState('OTHER');
   const [isUploading, setIsUploading] = useState(false);
+  const [moving, setMoving] = useState<Attachment | null>(null);
+  const kind = targetType === 'COURSE' ? 'course' : 'chapter';
 
   // Determine API endpoints
   const fetchUrl = targetType === 'COURSE' ? `/course-attachments/course/${targetId}` : `/chapter-attachments/chapter/${targetId}`;
@@ -193,13 +199,31 @@ export function AttachmentsModal({ isOpen, onClose, targetId, targetType, title 
                       <div className="w-8 h-8 rounded-lg bg-cyan-500/10 flex flex-col items-center justify-center">
                         <FileText className="w-4 h-4 text-cyan-400" />
                       </div>
-                      <div className="flex flex-col">
-                        <a href={att.fileUrl} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-theme-text hover:text-cyan-400 transition-colors">
-                          {att.title}
-                        </a>
+                      <div className="flex flex-col min-w-0">
+                        <InlineRename
+                          value={att.title}
+                          label="Rename file"
+                          className="text-sm font-medium text-theme-text"
+                          onSave={async (next) => {
+                            await api.patch(`/content/materials/${kind}/${att.id}`, { title: next });
+                            await queryClient.invalidateQueries({ queryKey });
+                          }}
+                        />
                         <span className="text-[10px] font-bold text-cyan-500">{att.type || 'OTHER'}</span>
                       </div>
                     </div>
+                    <div className="flex items-center gap-1">
+                    {courseId && (
+                      <button
+                        type="button"
+                        onClick={() => setMoving(att)}
+                        className="p-2 text-theme-muted hover:text-cyan-400 hover:bg-cyan-400/10 rounded-lg transition-colors"
+                        title="Move to a lecture or another chapter"
+                        aria-label="Move file"
+                      >
+                        <FolderInput className="w-4 h-4" />
+                      </button>
+                    )}
                     <button
                       onClick={() => deleteMutation.mutate(att.id)}
                       disabled={deleteMutation.isPending}
@@ -208,6 +232,7 @@ export function AttachmentsModal({ isOpen, onClose, targetId, targetType, title 
                     >
                       {deleteMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
                     </button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -215,6 +240,15 @@ export function AttachmentsModal({ isOpen, onClose, targetId, targetType, title 
           </div>
         </div>
       </div>
+      {courseId && (
+        <MaterialMoveModal
+          open={!!moving}
+          material={moving ? { kind, id: moving.id, title: moving.title, parentId: targetId } : null}
+          courseId={courseId}
+          onClose={() => setMoving(null)}
+          onDone={() => queryClient.invalidateQueries({ queryKey: ['attachments'] })}
+        />
+      )}
     </div>
   );
 }

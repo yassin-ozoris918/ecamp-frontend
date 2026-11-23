@@ -2,13 +2,20 @@ import toast from 'react-hot-toast';
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../lib/api';
-import { Trash2, Paperclip, UploadCloud } from 'lucide-react';
+import { Trash2, Paperclip, UploadCloud, ArrowUp, ArrowDown, FolderInput } from 'lucide-react';
+import { InlineRename } from './common/InlineRename';
+import { MaterialMoveModal } from './MaterialMoveModal';
+import { apiErrorMessage } from '../lib/contentOrganizer';
 
 interface LectureFilesSectionProps {
   lectureId: string;
+  /** The lecture's course (pre-selected in the "move file" dialog). */
+  courseId?: string;
 }
 
-export function LectureFilesSection({ lectureId }: LectureFilesSectionProps) {
+type LectureFile = { id: string; title: string; type?: string; allowDownload?: boolean | null; canDownload?: boolean };
+
+export function LectureFilesSection({ lectureId, courseId }: LectureFilesSectionProps) {
   const queryClient = useQueryClient();
   const [fileTitle, setFileTitle] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -17,7 +24,9 @@ export function LectureFilesSection({ lectureId }: LectureFilesSectionProps) {
   // 'inherit' = follow course policy, 'true' = always downloadable, 'false' = view only
   const [downloadPolicy, setDownloadPolicy] = useState<'inherit' | 'true' | 'false'>('inherit');
 
-  const { data: files = [], isLoading } = useQuery({
+  const [moving, setMoving] = useState<LectureFile | null>(null);
+
+  const { data: files = [], isLoading } = useQuery<LectureFile[]>({
     queryKey: ['attachments', lectureId],
     queryFn: async () => {
       const res = await api.get(`/attachments/lecture/${lectureId}`);
@@ -69,6 +78,37 @@ export function LectureFilesSection({ lectureId }: LectureFilesSectionProps) {
     }
   });
 
+  const renameMutation = useMutation({
+    mutationFn: async ({ id, title }: { id: string; title: string }) => api.patch(`/content/materials/lecture/${id}`, { title }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['attachments', lectureId] }),
+  });
+
+  const orderMutation = useMutation({
+    mutationFn: async (ids: string[]) => api.put(`/content/lectures/${lectureId}/materials/order`, { ids }),
+    onMutate: async (ids: string[]) => {
+      await queryClient.cancelQueries({ queryKey: ['attachments', lectureId] });
+      const prev = queryClient.getQueryData<LectureFile[]>(['attachments', lectureId]);
+      if (prev) {
+        const byId = new Map(prev.map((f) => [f.id, f]));
+        queryClient.setQueryData(['attachments', lectureId], ids.map((id) => byId.get(id)).filter(Boolean));
+      }
+      return { prev };
+    },
+    onError: (err: unknown, _ids, ctx) => {
+      if (ctx?.prev) queryClient.setQueryData(['attachments', lectureId], ctx.prev);
+      toast.error(apiErrorMessage(err, 'Could not change the file order.'));
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ['attachments', lectureId] }),
+  });
+
+  const moveFile = (index: number, direction: -1 | 1) => {
+    const target = index + direction;
+    if (target < 0 || target >= files.length) return;
+    const ids = files.map((f) => f.id);
+    [ids[index], ids[target]] = [ids[target], ids[index]];
+    orderMutation.mutate(ids);
+  };
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
@@ -106,13 +146,38 @@ export function LectureFilesSection({ lectureId }: LectureFilesSectionProps) {
           {files.length === 0 ? (
             <p className="text-xs text-theme-muted italic">No resources attached to this lecture yet.</p>
           ) : (
-            files.map((file: { id: string; title: string; type?: string; allowDownload?: boolean | null; canDownload?: boolean }) => (
+            files.map((file, index) => (
               <div key={file.id} className="flex items-center justify-between rounded-lg bg-theme-card p-2 text-xs border border-theme-border/50">
-                <div className="flex items-center gap-2 overflow-hidden">
-                  <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-theme-secondary text-cyan-400 border border-theme-border">
+                <div className="flex items-center gap-2 overflow-hidden min-w-0">
+                  <span className="flex flex-col shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => moveFile(index, -1)}
+                      disabled={index === 0 || orderMutation.isPending}
+                      className="text-theme-muted hover:text-cyan-400 disabled:opacity-30"
+                      aria-label="Move file up"
+                    >
+                      <ArrowUp className="w-3 h-3" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => moveFile(index, 1)}
+                      disabled={index === files.length - 1 || orderMutation.isPending}
+                      className="text-theme-muted hover:text-cyan-400 disabled:opacity-30"
+                      aria-label="Move file down"
+                    >
+                      <ArrowDown className="w-3 h-3" />
+                    </button>
+                  </span>
+                  <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-theme-secondary text-cyan-400 border border-theme-border shrink-0">
                     {file.type || 'OTHER'}
                   </span>
-                  <span className="font-medium text-theme-muted truncate max-w-[200px] sm:max-w-xs">{file.title}</span>
+                  <InlineRename
+                    value={file.title}
+                    label="Rename file"
+                    className="font-medium text-theme-muted max-w-[200px] sm:max-w-xs"
+                    onSave={(title) => renameMutation.mutateAsync({ id: file.id, title })}
+                  />
                   <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold border ${file.canDownload ? 'text-emerald-400 border-emerald-400/20 bg-emerald-500/10' : 'text-red-400 border-red-400/20 bg-red-500/10'}`}>
                     {file.canDownload ? 'Downloadable' : 'View only'}
                   </span>
@@ -129,7 +194,18 @@ export function LectureFilesSection({ lectureId }: LectureFilesSectionProps) {
                     <option value="true">Allow download</option>
                     <option value="false">View only</option>
                   </select>
-                  <button type="button" onClick={() => deleteMutation.mutate(file.id)} className="text-theme-muted hover:text-red-400 transition">
+                  {courseId && (
+                    <button
+                      type="button"
+                      onClick={() => setMoving(file)}
+                      className="text-theme-muted hover:text-cyan-400 transition"
+                      aria-label="Move file to another lecture or chapter"
+                      title="Move to another lecture / chapter"
+                    >
+                      <FolderInput className="h-3.5 w-3.5" />
+                    </button>
+                  )}
+                  <button type="button" onClick={() => deleteMutation.mutate(file.id)} className="text-theme-muted hover:text-red-400 transition" aria-label="Delete file">
                     <Trash2 className="h-3.5 w-3.5" />
                   </button>
                 </div>
@@ -137,6 +213,16 @@ export function LectureFilesSection({ lectureId }: LectureFilesSectionProps) {
             ))
           )}
         </div>
+      )}
+
+      {courseId && (
+        <MaterialMoveModal
+          open={!!moving}
+          material={moving ? { kind: 'lecture', id: moving.id, title: moving.title, parentId: lectureId } : null}
+          courseId={courseId}
+          onClose={() => setMoving(null)}
+          onDone={() => queryClient.invalidateQueries({ queryKey: ['attachments'] })}
+        />
       )}
 
       <form onSubmit={handleUploadSubmit} className="mt-4 flex flex-col md:flex-row gap-2 border-t border-neutral-900 pt-3">

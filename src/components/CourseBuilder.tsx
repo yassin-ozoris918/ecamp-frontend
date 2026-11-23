@@ -20,6 +20,9 @@ import {
   ArrowUp,
   ArrowDown,
   Download,
+  Lock,
+  Unlock as LockOpen,
+  FolderInput,
 } from 'lucide-react';
 import { api } from '../lib/api';
 import { useAuth } from '../lib/authContext';
@@ -35,6 +38,8 @@ import { LectureSequenceBuilder } from './LectureSequenceBuilder';
 import { LectureFilesSection } from './LectureFilesSection';
 import { AIQuestionReviewStudio } from './AIQuestionReviewStudio';
 import { CourseTargetingModal } from './CourseTargetingModal';
+import { InlineRename } from './common/InlineRename';
+import { LectureMoveCopyModal } from './LectureMoveCopyModal';
 
 export function CourseSettingsPanel({ courseId }: { courseId: string }) {
   const queryClient = useQueryClient();
@@ -344,9 +349,12 @@ export function CourseBuilder({ courseId }: { courseId: string }) {
 
   const finalExams = useMemo(() => exams.filter(e => !e.chapterId), [exams]);
 
+  // Only the first load shows the full-page spinner; later reloads (after a rename, move, lock…)
+  // refresh in place so the page does not jump.
+  const loadedCourseRef = useRef<string | null>(null);
   const load = useCallback(async () => {
     if (!profile) return;
-    setLoading(true);
+    if (loadedCourseRef.current !== courseId) setLoading(true);
 
     try {
       const [builderRes, examsRes] = await Promise.all([
@@ -369,6 +377,7 @@ export function CourseBuilder({ courseId }: { courseId: string }) {
       setItems(itemsMap);
 
       setExams(examsRes.data);
+      loadedCourseRef.current = courseId;
     } catch (e) {
       console.error(e);
     }
@@ -377,6 +386,15 @@ export function CourseBuilder({ courseId }: { courseId: string }) {
   }, [profile, courseId]);
 
   useEffect(() => { load(); }, [load]);
+
+  const toggleChapter = (id: string) => {
+    setExpandedChapters((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
 
   const handleAiFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -577,23 +595,34 @@ export function CourseBuilder({ courseId }: { courseId: string }) {
                 const expandedChap = expandedChapters.has(chapter.id);
                 return (
                   <div key={chapter.id} className="border border-white/[0.04] bg-white/[0.01] rounded-2xl overflow-hidden">
-                    <button
-                      onClick={() => {
-                        setExpandedChapters((prev) => {
-                          const next = new Set(prev);
-                          if (next.has(chapter.id)) next.delete(chapter.id);
-                          else next.add(chapter.id);
-                          return next;
-                        });
+                    <div
+                      role="button"
+                      tabIndex={0}
+                      aria-expanded={expandedChap}
+                      onClick={() => toggleChapter(chapter.id)}
+                      onKeyDown={(e) => {
+                        if (e.target !== e.currentTarget) return;
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          toggleChapter(chapter.id);
+                        }
                       }}
-                      className="w-full p-4 flex items-center gap-3 hover:bg-theme-card transition-colors"
+                      className="w-full p-4 flex items-center gap-3 hover:bg-theme-card transition-colors cursor-pointer"
                     >
                       {expandedChap ? <ChevronDown className="w-4 h-4 text-theme-muted" /> : <ChevronRight className="w-4 h-4 text-theme-muted" />}
                       <div className="font-display font-bold text-accent-400 text-lg">
                         Chapter {cIdx + 1}
                       </div>
                       <div className="flex-1 text-start min-w-0">
-                        <p className="font-bold text-theme-text truncate">{chapter.title}</p>
+                        <InlineRename
+                          value={chapter.title}
+                          label="Rename chapter"
+                          className="font-bold text-theme-text"
+                          onSave={async (title) => {
+                            await api.put(`/chapters/${chapter.id}`, { title });
+                            await load();
+                          }}
+                        />
                         <p className="text-xs text-theme-muted">{chapter.lectures.length} lectures</p>
                       </div>
                       <button
@@ -613,7 +642,7 @@ export function CourseBuilder({ courseId }: { courseId: string }) {
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
-                    </button>
+                    </div>
 
                     {expandedChap && (
                       <div className="p-4 pt-0 space-y-3 bg-white/[0.01] border-t border-white/[0.04]">
@@ -921,6 +950,7 @@ export function CourseBuilder({ courseId }: { courseId: string }) {
         targetId={attachmentsTargetId}
         targetType={attachmentsTargetType}
         title={attachmentsTitle}
+        courseId={courseId}
       />
       
       <input 
@@ -959,13 +989,57 @@ export function CourseBuilder({ courseId }: { courseId: string }) {
 
 function LectureActions({ lecture, onUpdated }: { lecture: BuilderLecture; onUpdated: () => void }) {
   const { confirm, state: confirmState, handleConfirm, handleCancel } = useConfirm();
+  const [moveOpen, setMoveOpen] = useState(false);
+  const [lockBusy, setLockBusy] = useState(false);
+  const locked = !!lecture.requiresOwnCode;
+
+  const toggleLock = async () => {
+    const ok = await confirm(
+      locked ? 'Include lecture in the course again' : 'Lock lecture',
+      locked
+        ? 'Students with full-course access will be able to open this lecture again.'
+        : 'Students with full-course access (or a materials code, or a free course) will no longer open this lecture or its files. They must redeem a lecture code for it. Students who already unlocked it with a lecture code keep it.',
+    );
+    if (!ok) return;
+    setLockBusy(true);
+    try {
+      await api.put(`/lectures/${lecture.id}`, { requiresOwnCode: !locked });
+      toast.success(locked ? 'Lecture is part of the course again.' : 'Lecture locked: it now needs its own code.');
+      onUpdated();
+    } catch (err: unknown) {
+      toast.error((err as any)?.response?.data?.message || 'Could not change the lock.');
+    } finally {
+      setLockBusy(false);
+    }
+  };
 
   return (
     <>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
         <button
-          onClick={async (e) => {
-            e.stopPropagation();
+          type="button"
+          onClick={toggleLock}
+          disabled={lockBusy}
+          className={`p-2 rounded-lg transition-colors disabled:opacity-50 ${
+            locked ? 'text-amber-500 bg-amber-500/10 hover:bg-amber-500/20' : 'text-theme-muted hover:text-amber-500 hover:bg-amber-500/10'
+          }`}
+          aria-label={locked ? 'Include lecture in the course again' : 'Lock lecture (require its own code)'}
+          title={locked ? 'Locked: needs its own lecture code. Click to include it in the course again.' : 'Lock: require its own lecture code'}
+        >
+          {locked ? <Lock className="w-4 h-4" /> : <LockOpen className="w-4 h-4" />}
+        </button>
+        <button
+          type="button"
+          onClick={() => setMoveOpen(true)}
+          className="p-2 rounded-lg text-theme-muted hover:text-accent-600 dark:hover:text-accent-300 hover:bg-accent-500/10 transition-colors"
+          aria-label="Move or copy lecture"
+          title="Move or copy to another chapter / course"
+        >
+          <FolderInput className="w-4 h-4" />
+        </button>
+        <button
+          type="button"
+          onClick={async () => {
             const ok = await confirm('Delete Lecture', 'Delete this lecture and all its content?');
             if (!ok) return;
             try {
@@ -981,6 +1055,13 @@ function LectureActions({ lecture, onUpdated }: { lecture: BuilderLecture; onUpd
           <Trash2 className="w-4 h-4" />
         </button>
       </div>
+
+      <LectureMoveCopyModal
+        open={moveOpen}
+        lecture={lecture.courseId ? { id: lecture.id, title: lecture.title, courseId: lecture.courseId, chapterId: lecture.chapterId } : null}
+        onClose={() => setMoveOpen(false)}
+        onDone={onUpdated}
+      />
 
       <ConfirmDialog
         open={confirmState.open}
@@ -1738,9 +1819,19 @@ export function LectureList({ lectures, items, expandedLecs, toggleLec, load, se
         const expanded = expandedLecs.has(lec.id);
         return (
           <div key={lec.id} className="glass rounded-2xl overflow-hidden">
-            <button
+            <div
+              role="button"
+              tabIndex={0}
+              aria-expanded={expanded}
               onClick={() => toggleLec(lec.id)}
-              className="w-full p-4 flex items-center gap-3 hover:bg-white/[0.02] transition-colors"
+              onKeyDown={(e) => {
+                if (e.target !== e.currentTarget) return;
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  toggleLec(lec.id);
+                }
+              }}
+              className="w-full p-4 flex items-center gap-3 hover:bg-white/[0.02] transition-colors cursor-pointer"
             >
               <div className="flex flex-col gap-1 mr-1" onClick={(e) => e.stopPropagation()}>
                 <button 
@@ -1763,11 +1854,26 @@ export function LectureList({ lectures, items, expandedLecs, toggleLec, load, se
                 {idx + 1}
               </div>
               <div className="flex-1 text-start min-w-0">
-                <p className="font-semibold text-theme-text truncate">{lec.title}</p>
-                <p className="text-xs text-theme-muted">{lecItems.length} items</p>
+                <InlineRename
+                  value={lec.title}
+                  label="Rename lecture"
+                  className="font-semibold text-theme-text"
+                  onSave={async (title) => {
+                    await api.put(`/lectures/${lec.id}`, { title });
+                    await load();
+                  }}
+                />
+                <p className="text-xs text-theme-muted flex items-center gap-2">
+                  <span>{lecItems.length} items</span>
+                  {lec.requiresOwnCode && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold text-amber-600 dark:text-amber-300">
+                      <Lock className="w-3 h-3" /> Needs its own code
+                    </span>
+                  )}
+                </p>
               </div>
               <LectureActions lecture={lec} onUpdated={load} />
-            </button>
+            </div>
 
             {expanded && (
               <div className="p-4 pt-0 space-y-3 border-t border-white/[0.04] mt-1">
@@ -1791,7 +1897,7 @@ export function LectureList({ lectures, items, expandedLecs, toggleLec, load, se
                     onAIGenerate={(info) => setAiModalLecInfo({ lectureId: lec.id, ...info })} 
                   />
                 </div>
-                <LectureFilesSection lectureId={lec.id} />
+                <LectureFilesSection lectureId={lec.id} courseId={lec.courseId} />
               </div>
             )}
           </div>
@@ -1863,6 +1969,7 @@ function EditExamSettingsModal({
   onClose: () => void;
   onUpdated: () => void;
 }) {
+  const [title, setTitle] = useState('');
   const [passingScore, setPassingScore] = useState('');
   const [timeLimit, setTimeLimit] = useState('');
   const [maxAttempts, setMaxAttempts] = useState('');
@@ -1870,6 +1977,7 @@ function EditExamSettingsModal({
 
   useEffect(() => {
     if (exam) {
+      setTitle(exam.title || '');
       setPassingScore(exam.passGrade?.toString() || '70');
       setTimeLimit(exam.timeLimit?.toString() || '');
       setMaxAttempts(exam.maxAttempts?.toString() || '1');
@@ -1882,6 +1990,7 @@ function EditExamSettingsModal({
     setBusy(true);
     try {
       await api.put(`/admin/exams/${exam.id}`, {
+        title: title.trim(),
         passingScore: Number(passingScore),
         timeLimit: timeLimit ? Number(timeLimit) : null,
         maxAttempts: Number(maxAttempts)
@@ -1890,6 +1999,7 @@ function EditExamSettingsModal({
       onClose();
     } catch(err) {
       console.error(err);
+      toast.error((err as any)?.response?.data?.message || 'Could not save the exam settings.');
     } finally {
       setBusy(false);
     }
@@ -1898,6 +2008,10 @@ function EditExamSettingsModal({
   return (
     <Modal open={open} onClose={onClose} title="Edit Exam Settings">
       <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label className="label">Exam name</label>
+          <input dir="auto" className="input" value={title} maxLength={255} onChange={(e) => setTitle(e.target.value)} required />
+        </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="label">Passing Score (%)</label>
@@ -1932,6 +2046,7 @@ function EditQuizSettingsModal({
   onClose: () => void;
   onUpdated: () => void;
 }) {
+  const [title, setTitle] = useState('');
   const [passingScore, setPassingScore] = useState('');
   const [timeLimit, setTimeLimit] = useState('');
   const [maxAttempts, setMaxAttempts] = useState('');
@@ -1939,6 +2054,7 @@ function EditQuizSettingsModal({
 
   useEffect(() => {
     if (quiz) {
+      setTitle(quiz.title || '');
       setPassingScore(quiz.passGrade?.toString() || '70');
       setTimeLimit(quiz.timeLimit?.toString() || '');
       setMaxAttempts(quiz.maxAttempts?.toString() || '1');
@@ -1950,7 +2066,12 @@ function EditQuizSettingsModal({
     if (!quiz) return;
     setBusy(true);
     try {
+      if (!title.trim()) {
+        toast.error('The quiz name cannot be empty.');
+        return;
+      }
       await api.put(`/quizzes/${quiz.id}`, {
+        title: title.trim(),
         passGrade: Number(passingScore),
         timeLimit: timeLimit ? Number(timeLimit) : null,
         maxAttempts: Number(maxAttempts)
@@ -1959,6 +2080,7 @@ function EditQuizSettingsModal({
       onClose();
     } catch(err) {
       console.error(err);
+      toast.error((err as any)?.response?.data?.message || 'Could not save the quiz settings.');
     } finally {
       setBusy(false);
     }
@@ -1967,6 +2089,10 @@ function EditQuizSettingsModal({
   return (
     <Modal open={open} onClose={onClose} title="Edit Quiz Settings">
       <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label className="label">Quiz name</label>
+          <input dir="auto" className="input" value={title} maxLength={255} onChange={(e) => setTitle(e.target.value)} required />
+        </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="label">Passing Score (%)</label>

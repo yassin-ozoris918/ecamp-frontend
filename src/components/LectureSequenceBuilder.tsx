@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { api } from '../lib/api';
 import { ArrowUp, ArrowDown, FileQuestion, PlayCircle, Paperclip, Trash2, Edit3, Settings } from 'lucide-react';
 import { Badge, Spinner } from './ui';
 import { useConfirm, ConfirmDialog } from '../hooks/useConfirm';
+import { InlineRename } from './common/InlineRename';
 
 function ItemIcon({ type, className }: { type: string; className?: string }) {
   if (type === 'QUIZ') return <FileQuestion className={className} />;
@@ -60,10 +61,22 @@ export function LectureSequenceBuilder({
   onAddQuestion?: (id: string, type: 'EXAM'|'QUIZ') => void;
   onEditQuizSettings?: (quiz: any) => void;
 }) {
-  const [items, setItems] = useState(() => {
+  const sortItems = (list: any[]) =>
     // Sort by sortOrder (the canonical field saved by reorder API)
-    return [...initialItems].sort((a, b) => (a.sortOrder ?? a.orderIndex ?? 0) - (b.sortOrder ?? b.orderIndex ?? 0));
-  });
+    [...list].sort((a, b) => (a.sortOrder ?? a.orderIndex ?? 0) - (b.sortOrder ?? b.orderIndex ?? 0));
+  const [items, setItems] = useState(() => sortItems(initialItems));
+
+  // Keep in sync when the parent reloads (after a rename, reorder, add or delete).
+  useEffect(() => {
+    setItems(sortItems(initialItems));
+  }, [initialItems]);
+
+  const renameItem = async (item: any, title: string) => {
+    const endpoint = item.type === 'QUIZ' ? `/quizzes/${item.id}` : `/sessions/${item.id}`;
+    await api.put(endpoint, { title });
+    setItems((prev) => prev.map((i) => (i.id === item.id ? { ...i, title } : i)));
+    onReordered();
+  };
 
   const reorderMutation = useMutation({
     mutationFn: async (newItems: any[]) => {
@@ -139,8 +152,17 @@ export function LectureSequenceBuilder({
           <ItemIcon type={item.type} className="w-5 h-5 text-theme-muted" />
           
           <div className="flex-1 min-w-0">
-            <span className="text-sm font-medium text-theme-muted block truncate">{item.title}</span>
-            <span className="text-[10px] text-theme-muted uppercase tracking-wider">{item.type}</span>
+            {item.type === 'SESSION' || item.type === 'QUIZ' ? (
+              <InlineRename
+                value={item.title}
+                label={item.type === 'QUIZ' ? 'Rename quiz' : 'Rename session'}
+                className="text-sm font-medium text-theme-muted"
+                onSave={(title) => renameItem(item, title)}
+              />
+            ) : (
+              <span className="text-sm font-medium text-theme-muted block truncate">{item.title}</span>
+            )}
+            <span className="text-[10px] text-theme-muted uppercase tracking-wider block">{item.type}</span>
           </div>
 
           <div className="shrink-0 flex items-center gap-2">

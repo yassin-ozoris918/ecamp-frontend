@@ -6,7 +6,6 @@ import {
   Database,
   User,
   ShieldAlert,
-  MessageSquare,
   KeyRound,
   RotateCcw,
   Shield,
@@ -280,14 +279,6 @@ export function AdminDashboard() {
           to="#/admin/risk"
           color="text-error-300"
           bg="bg-error-500/10"
-        />
-        <QuickActionCard
-          icon={<MessageSquare className="w-5 h-5" />}
-          title="Notification Logs"
-          description="View ledger of all dispatched parent communications."
-          to="#/admin/notifications"
-          color="text-secondary-700 dark:text-secondary-300"
-          bg="bg-secondary-500/10"
         />
         <QuickActionCard
           icon={<Search className="w-5 h-5" />}

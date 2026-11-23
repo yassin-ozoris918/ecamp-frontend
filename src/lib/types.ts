@@ -157,6 +157,8 @@ export interface Lecture {
   isUnlocked?: boolean;
   isExpired?: boolean;
   isStarted?: boolean;
+  /** Locked lecture: needs its own lecture code even with full-course access. */
+  requiresOwnCode?: boolean;
   isPublished?: boolean;
   warningHours?: number;
   warningMinutes?: number;
@@ -296,10 +298,13 @@ export interface BuilderChapter {
 
 export interface BuilderLecture {
   id: string;
+  courseId?: string;
   title: string;
   description: string | null;
   sortOrder: number;
   chapterId: string | null;
+  /** Locked: full-course access does not open it; it needs its own lecture code. */
+  requiresOwnCode?: boolean;
   isPublished?: boolean;
   items: BuilderItem[];
 }
@@ -640,23 +645,6 @@ export interface MediaFile {
   altText: string | null;
   uploadedById: string;
   uploadedAt: string;
-}
-
-// --- Notification types ---
-
-export interface NotificationLog {
-  id: string;
-  recipientId: string | null;
-  recipientPhone: string | null;
-  recipientEmail: string | null;
-  eventCategory: string;
-  channelType: string;
-  deliveryStatus: string;
-  messageContent: string;
-  dispatchedAt: string;
-  completedAt: string | null;
-  failureReason: string | null;
-  retryCount: number;
 }
 
 // --- AI / Quiz types ---

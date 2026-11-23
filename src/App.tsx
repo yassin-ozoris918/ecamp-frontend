@@ -51,7 +51,6 @@ const AdminCodes = lazyImport(() => import('./components/AdminDashboard').then(m
 const AdminCourses = lazyImport(() => import('./components/AdminDashboard').then(m => ({ default: m.AdminCourses })));
 const AdminProfileRequests = lazyImport(() => import('./components/AdminDashboard').then(m => ({ default: m.AdminProfileRequests })));
 const AcademicRiskDashboard = lazyImport(() => import('./components/AcademicRiskDashboard').then(m => ({ default: m.AcademicRiskDashboard })));
-const NotificationLogViewer = lazyImport(() => import('./components/NotificationLogViewer').then(m => ({ default: m.NotificationLogViewer })));
 const Student360Workspace = lazyImport(() => import('./components/Student360Workspace').then(m => ({ default: m.Student360Workspace })));
 const SystemAuditViewer = lazyImport(() => import('./components/SystemAuditViewer').then(m => ({ default: m.SystemAuditViewer })));
 const QuizAttemptsManager = lazyImport(() => import('./components/QuizAttemptsManager').then(m => ({ default: m.QuizAttemptsManager })));
@@ -275,7 +274,6 @@ function RoleRoutes({ role }: { role: string }) {
         { pattern: '/admin/courses', element: () => <AdminCourses /> },
         { pattern: '/admin/codes', element: () => <AdminCodes /> },
         { pattern: '/admin/risk', element: () => <AcademicRiskDashboard /> },
-        { pattern: '/admin/notifications', element: () => <NotificationLogViewer /> },
         { pattern: '/admin/student-360', element: () => <Student360Workspace /> },
         { pattern: '/admin/audit-logs', element: () => <SystemAuditViewer /> },
         { pattern: '/admin/profile-requests', element: () => <AdminProfileRequests /> },
