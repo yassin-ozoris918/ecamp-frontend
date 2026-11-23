@@ -113,15 +113,28 @@ export function LectureMoveCopyModal({
             <div>
               <label className="label">Chapter</label>
               <select className="input" value={chapterId} onChange={(e) => setChapterId(e.target.value)}>
-                <option value="">No chapter (unassigned lectures)</option>
+                <option value="">
+                  No chapter (unassigned lectures){!crossCourse && !lecture?.chapterId ? ' — current' : ''}
+                </option>
                 {course?.chapters.map((ch, i) => (
                   <option key={ch.id} value={ch.id}>
                     Chapter {i + 1}: {ch.title}
+                    {!crossCourse && ch.id === lecture?.chapterId ? ' — current' : ''}
                   </option>
                 ))}
               </select>
             </div>
           </>
+        )}
+
+        {noChange && (
+          <p className="text-xs text-theme-muted">
+            The lecture is already here. Choose a different chapter or course to move it, or switch to{' '}
+            <button type="button" className="underline text-accent-600 dark:text-accent-300" onClick={() => setMode('copy')}>
+              Copy
+            </button>{' '}
+            to duplicate it.
+          </p>
         )}
 
         {mode === 'move' && crossCourse && (
