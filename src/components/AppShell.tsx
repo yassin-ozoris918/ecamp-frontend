@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Toaster } from 'react-hot-toast';
 import {
   GraduationCap,
@@ -20,7 +20,19 @@ import {
   MessageCircle,
   Compass,
   UserCircle2,
+  Search,
+  UserPlus,
+  UserCog,
+  Contact,
+  HelpCircle,
+  Eye,
+  ShieldAlert,
+  Smartphone,
+  Database,
+  FileCheck2,
 } from 'lucide-react';
+import { useAdminAttention, type AdminAttention } from '../lib/adminAttention';
+import { CommandPalette, type PaletteEntry } from './admin/CommandPalette';
 import { Link, useRouter } from '../lib/router';
 import { useAuth } from '../lib/authContext';
 import type { UserRole } from '../lib/types';
@@ -34,7 +46,57 @@ interface NavItem {
   to: string;
   label: string;
   icon: ReactNode;
+  /** Admin: show a counter from /admin/attention next to the item. */
+  badge?: keyof AdminAttention;
 }
+
+interface NavGroup {
+  /** i18n key; omitted for the top group. */
+  label?: string;
+  items: NavItem[];
+}
+
+/**
+ * Admin navigation: every admin page one click away, grouped by job. (Previously most pages were
+ * only reachable through cards on the dashboard.)
+ */
+const ADMIN_GROUPS: NavGroup[] = [
+  { items: [{ to: '/admin', label: 'nav.dashboard', icon: <LayoutDashboard className="w-4 h-4" /> }] },
+  {
+    label: 'adminNav.people',
+    items: [
+      { to: '/admin/users', label: 'adminNav.users', icon: <Users className="w-4 h-4" /> },
+      { to: '/admin/pending-users', label: 'adminNav.pending', icon: <UserPlus className="w-4 h-4" />, badge: 'pendingRegistrations' },
+      { to: '/admin/profile-requests', label: 'adminNav.profileRequests', icon: <UserCog className="w-4 h-4" />, badge: 'profileRequests' },
+      { to: '/admin/student-360', label: 'adminNav.student360', icon: <Contact className="w-4 h-4" /> },
+    ],
+  },
+  {
+    label: 'adminNav.content',
+    items: [
+      { to: '/admin/courses', label: 'adminNav.courses', icon: <BookOpen className="w-4 h-4" /> },
+      { to: '/admin/codes', label: 'adminNav.codes', icon: <KeyRound className="w-4 h-4" /> },
+      { to: '/admin/help-center', label: 'adminNav.helpCenter', icon: <HelpCircle className="w-4 h-4" /> },
+    ],
+  },
+  {
+    label: 'adminNav.learning',
+    items: [
+      { to: '/admin/quiz-review', label: 'adminNav.quizReview', icon: <FileCheck2 className="w-4 h-4" />, badge: 'quizAnswersToReview' },
+      { to: '/instructor/grading', label: 'adminNav.grading', icon: <ClipboardList className="w-4 h-4" />, badge: 'examsToGrade' },
+      { to: '/admin/lecture-viewers', label: 'adminNav.lectureViewers', icon: <Eye className="w-4 h-4" /> },
+      { to: '/admin/risk', label: 'adminNav.risk', icon: <ShieldAlert className="w-4 h-4" /> },
+    ],
+  },
+  {
+    label: 'adminNav.system',
+    items: [
+      { to: '/admin/device-logs', label: 'adminNav.deviceLogs', icon: <Smartphone className="w-4 h-4" /> },
+      { to: '/admin/audit-logs', label: 'adminNav.audit', icon: <Database className="w-4 h-4" /> },
+      { to: '/contact', label: 'nav.contact', icon: <MessageCircle className="w-4 h-4" /> },
+    ],
+  },
+];
 
 const NAV: Record<UserRole, NavItem[]> = {
   STUDENT: [
@@ -98,6 +160,43 @@ export function AppShell({ children }: { children: ReactNode }) {
   const nav = NAV[role];
   // In-app content notifications are for students only.
   const showNotifications = profile?.role === 'STUDENT';
+  const isAdmin = role === 'ADMIN';
+  const groups: NavGroup[] = isAdmin ? ADMIN_GROUPS : [{ items: nav }];
+  const { data: attention } = useAdminAttention(isAdmin);
+
+  // Quick search (Ctrl/⌘ + K) for admins.
+  const [paletteOpen, setPaletteOpen] = useState(false);
+  useEffect(() => {
+    if (!isAdmin) return;
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setPaletteOpen((v) => !v);
+      }
+    };
+    // Any screen can open the search with: window.dispatchEvent(new Event('ecamp:open-search'))
+    const onOpen = () => setPaletteOpen(true);
+    window.addEventListener('keydown', onKey);
+    window.addEventListener('ecamp:open-search', onOpen);
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      window.removeEventListener('ecamp:open-search', onOpen);
+    };
+  }, [isAdmin]);
+  const paletteEntries: PaletteEntry[] = useMemo(
+    () =>
+      ADMIN_GROUPS.flatMap((g) =>
+        g.items.map((item) => ({
+          to: item.to,
+          label: t(item.label),
+          icon: item.icon,
+          group: g.label ? t(g.label) : t('palette.pages'),
+          keywords: item.to.replace(/[/-]/g, ' '),
+        })),
+      ),
+    [t],
+  );
+  const openPalette = isAdmin ? () => setPaletteOpen(true) : undefined;
 
   return (
     <div className="min-h-screen lg:flex">
@@ -123,7 +222,9 @@ export function AppShell({ children }: { children: ReactNode }) {
       {/* Desktop sidebar */}
       <aside className="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0 border-e border-theme-border bg-theme-bg backdrop-blur-xl">
         <SidebarContent
-          nav={nav}
+          groups={groups}
+          badges={attention}
+          onOpenSearch={openPalette}
           currentPath={path}
           roleLabel={t(`roles.${role}`)}
           roleBadgeClass={ROLE_BADGE[role]}
@@ -149,6 +250,11 @@ export function AppShell({ children }: { children: ReactNode }) {
         </Link>
         <div className="flex items-center gap-1">
           {showNotifications && <NotificationBell />}
+          {openPalette && (
+            <button type="button" onClick={openPalette} className="p-2 rounded-lg text-theme-muted hover:bg-theme-card" aria-label={t('palette.title')}>
+              <Search className="w-5 h-5" />
+            </button>
+          )}
           <button
             type="button"
             onClick={() => setMobileOpen(true)}
@@ -176,7 +282,9 @@ export function AppShell({ children }: { children: ReactNode }) {
             </div>
             <div className="flex-1 overflow-y-auto">
               <SidebarContent
-                nav={nav}
+                groups={groups}
+                badges={attention}
+                onOpenSearch={openPalette ? () => { setMobileOpen(false); setPaletteOpen(true); } : undefined}
                 currentPath={path}
                 roleLabel={t(`roles.${role}`)}
                 roleBadgeClass={ROLE_BADGE[role]}
@@ -205,6 +313,8 @@ export function AppShell({ children }: { children: ReactNode }) {
         )}
         <div className={`p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto ${showNotifications ? 'pb-24 lg:pb-8' : ''}`}>{children}</div>
       </main>
+
+      {isAdmin && <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} entries={paletteEntries} />}
 
       {/* Phone bottom navigation (students) */}
       {showNotifications && (
@@ -237,7 +347,9 @@ export function AppShell({ children }: { children: ReactNode }) {
 }
 
 function SidebarContent({
-  nav,
+  groups,
+  badges,
+  onOpenSearch,
   currentPath,
   roleLabel,
   roleBadgeClass,
@@ -252,7 +364,9 @@ function SidebarContent({
   showGamification = true,
   t,
 }: {
-  nav: NavItem[];
+  groups: NavGroup[];
+  badges?: AdminAttention;
+  onOpenSearch?: () => void;
   currentPath: string;
   roleLabel: string;
   roleBadgeClass: string;
@@ -291,27 +405,61 @@ function SidebarContent({
         )}
       </div>
 
+      {/* Quick search (admins) */}
+      {onOpenSearch && (
+        <div className="px-3 pb-3">
+          <button
+            type="button"
+            onClick={() => {
+              onNavigate?.();
+              onOpenSearch();
+            }}
+            className="w-full flex items-center gap-2 rounded-xl border border-theme-border bg-theme-card px-3 py-2 text-sm text-theme-muted hover:text-theme-text hover:border-accent-500/40 transition-colors"
+          >
+            <Search className="w-4 h-4" />
+            <span className="flex-1 text-start">{t('palette.button')}</span>
+            <kbd className="hidden lg:inline text-[10px] font-semibold rounded border border-theme-border px-1.5 py-0.5" dir="ltr">Ctrl K</kbd>
+          </button>
+        </div>
+      )}
+
       {/* Nav */}
-      <nav className="px-3 flex-1 space-y-1">
-        {nav.map((item) => {
-          const active = isNavActive(item.to, currentPath);
-          return (
-            <Link
-              key={item.to}
-              to={item.to}
-              onClick={onNavigate}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
-                active
-                  ? 'bg-accent-500/10 text-accent-700 dark:text-accent-200 shadow-sm'
-                  : 'text-theme-muted hover:text-theme-text hover:bg-theme-card'
-              }`}
-            >
-              <span className={active ? 'text-accent-600 dark:text-accent-300' : 'text-theme-muted'}>{item.icon}</span>
-              {t(item.label)}
-              {active && <ChevronRight className="w-3 h-3 ms-auto rtl:rotate-180 transition-transform" />}
-            </Link>
-          );
-        })}
+      <nav className="px-3 flex-1 overflow-y-auto scrollbar-thin pb-2">
+        {groups.map((group, gi) => (
+          <div key={gi} className={gi > 0 ? 'mt-4' : ''}>
+            {group.label && (
+              <p className="px-3 mb-1 text-[10px] font-semibold uppercase tracking-widest text-theme-muted/80">{t(group.label)}</p>
+            )}
+            <div className="space-y-0.5">
+              {group.items.map((item) => {
+                const active = isNavActive(item.to, currentPath);
+                const count = item.badge && badges ? badges[item.badge] : 0;
+                return (
+                  <Link
+                    key={item.to}
+                    to={item.to}
+                    onClick={onNavigate}
+                    className={`flex items-center gap-3 px-3 ${groups.length > 1 ? 'py-2' : 'py-2.5'} rounded-xl text-sm font-medium transition-all ${
+                      active
+                        ? 'bg-accent-500/10 text-accent-700 dark:text-accent-200 shadow-sm'
+                        : 'text-theme-muted hover:text-theme-text hover:bg-theme-card'
+                    }`}
+                  >
+                    <span className={active ? 'text-accent-600 dark:text-accent-300' : 'text-theme-muted'}>{item.icon}</span>
+                    <span className="flex-1 truncate">{t(item.label)}</span>
+                    {count > 0 ? (
+                      <span className="min-w-[1.25rem] h-5 px-1.5 rounded-full bg-red-600 text-white text-[11px] font-bold leading-5 text-center">
+                        {count > 99 ? '99+' : count}
+                      </span>
+                    ) : (
+                      active && <ChevronRight className="w-3 h-3 rtl:rotate-180 transition-transform" />
+                    )}
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        ))}
       </nav>
 
       {/* XP / streak card (students only — gamification means nothing to staff) */}

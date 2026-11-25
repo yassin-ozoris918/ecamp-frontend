@@ -25,9 +25,18 @@ import {
   Download,
   Settings,
   Printer,
-  HelpCircle,
   Lock,
+  Pencil,
+  UserPlus,
+  UserCog,
+  FileCheck2,
+  ClipboardList,
+  BellRing,
+  ChevronRight,
+  Activity,
 } from 'lucide-react';
+import { ActionsMenu } from './common/ActionsMenu';
+import { useAdminAttention } from '../lib/adminAttention';
 import { api } from '../lib/api';
 import type { Profile, UserListItem, ActivationCode, Course, CourseInstructor } from '../lib/types';
 import { Badge, EmptyState, Skeleton, Spinner } from './ui';
@@ -197,140 +206,140 @@ function printTable(allHeaders: string[], allRows: any[][], title: string) {
 }
 
 export function AdminDashboard() {
-  const [stats, setStats] = useState<{ students: number; instructors: number; courses: number; codesRedeemed: number; codesGenerated: number } | null>(null);
-  const [loading, setLoading] = useState(true);
   const { t } = useTranslation();
+  const { data: stats, isLoading: statsLoading } = useQuery({
+    queryKey: ['admin', 'stats'],
+    queryFn: async () => (await api.get('/admin/stats')).data as {
+      totalStudents: number;
+      totalInstructors: number;
+      totalCourses: number;
+      publishedCourses: number;
+      totalCodesGenerated: number;
+      totalCodesRedeemed: number;
+    },
+  });
+  const { data: attention, isLoading: attentionLoading } = useAdminAttention(true);
+  const openSearch = () => window.dispatchEvent(new Event('ecamp:open-search'));
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const { data } = await api.get('/admin/stats');
-        setStats({
-          students: data.totalStudents,
-          instructors: data.totalInstructors,
-          courses: data.totalCourses,
-          codesGenerated: data.totalCodesGenerated,
-          codesRedeemed: data.totalCodesRedeemed,
-        });
-      } catch(e) {
-        console.error(e);
-      }
-      setLoading(false);
-    })();
-  }, []);
+  // Work waiting for an admin, most urgent first. Only items with something to do are shown.
+  const todo = [
+    { key: 'pendingRegistrations', to: '/admin/pending-users', icon: <UserPlus className="w-5 h-5" />, tone: 'accent' },
+    { key: 'profileRequests', to: '/admin/profile-requests', icon: <UserCog className="w-5 h-5" />, tone: 'accent' },
+    { key: 'quizAnswersToReview', to: '/admin/quiz-review', icon: <FileCheck2 className="w-5 h-5" />, tone: 'warning' },
+    { key: 'examsToGrade', to: '/instructor/grading', icon: <ClipboardList className="w-5 h-5" />, tone: 'warning' },
+    { key: 'failedNotifications', to: '/admin/audit-logs', icon: <BellRing className="w-5 h-5" />, tone: 'error' },
+  ] as const;
+  const pendingTodo = todo.filter((item) => (attention?.[item.key] ?? 0) > 0);
+  const toneClass = {
+    accent: 'bg-accent-500/10 text-accent-700 dark:text-accent-300',
+    warning: 'bg-warning-500/10 text-warning-700 dark:text-warning-300',
+    error: 'bg-error-500/10 text-error-600 dark:text-error-300',
+  } as const;
+
+  const quick = [
+    { to: '/admin/courses', label: t('admin.overview.quick.createCourse'), icon: <Plus className="w-4 h-4" /> },
+    { to: '/admin/codes', label: t('admin.overview.quick.generateCodes'), icon: <KeyRound className="w-4 h-4" /> },
+    { to: '/admin/users', label: t('admin.overview.quick.manageUsers'), icon: <Users className="w-4 h-4" /> },
+    { to: '/admin/audit-logs', label: t('admin.overview.quick.export'), icon: <Database className="w-4 h-4" /> },
+  ];
 
   return (
     <div className="space-y-8 animate-fade-up">
-      <div>
-        <p className="text-sm text-theme-muted">Admin</p>
-        <h1 className="text-3xl font-display font-bold text-theme-text mt-1 flex items-center gap-2">
-          <Shield className="w-7 h-7 text-gold-700 dark:text-gold-300" />
-          Platform Overview
-        </h1>
+      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+        <div>
+          <p className="text-sm text-theme-muted">{t('roles.ADMIN')}</p>
+          <h1 className="text-3xl font-display font-bold text-theme-text mt-1">{t('admin.overview.title')}</h1>
+        </div>
+        <button
+          type="button"
+          onClick={openSearch}
+          className="w-full sm:w-80 flex items-center gap-2 rounded-xl border border-theme-border bg-theme-card px-4 py-2.5 text-sm text-theme-muted hover:text-theme-text hover:border-accent-500/40 transition-colors"
+        >
+          <Search className="w-4 h-4" />
+          <span className="flex-1 text-start">{t('admin.overview.searchHint')}</span>
+          <kbd className="hidden sm:inline text-[10px] font-semibold rounded border border-theme-border px-1.5 py-0.5" dir="ltr">Ctrl K</kbd>
+        </button>
       </div>
 
-      {/* KPIs */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <AdminKpi icon={<Users className="w-5 h-5" />} label={t('dashboard.kpi.students')} value={stats?.students ?? 0} color="text-accent-700 dark:text-accent-300" bg="bg-accent-500/10" loading={loading} />
-        <AdminKpi icon={<GraduationCap className="w-5 h-5" />} label={t('nav.instructors')} value={stats?.instructors ?? 0} color="text-secondary-700 dark:text-secondary-300" bg="bg-secondary-500/10" loading={loading} />
-        <AdminKpi icon={<BookOpen className="w-5 h-5" />} label={t('dashboard.kpi.courses')} value={stats?.courses ?? 0} color="text-gold-700 dark:text-gold-300" bg="bg-gold-500/10" loading={loading} />
-        <AdminKpi icon={<KeyRound className="w-5 h-5" />} label="Codes Redeemed" value={stats ? `${stats.codesRedeemed}/${stats.codesGenerated}` : '0/0'} color="text-warning-700 dark:text-warning-300" bg="bg-warning-500/10" loading={loading} />
-      </div>
+      {/* Needs attention */}
+      <section aria-labelledby="needs-attention">
+        <h2 id="needs-attention" className="text-lg font-display font-bold text-theme-text mb-3">{t('admin.overview.needsAttention')}</h2>
+        {attentionLoading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {[1, 2, 3].map((i) => <Skeleton key={i} className="h-20" />)}
+          </div>
+        ) : pendingTodo.length === 0 ? (
+          <div className="glass rounded-2xl p-5 flex items-center gap-4">
+            <div className="w-11 h-11 rounded-xl bg-secondary-500/10 text-secondary-600 dark:text-secondary-300 flex items-center justify-center">
+              <CheckCircle2 className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="font-semibold text-theme-text">{t('admin.overview.allClear')}</p>
+              <p className="text-sm text-theme-muted">{t('admin.overview.allClearDesc')}</p>
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {pendingTodo.map((item) => (
+              <Link
+                key={item.key}
+                to={item.to}
+                className="glass rounded-2xl p-4 flex items-center gap-4 hover:border-accent-500/40 transition-colors group"
+              >
+                <div className={`w-11 h-11 shrink-0 rounded-xl flex items-center justify-center ${toneClass[item.tone]}`}>{item.icon}</div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-2xl font-bold text-theme-text leading-tight">{attention?.[item.key]}</p>
+                  <p className="text-sm text-theme-muted truncate">{t(`admin.overview.todo.${item.key}`, { count: attention?.[item.key] ?? 0 })}</p>
+                </div>
+                <span className="text-sm font-semibold text-accent-700 dark:text-accent-300 inline-flex items-center gap-1 shrink-0">
+                  {t('admin.overview.review')}
+                  <ChevronRight className="w-4 h-4 rtl:rotate-180 group-hover:translate-x-0.5 rtl:group-hover:-translate-x-0.5 transition-transform" />
+                </span>
+              </Link>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* Platform at a glance */}
+      <section aria-labelledby="at-a-glance">
+        <h2 id="at-a-glance" className="text-lg font-display font-bold text-theme-text mb-3">{t('admin.overview.atAGlance')}</h2>
+        <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
+          <AdminKpi icon={<Users className="w-5 h-5" />} label={t('admin.overview.kpi.students')} value={stats?.totalStudents ?? 0} color="text-accent-700 dark:text-accent-300" bg="bg-accent-500/10" loading={statsLoading} />
+          <AdminKpi icon={<Activity className="w-5 h-5" />} label={t('admin.overview.kpi.active7d')} value={attention?.activeStudents7d ?? 0} color="text-secondary-700 dark:text-secondary-300" bg="bg-secondary-500/10" loading={attentionLoading} />
+          <AdminKpi icon={<UserPlus className="w-5 h-5" />} label={t('admin.overview.kpi.new7d')} value={attention?.newStudents7d ?? 0} color="text-secondary-700 dark:text-secondary-300" bg="bg-secondary-500/10" loading={attentionLoading} />
+          <AdminKpi icon={<GraduationCap className="w-5 h-5" />} label={t('admin.overview.kpi.instructors')} value={stats?.totalInstructors ?? 0} color="text-blue-700 dark:text-blue-300" bg="bg-blue-500/10" loading={statsLoading} />
+          <AdminKpi
+            icon={<BookOpen className="w-5 h-5" />}
+            label={t('admin.overview.kpi.courses', { drafts: attention?.draftCourses ?? 0 })}
+            value={stats ? `${stats.publishedCourses}/${stats.totalCourses}` : '0'}
+            color="text-gold-700 dark:text-gold-300"
+            bg="bg-gold-500/10"
+            loading={statsLoading}
+          />
+          <AdminKpi
+            icon={<KeyRound className="w-5 h-5" />}
+            label={t('admin.overview.kpi.codes', { unused: attention?.unusedCodes ?? 0 })}
+            value={stats ? `${stats.totalCodesRedeemed}/${stats.totalCodesGenerated}` : '0'}
+            color="text-warning-700 dark:text-warning-300"
+            bg="bg-warning-500/10"
+            loading={statsLoading}
+          />
+        </div>
+      </section>
 
       {/* Quick actions */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <QuickActionCard
-          icon={<Users className="w-5 h-5" />}
-          title="Manage Users"
-          description="Search, reset devices, and override progress for any student."
-          to="#/admin/users"
-          color="text-accent-700 dark:text-accent-300"
-          bg="bg-accent-500/10"
-        />
-        <QuickActionCard
-          icon={<KeyRound className="w-5 h-5" />}
-          title="Activation Codes"
-          description="View all generated codes and their redemption status across the platform."
-          to="#/admin/codes"
-          color="text-gold-700 dark:text-gold-300"
-          bg="bg-gold-500/10"
-        />
-        <QuickActionCard
-          icon={<HelpCircle className="w-5 h-5" />}
-          title="Help Center"
-          description="Manage tutorial videos and support guides."
-          to="#/admin/help-center"
-          color="text-blue-700 dark:text-blue-300"
-          bg="bg-blue-500/10"
-        />
-        <QuickActionCard
-          icon={<Shield className="w-5 h-5" />}
-          title="Quiz Answer Review"
-          description="Review student quiz submissions and override subjective grades."
-          to="#/admin/quiz-review"
-          color="text-secondary-700 dark:text-secondary-300"
-          bg="bg-secondary-500/10"
-        />
-
-        <QuickActionCard
-          icon={<ShieldAlert className="w-5 h-5" />}
-          title="Academic Risk Engine"
-          description="Monitor struggling students and view risk matrix."
-          to="#/admin/risk"
-          color="text-error-300"
-          bg="bg-error-500/10"
-        />
-        <QuickActionCard
-          icon={<Search className="w-5 h-5" />}
-          title="Lecture Viewers"
-          description="See exactly which students have opened specific lectures."
-          to="#/admin/lecture-viewers"
-          color="text-accent-700 dark:text-accent-300"
-          bg="bg-accent-500/10"
-        />
-        <QuickActionCard
-          icon={<User className="w-5 h-5" />}
-          title="Pending Registrations"
-          description="Review and approve new student registrations."
-          to="#/admin/pending-users"
-          color="text-accent-700 dark:text-accent-300"
-          bg="bg-accent-500/10"
-        />
-
-        <QuickActionCard
-          icon={<User className="w-5 h-5" />}
-          title="Profile Change Requests"
-          description="Review and approve student requests to change their name or phone number."
-          to="#/admin/profile-requests"
-          color="text-accent-700 dark:text-accent-300"
-          bg="bg-accent-500/10"
-        />
-
-        <QuickActionCard
-          icon={<User className="w-5 h-5" />}
-          title="Student 360 Workspace"
-          description="Deep-dive into comprehensive individual student dossiers."
-          to="#/admin/student-360"
-          color="text-accent-700 dark:text-accent-300"
-          bg="bg-accent-500/10"
-        />
-        <QuickActionCard
-          icon={<Smartphone className="w-5 h-5" />}
-          title="Device Login Logs"
-          description="View all student login attempts, device fingerprints, mismatches, and device history events."
-          to="#/admin/device-logs"
-          color="text-error-300"
-          bg="bg-error-500/10"
-        />
-        <QuickActionCard
-          icon={<Database className="w-5 h-5" />}
-          title="System Audit & Analytics"
-          description="View immutable operation logs and export wide-scale CSV metrics."
-          to="#/admin/audit-logs"
-          color="text-gold-700 dark:text-gold-300"
-          bg="bg-gold-500/10"
-        />
-      </div>
+      <section aria-labelledby="quick-actions">
+        <h2 id="quick-actions" className="text-lg font-display font-bold text-theme-text mb-3">{t('admin.overview.quickActions')}</h2>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          {quick.map((q) => (
+            <Link key={q.to} to={q.to} className="btn-secondary justify-start !py-3">
+              {q.icon}
+              <span className="truncate">{q.label}</span>
+            </Link>
+          ))}
+        </div>
+      </section>
 
       <SystemControls />
     </div>
@@ -384,8 +393,8 @@ function SystemControls() {
   };
 
   return (
-    <div className="mt-8">
-      <h2 className="text-xl font-display font-bold text-theme-text mb-4 flex items-center gap-2">
+    <section>
+      <h2 className="text-lg font-display font-bold text-theme-text mb-3 flex items-center gap-2">
         <Settings className="w-5 h-5 text-theme-muted" />
         {t('admin.settings.systemControls')}
       </h2>
@@ -438,9 +447,9 @@ function SystemControls() {
         confirmText={confirmState.confirmText} 
         cancelText={confirmState.cancelText} 
         onConfirm={handleConfirm} 
-        onCancel={handleCancel} 
+        onCancel={handleCancel}
       />
-    </div>
+    </section>
   );
 }
 
@@ -461,48 +470,22 @@ function AdminKpi({
   loading?: boolean;
 }) {
   return (
-    <div className="glass rounded-2xl p-5">
-      <div className={`w-10 h-10 rounded-xl ${bg} flex items-center justify-center ${color}`}>
+    <div className="glass rounded-2xl p-4">
+      <div className={`w-9 h-9 rounded-xl ${bg} flex items-center justify-center ${color}`}>
         {icon}
       </div>
-      <p className="text-2xl font-bold text-theme-text mt-3">
+      <p className="text-2xl font-bold text-theme-text mt-2 leading-tight">
         {loading ? <Skeleton className="h-7 w-16" /> : typeof value === 'number' ? value.toLocaleString() : value}
       </p>
-      <p className="text-xs text-theme-muted uppercase tracking-wide mt-1">{label}</p>
+      <p className="text-xs text-theme-muted mt-0.5">{label}</p>
     </div>
   );
 }
 
-function QuickActionCard({
-  icon,
-  title,
-  description,
-  to,
-  color,
-  bg,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  description: string;
-  to: string;
-  color: string;
-  bg: string;
-}) {
-  return (
-    <a href={to} className="glass rounded-2xl p-5 flex items-start gap-4 hover:border-white/[0.12] transition-all hover:-translate-y-0.5">
-      <div className={`w-12 h-12 rounded-xl ${bg} flex items-center justify-center ${color}`}>
-        {icon}
-      </div>
-      <div>
-        <p className="font-display font-bold text-theme-text">{title}</p>
-        <p className="text-sm text-theme-muted mt-0.5">{description}</p>
-      </div>
-    </a>
-  );
-}
 
 // --- Admin Users Page ---
 export function AdminUsers() {
+  const { t } = useTranslation();
   const { profile } = useAuth();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
@@ -631,12 +614,12 @@ export function AdminUsers() {
 
   return (
     <div className="space-y-6 animate-fade-up">
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+      <div className="flex flex-col gap-4">
         <div>
-          <h1 className="text-2xl font-display font-bold text-theme-text">User Management</h1>
-          <p className="text-sm text-theme-muted mt-1">Search users, reset devices, and override progress.</p>
+          <h1 className="text-2xl font-display font-bold text-theme-text">{t('admin.users.title')}</h1>
+          <p className="text-sm text-theme-muted mt-1">{t('admin.users.subtitle')}</p>
         </div>
-        <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
+        <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2 w-full">
           <select 
             className="input w-full sm:w-auto"
             value={roleFilter}
@@ -873,7 +856,13 @@ export function AdminUsers() {
                         </div>
                       )}
                       <div>
-                        <p className="font-semibold text-theme-text">{u.full_name}</p>
+                        {u.role === 'STUDENT' ? (
+                          <Link to={`/admin/student-360/${u.id}`} className="font-semibold text-theme-text hover:text-accent-600 dark:hover:text-accent-300 hover:underline">
+                            {u.full_name}
+                          </Link>
+                        ) : (
+                          <p className="font-semibold text-theme-text">{u.full_name}</p>
+                        )}
                         <p className="text-xs text-theme-muted mb-0.5">{u.email}</p>
                         {(u.phoneNumber || u.parentPhoneNumber) && (
                           <div className="flex flex-col gap-0.5 mt-1">
@@ -964,67 +953,48 @@ export function AdminUsers() {
                   </td>
                   <td className="p-4 font-semibold text-gold-700 dark:text-gold-300">{(u.xp || 0).toLocaleString()}</td>
                   <td className="p-4">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center justify-end gap-1.5">
                       {u.role === 'STUDENT' && (
-                        <>
-                          <button
-                            onClick={() => setResetUser(u)}
-                            disabled={!u.deviceId}
-                            className="btn-ghost text-xs"
-                            title="Reset device"
-                          >
-                            <RotateCcw className="w-3.5 h-3.5" /> Reset Device
-                          </button>
-                          <button
-                            onClick={() => setResetPasswordUser(u)}
-                            className="btn-ghost text-xs"
-                            title="Reset password"
-                          >
-                            <KeyRound className="w-3.5 h-3.5 text-warning-400" /> Reset Password
-                          </button>
-                          <button
-                            onClick={() => setGrantAccessUser(u)}
-                            className="btn-ghost text-xs"
-                            title="Direct grant access"
-                          >
-                            <Key className="w-3.5 h-3.5 text-primary-400" /> Grant
-                          </button>
-                          <button
-                            onClick={() => setOverrideUser(u)}
-                            className="btn-ghost text-xs"
-                            title="Force-unlock progress"
-                          >
-                            <TrendingUp className="w-3.5 h-3.5" /> Unlock
-                          </button>
-                        </>
+                        <Link to={`/admin/student-360/${u.id}`} className="btn-secondary !px-3 !py-1.5 text-xs">
+                          <User className="w-3.5 h-3.5" />
+                          {t('admin.users.profile')}
+                        </Link>
                       )}
-                      {u.id !== profile?.id && (
-                        <>
-                          <button
-                            onClick={() => handleToggleSuspend(u)}
-                            className="btn-ghost text-xs"
-                            title={u.is_active ? "Suspend User" : "Activate User"}
-                          >
-                            <AlertCircle className={`w-3.5 h-3.5 ${u.is_active ? 'text-warning-400' : 'text-success-400'}`} /> 
-                            {u.is_active ? 'Suspend' : 'Activate'}
-                          </button>
-                          <button
-                            onClick={() => handleToggleInstructor(u)}
-                            className="btn-ghost text-xs text-accent-700 dark:text-accent-300"
-                            title={u.role === 'INSTRUCTOR' ? 'Demote to Student' : 'Promote to Instructor'}
-                          >
-                            <Shield className="w-3.5 h-3.5" />
-                            {u.role === 'INSTRUCTOR' ? 'Demote' : 'Make Instructor'}
-                          </button>
-                          <button
-                            onClick={() => setDeleteUser(u)}
-                            className="btn-ghost text-xs text-error-400 hover:text-error-300 hover:bg-error-500/10"
-                            title="Delete User"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" /> Delete
-                          </button>
-                        </>
-                      )}
+                      <ActionsMenu
+                        label={t('admin.users.actions')}
+                        items={[
+                          ...(u.role === 'STUDENT'
+                            ? [
+                                { label: t('admin.users.grantAccess'), icon: <Key className="w-4 h-4" />, onClick: () => setGrantAccessUser(u) },
+                                { label: t('admin.users.unlockProgress'), icon: <TrendingUp className="w-4 h-4" />, onClick: () => setOverrideUser(u) },
+                                {
+                                  label: t('admin.users.resetDevice'),
+                                  icon: <RotateCcw className="w-4 h-4" />,
+                                  onClick: () => setResetUser(u),
+                                  disabled: !u.deviceId,
+                                  hint: t('admin.users.noDevice'),
+                                },
+                                { label: t('admin.users.resetPassword'), icon: <KeyRound className="w-4 h-4" />, onClick: () => setResetPasswordUser(u) },
+                              ]
+                            : []),
+                          ...(u.id !== profile?.id
+                            ? [
+                                {
+                                  label: u.role === 'INSTRUCTOR' ? t('admin.users.demote') : t('admin.users.makeInstructor'),
+                                  icon: <Shield className="w-4 h-4" />,
+                                  onClick: () => handleToggleInstructor(u),
+                                  separated: u.role === 'STUDENT',
+                                },
+                                {
+                                  label: u.is_active ? t('admin.users.suspend') : t('admin.users.activate'),
+                                  icon: <AlertCircle className="w-4 h-4" />,
+                                  onClick: () => handleToggleSuspend(u),
+                                },
+                                { label: t('admin.users.delete'), icon: <Trash2 className="w-4 h-4" />, onClick: () => setDeleteUser(u), danger: true, separated: true },
+                              ]
+                            : []),
+                        ]}
+                      />
                     </div>
                   </td>
                 </tr>
@@ -1907,6 +1877,7 @@ interface CourseRelockRecord {
 }
 
 export function AdminCourses() {
+  const { t } = useTranslation();
   const { navigate } = useRouter();
   const [courses, setCourses] = useState<Course[]>([]);
   const [createCourseOpen, setCreateCourseOpen] = useState(false);
@@ -2056,10 +2027,11 @@ export function AdminCourses() {
           <table className="w-full text-sm min-w-[800px]">
             <thead>
               <tr className="text-xs uppercase tracking-wider text-theme-muted border-b border-theme-border">
-                <th className="p-4 text-start">Course Title</th>
-                <th className="p-4 text-start">Instructors</th>
-                <th className="p-4 text-start">Created</th>
-                <th className="p-4 text-end">Actions</th>
+                <th className="p-4 text-start">{t('admin.courses.course')}</th>
+                <th className="p-4 text-start">{t('admin.courses.status')}</th>
+                <th className="p-4 text-start">{t('admin.courses.instructors')}</th>
+                <th className="p-4 text-start">{t('admin.courses.created')}</th>
+                <th className="p-4 text-end">{t('admin.courses.actions')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/[0.04]">
@@ -2085,44 +2057,32 @@ export function AdminCourses() {
                       </div>
                     </div>
                   </td>
+                  <td className="p-4">
+                    <div className="flex flex-wrap gap-1.5">
+                      <Badge variant={c.status === 'PUBLISHED' ? 'success' : 'warning'}>{t(`instructor.status.${c.status}`, c.status)}</Badge>
+                      {c.type === 'MATERIALS_ONLY' && <Badge variant="default">{t('instructor.materialsOnly')}</Badge>}
+                    </div>
+                  </td>
                   <td className="p-4 text-theme-muted">
-                    {c.instructors?.map((i: CourseInstructor) => i.instructor?.fullName).join(', ') || 'None'}
+                    {c.instructors?.map((i: CourseInstructor) => i.instructor?.fullName).join(', ') || '—'}
                   </td>
                   <td className="p-4 text-theme-muted">{new Date(c.createdAt ?? '').toLocaleDateString()}</td>
-                  <td className="p-4 text-end space-x-2">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        openRestoreModal(c);
-                      }}
-                      disabled={busy}
-                      className="p-2 rounded-lg text-theme-muted hover:bg-emerald-500/10 hover:text-emerald-300 transition-colors"
-                      title="Restore Previous Access (undo an accidental relock)"
-                    >
-                      <RotateCcw className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleRelock(c);
-                      }}
-                      disabled={busy}
-                      className="p-2 rounded-lg text-theme-muted hover:bg-amber-500/10 hover:text-amber-300 transition-colors"
-                      title="Relock Course (all students must redeem a new code)"
-                    >
-                      <Lock className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDelete(c.id);
-                      }}
-                      disabled={busy}
-                      className="p-2 rounded-lg text-theme-muted hover:bg-error-500/10 hover:text-error-300 transition-colors"
-                      title="Delete Course"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                  <td className="p-4">
+                    <div className="flex items-center justify-end gap-1.5">
+                      <Link to={`/instructor/course/${c.id}`} className="btn-secondary !px-3 !py-1.5 text-xs">
+                        <Pencil className="w-3.5 h-3.5" />
+                        {t('admin.courses.editContent')}
+                      </Link>
+                      <ActionsMenu
+                        label={t('admin.courses.actions')}
+                        items={[
+                          { label: t('admin.courses.analytics'), icon: <TrendingUp className="w-4 h-4" />, onClick: () => navigate(`/instructor/courses/${c.id}`) },
+                          { label: t('admin.courses.relock'), icon: <Lock className="w-4 h-4" />, onClick: () => handleRelock(c), disabled: busy, separated: true },
+                          { label: t('admin.courses.restoreAccess'), icon: <RotateCcw className="w-4 h-4" />, onClick: () => openRestoreModal(c), disabled: busy },
+                          { label: t('admin.courses.delete'), icon: <Trash2 className="w-4 h-4" />, onClick: () => handleDelete(c.id), danger: true, disabled: busy, separated: true },
+                        ]}
+                      />
+                    </div>
                   </td>
                 </tr>
               ))}

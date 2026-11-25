@@ -51,7 +51,7 @@ export function InstructorDashboard() {
       const [coursesRes, statsRes, pendingRes] = await Promise.all([
         api.get('/instructor/courses').catch(() => ({ data: [] })),
         api.get('/instructor/dashboard/stats').catch(() => ({ data: { myTotalStudents: 0, totalHighSchoolStudents: 0, totalUniversityStudents: 0 } })),
-        api.get('/instructor-dashboard/exams/pending').catch(() => ({ data: [] })),
+        api.get('/instructor/dashboard/exams/pending').catch(() => ({ data: [] })),
       ]);
 
       const fetched = coursesRes.data?.items || coursesRes.data || [];
@@ -412,7 +412,7 @@ export function GradingQueue() {
     (async () => {
       if (!profile) return;
       try {
-        const { data } = await api.get('/instructor-dashboard/exams/pending');
+        const { data } = await api.get('/instructor/dashboard/exams/pending');
         setSubs(data);
       } catch (e) {
         console.error(e);

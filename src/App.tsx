@@ -275,6 +275,7 @@ function RoleRoutes({ role }: { role: string }) {
         { pattern: '/admin/codes', element: () => <AdminCodes /> },
         { pattern: '/admin/risk', element: () => <AcademicRiskDashboard /> },
         { pattern: '/admin/student-360', element: () => <Student360Workspace /> },
+        { pattern: '/admin/student-360/:studentId', element: (p) => <Student360Workspace initialStudentId={p.studentId} /> },
         { pattern: '/admin/audit-logs', element: () => <SystemAuditViewer /> },
         { pattern: '/admin/profile-requests', element: () => <AdminProfileRequests /> },
         { pattern: '/admin/pending-users', element: () => <AdminPendingUsers /> },

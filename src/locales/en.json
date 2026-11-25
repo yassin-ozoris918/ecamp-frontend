@@ -452,6 +452,70 @@
       "enableSuccess": "Maintenance Mode has been enabled successfully. Students and instructors will no longer be able to access the platform.",
       "disableSuccess": "Maintenance Mode has been disabled. The platform is now available to users.",
       "systemControls": "System Controls"
+    },
+    "overview": {
+      "title": "Overview",
+      "searchHint": "Find a student, course or page",
+      "needsAttention": "Needs your attention",
+      "allClear": "All caught up",
+      "allClearDesc": "No registrations, requests or answers are waiting for you.",
+      "review": "Review",
+      "atAGlance": "Platform at a glance",
+      "quickActions": "Quick actions",
+      "todo": {
+        "pendingRegistrations_one": "registration to approve",
+        "pendingRegistrations_other": "registrations to approve",
+        "profileRequests_one": "profile change request",
+        "profileRequests_other": "profile change requests",
+        "quizAnswersToReview_one": "quiz answer to review",
+        "quizAnswersToReview_other": "quiz answers to review",
+        "examsToGrade_one": "exam to grade",
+        "examsToGrade_other": "exams to grade",
+        "failedNotifications_one": "notification failed to send",
+        "failedNotifications_other": "notifications failed to send"
+      },
+      "kpi": {
+        "students": "Students",
+        "active7d": "Active this week",
+        "new7d": "New this week",
+        "instructors": "Instructors",
+        "courses": "Published courses ({{drafts}} drafts)",
+        "codes": "Codes redeemed ({{unused}} unused)"
+      },
+      "quick": {
+        "createCourse": "Create a course",
+        "generateCodes": "Generate codes",
+        "manageUsers": "Manage users",
+        "export": "Reports & exports"
+      }
+    },
+    "users": {
+      "profile": "Profile",
+      "actions": "More actions",
+      "grantAccess": "Grant access",
+      "unlockProgress": "Unlock progress",
+      "resetDevice": "Reset device",
+      "noDevice": "No device is bound yet",
+      "resetPassword": "Reset password",
+      "makeInstructor": "Make instructor",
+      "demote": "Change to student",
+      "suspend": "Suspend account",
+      "activate": "Activate account",
+      "delete": "Delete user",
+      "title": "Users",
+      "subtitle": "Search, filter and manage every account. Open a student’s profile for their full history."
+    },
+    "courses": {
+      "course": "Course",
+      "status": "Status",
+      "instructors": "Instructors",
+      "created": "Created",
+      "actions": "Actions",
+      "editContent": "Edit content",
+      "analytics": "Students & analytics",
+      "relock": "Relock for all students",
+      "restoreAccess": "Restore previous access",
+      "delete": "Delete course"
     }
   },
   "about": {
@@ -687,5 +751,37 @@
     "STUDENT": "Student",
     "INSTRUCTOR": "Instructor",
     "ADMIN": "Admin"
+  },
+  "adminNav": {
+    "people": "People",
+    "content": "Content",
+    "learning": "Learning",
+    "system": "System",
+    "users": "Users",
+    "pending": "Pending registrations",
+    "profileRequests": "Profile requests",
+    "student360": "Student 360",
+    "courses": "Courses",
+    "codes": "Activation codes",
+    "helpCenter": "Help center",
+    "quizReview": "Quiz answer review",
+    "grading": "Exam grading",
+    "lectureViewers": "Lecture viewers",
+    "risk": "Academic risk",
+    "deviceLogs": "Device logs",
+    "audit": "Audit & exports"
+  },
+  "palette": {
+    "title": "Search",
+    "button": "Search…",
+    "placeholder": "Search students, courses or pages…",
+    "pages": "Pages",
+    "people": "Students & staff",
+    "courses": "Courses",
+    "noResults": "Nothing found",
+    "searching": "Searching…",
+    "navigate": "to move",
+    "open": "to open",
+    "close": "to close"
   }
 }

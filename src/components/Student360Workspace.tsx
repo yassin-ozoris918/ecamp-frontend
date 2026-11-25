@@ -936,13 +936,17 @@ function downloadStudentHistoryCsv(profileData: any) {
   window.URL.revokeObjectURL(url);
 }
 
-export function Student360Workspace() {
+export function Student360Workspace({ initialStudentId }: { initialStudentId?: string } = {}) {
   const [students, setStudents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebounce(search, 300);
 
-  const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
+  // Opened from a link (/admin/student-360/:id, e.g. the Users table or search) → show that student.
+  const [selectedStudentId, setSelectedStudentId] = useState<string | null>(initialStudentId ?? null);
+  useEffect(() => {
+    if (initialStudentId) setSelectedStudentId(initialStudentId);
+  }, [initialStudentId]);
   const [profileData, setProfileData] = useState<any | null>(null);
   const [profileLoading, setProfileLoading] = useState(false);
   const [reviewAttemptId, setReviewAttemptId] = useState<string | null>(null);
@@ -1082,14 +1086,15 @@ Are you sure you want to apply this grant?`;
         className={`flex flex-col gap-4 ${selectedStudentId ? 'w-1/4 min-w-[260px]' : 'w-full'} transition-all duration-300`}
       >
         <SectionHeader
+          stacked={!!selectedStudentId}
           title={
-            <span className="flex items-center gap-2">
+            <span className="flex items-center gap-2 whitespace-nowrap">
               <User className="w-7 h-7 text-accent-700 dark:text-accent-300" /> Student 360
             </span>
           }
           subtitle={!selectedStudentId ? 'Comprehensive student lookup, watch history, and printable evidence dossier.' : undefined}
           actions={
-            <div className="relative">
+            <div className={`relative ${selectedStudentId ? 'w-full' : ''}`}>
               <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-theme-muted" />
               <input
                 dir="auto"
