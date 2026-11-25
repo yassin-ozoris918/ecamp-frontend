@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Toaster } from 'react-hot-toast';
 import {
-  GraduationCap,
   LayoutGrid,
   LayoutDashboard,
   Trophy,
@@ -41,6 +40,7 @@ import { useTranslation } from 'react-i18next';
 import { LanguageToggle } from './common/LanguageToggle';
 import { AboutPlatformModal } from './AboutPlatformModal';
 import { NotificationBell } from './NotificationBell';
+import { EcampLogo } from './common/EcampLogo';
 
 interface NavItem {
   to: string;
@@ -112,7 +112,7 @@ const NAV: Record<UserRole, NavItem[]> = {
     { to: '/instructor/courses', label: 'nav.courses', icon: <BookOpen className="w-4 h-4" /> },
     { to: '/instructor/grading', label: 'nav.gradingQueue', icon: <ClipboardList className="w-4 h-4" /> },
     { to: '/instructor/quiz-review', label: 'Quiz Review', icon: <Shield className="w-4 h-4" /> },
-    // { to: '/instructors', label: 'nav.instructors', icon: <GraduationCap className="w-4 h-4" /> }, // Temporarily disabled
+    // { to: '/instructors', label: 'nav.instructors', icon: <GraduationCap className="w-4 h-4" /> }, // Temporarily disabled (re-import GraduationCap when enabling)
     { to: '/contact', label: 'nav.contact', icon: <MessageCircle className="w-4 h-4" /> },
   ],
   ADMIN: [
@@ -121,7 +121,7 @@ const NAV: Record<UserRole, NavItem[]> = {
     { to: '/admin/courses', label: 'nav.courses', icon: <BookOpen className="w-4 h-4" /> },
     { to: '/admin/codes', label: 'nav.activationCodes', icon: <KeyRound className="w-4 h-4" /> },
     { to: '/admin/quiz-review', label: 'Quiz Review', icon: <Shield className="w-4 h-4" /> },
-    // { to: '/instructors', label: 'nav.instructors', icon: <GraduationCap className="w-4 h-4" /> }, // Temporarily disabled
+    // { to: '/instructors', label: 'nav.instructors', icon: <GraduationCap className="w-4 h-4" /> }, // Temporarily disabled (re-import GraduationCap when enabling)
     { to: '/contact', label: 'nav.contact', icon: <MessageCircle className="w-4 h-4" /> },
   ],
 };
@@ -243,9 +243,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       {/* Mobile top bar */}
       <div className="lg:hidden sticky top-0 z-30 flex items-center justify-between px-4 py-3 border-b border-theme-border bg-theme-bg backdrop-blur-xl">
         <Link to="/" className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-accent-400 to-accent-600 flex items-center justify-center">
-            <GraduationCap className="w-5 h-5 text-white" />
-          </div>
+          <EcampLogo size="sm" />
           <span className="font-display font-bold text-theme-text">E.Camp</span>
         </Link>
         <div className="flex items-center gap-1">
@@ -386,9 +384,7 @@ function SidebarContent({
       {/* Logo */}
       <div className="p-5 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-accent-400 to-accent-600 flex items-center justify-center shadow-glow">
-            <GraduationCap className="w-5 h-5 text-white" />
-          </div>
+          <EcampLogo size="md" />
           <div>
             <p className="font-display font-extrabold text-theme-text leading-none">E.Camp</p>
             <p className="text-[10px] uppercase tracking-widest text-theme-muted mt-1">Learning OS</p>

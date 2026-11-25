@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { GraduationCap, AlertCircle, Eye, EyeOff, Video } from 'lucide-react';
+import { AlertCircle, Eye, EyeOff, Video } from 'lucide-react';
 import { api } from '../lib/api';
 import { useAuth } from '../lib/authContext';
 import { generateDeviceFingerprint, isInAppBrowser } from '../lib/device';
@@ -18,6 +18,7 @@ import {
   TraditionalBranch,
   BaccalaureatePath
 } from '../lib/types';
+import { EcampLogo } from './common/EcampLogo';
 
 
 
@@ -352,9 +353,7 @@ export function AuthScreen() {
           </div>
         ) : registrationPending ? (
           <div className="w-full max-w-md animate-fade-up text-center">
-            <div className="w-24 h-24 bg-accent-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
-              <GraduationCap className="w-12 h-12 text-accent-500" />
-            </div>
+            <EcampLogo size="xl" className="mx-auto mb-6" />
             <h3 className="text-2xl font-display font-bold text-theme-text mb-4">
               {t('auth.registrationPendingTitle', 'Registration Successful!')}
             </h3>

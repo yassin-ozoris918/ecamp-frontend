@@ -1,5 +1,6 @@
-import { Cpu, ShieldCheck, Code, Sparkles, CheckCircle2, X } from 'lucide-react';
+import { ShieldCheck, Code, Sparkles, CheckCircle2, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { EcampLogo } from './common/EcampLogo';
 
 interface AboutPlatformModalProps {
   isOpen: boolean;
@@ -18,9 +19,7 @@ export function AboutPlatformModal({ isOpen, onClose }: AboutPlatformModalProps)
         {/* Header */}
         <div className="relative p-6 sm:p-8 bg-gradient-to-br from-accent-500/10 via-theme-card to-secondary-500/10 border-b border-theme-border flex items-start justify-between">
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-accent-400 via-accent-500 to-accent-600 flex items-center justify-center text-white shadow-glow">
-              <Cpu className="w-7 h-7" />
-            </div>
+            <EcampLogo size="lg" />
             <div>
               <div className="flex items-center gap-2">
                 <span className="badge bg-accent-500/20 text-accent-700 dark:text-accent-300 border border-accent-500/30 text-[10px] font-mono">
