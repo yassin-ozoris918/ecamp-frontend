@@ -19,6 +19,7 @@ import {
   BaccalaureatePath
 } from '../lib/types';
 import { EcampLogo } from './common/EcampLogo';
+import { SupportChat } from './support/SupportChat';
 
 
 
@@ -303,6 +304,7 @@ export function AuthScreen() {
         <LanguageToggle />
         <ThemeToggle />
       </div>
+      <SupportChat signedIn={false} />
       
       {/* Left visual panel */}
       <div className="lg:w-1/2 min-h-[30vh] lg:min-h-screen relative overflow-hidden flex flex-col justify-center items-center p-8 lg:p-12 lg:border-r border-theme-border">

@@ -5,6 +5,8 @@ import type { Course, CourseInstructor } from '../lib/types';
 import { Spinner, Badge, ErrorMessage, EmptyState } from './ui';
 import { useApi } from '../hooks/useApi';
 import { useTranslation } from 'react-i18next';
+import { EcampLogo } from './common/EcampLogo';
+import { SupportChat } from './support/SupportChat';
 
 export function CourseCatalog() {
   const { data, loading, error, execute } = useApi<Course[]>(true);
@@ -17,13 +19,12 @@ export function CourseCatalog() {
 
   return (
     <div className="min-h-screen bg-theme-bg font-sans selection:bg-accent-500/30 selection:text-accent-200 flex flex-col">
+      <SupportChat signedIn={false} />
       {/* Header */}
       <header className="sticky top-0 z-50 bg-theme-bg backdrop-blur-xl border-b border-white/[0.04]">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent-400 to-accent-600 flex items-center justify-center shadow-[0_0_20px_rgba(var(--accent-500),0.3)]">
-              <BookOpen className="w-6 h-6 text-theme-text" />
-            </div>
+            <EcampLogo size="md" />
             <span className="text-xl font-display font-bold text-theme-text tracking-tight">E.Camp</span>
           </div>
           

@@ -29,7 +29,9 @@ import {
   Smartphone,
   Database,
   FileCheck2,
+  Bot,
 } from 'lucide-react';
+import { SupportChat } from './support/SupportChat';
 import { useAdminAttention, type AdminAttention } from '../lib/adminAttention';
 import { CommandPalette, type PaletteEntry } from './admin/CommandPalette';
 import { Link, useRouter } from '../lib/router';
@@ -77,6 +79,7 @@ const ADMIN_GROUPS: NavGroup[] = [
       { to: '/admin/courses', label: 'adminNav.courses', icon: <BookOpen className="w-4 h-4" /> },
       { to: '/admin/codes', label: 'adminNav.codes', icon: <KeyRound className="w-4 h-4" /> },
       { to: '/admin/help-center', label: 'adminNav.helpCenter', icon: <HelpCircle className="w-4 h-4" /> },
+      { to: '/admin/support-bot', label: 'adminNav.supportBot', icon: <Bot className="w-4 h-4" /> },
     ],
   },
   {
@@ -313,6 +316,9 @@ export function AppShell({ children }: { children: ReactNode }) {
       </main>
 
       {isAdmin && <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} entries={paletteEntries} />}
+
+      {/* Support assistant (students) */}
+      {role === 'STUDENT' && <SupportChat raised />}
 
       {/* Phone bottom navigation (students) */}
       {showNotifications && (
