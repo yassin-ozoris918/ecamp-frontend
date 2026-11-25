@@ -1,69 +1,11 @@
 import toast from 'react-hot-toast';
-import { useState, useEffect, useMemo, Fragment } from 'react';
-import {
-  Users,
-  User,
-  ShieldAlert,
-  BookOpen,
-  Search,
-  X,
-  Smartphone,
-  Eye,
-  Video,
-  Printer,
-  Download,
-  Clock,
-  CheckCircle2,
-  XCircle,
-  KeyRound,
-  Calendar,
-  Award,
-  FileText,
-  Activity,
-  ChevronDown,
-  ChevronRight,
-  PlayCircle,
-  PlusCircle,
-  Layers,
-} from 'lucide-react';
+import { useState, useEffect, useCallback, type KeyboardEvent } from 'react';
+import { Users, User, Search } from 'lucide-react';
 import { client } from '../lib/api';
-import { Badge, Skeleton, EmptyState, Button, SectionHeader } from './ui';
-import { useConfirm, ConfirmDialog } from '../hooks/useConfirm';
+import { Skeleton, EmptyState } from './ui';
 import { useDebounce } from '../hooks/useDebounce';
-import { QuizAttemptReviewModal } from './QuizAttemptReviewModal';
-
-type TabKey =
-  | 'ALL'
-  | 'COURSES_VIDEOS'
-  | 'VIDEO_LOG'
-  | 'QUIZZES_EXAMS'
-  | 'CODES_ACCESS'
-  | 'DEVICES'
-  | 'TIMELINE';
-
-function formatDateTime(val?: string | Date | null): string {
-  if (!val) return '—';
-  const d = new Date(val);
-  if (isNaN(d.getTime())) return '—';
-  return d.toLocaleString('en-GB', {
-    year: 'numeric',
-    month: 'short',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-  });
-}
-
-function formatDuration(seconds?: number | null): string {
-  if (!seconds || seconds <= 0) return '—';
-  const hrs = Math.floor(seconds / 3600);
-  const mins = Math.floor((seconds % 3600) / 60);
-  const secs = Math.floor(seconds % 60);
-  if (hrs > 0) return `${hrs}h ${mins}m ${secs}s`;
-  if (mins > 0) return `${mins}m ${secs}s`;
-  return `${secs}s`;
-}
+import { StudentDossier, Avatar, type DossierTab } from './student360/StudentDossier';
+import { formatAcademicProfile, formatDateTime, formatDuration } from './student360/format';
 
 function escapeHtml(str: any): string {
   if (str === null || str === undefined) return '';
@@ -73,43 +15,6 @@ function escapeHtml(str: any): string {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
-}
-
-function formatAcademicProfile(p: any): string {
-  if (!p) return '—';
-  if (p.educationLevel === 'HIGH_SCHOOL') {
-    const parts = [
-      'High School',
-      p.highSchoolSystem,
-      p.highSchoolGrade,
-      p.traditionalBranch,
-      p.baccalaureatePath,
-      p.studyMode,
-      p.studyLanguage,
-    ].filter(Boolean);
-    return parts.join(' • ');
-  }
-  const uni =
-    p.academicUniversity?.nameEn ||
-    p.academicUniversity?.nameAr ||
-    p.otherUniversityName ||
-    '';
-  const fac =
-    p.academicFaculty?.nameEn ||
-    p.academicFaculty?.nameAr ||
-    p.otherFacultyName ||
-    '';
-  const dep =
-    p.academicDepartment?.nameEn ||
-    p.academicDepartment?.nameAr ||
-    p.otherDepartmentName ||
-    '';
-  const prog =
-    p.academicProgram?.nameEn ||
-    p.academicProgram?.nameAr ||
-    p.otherProgramName ||
-    '';
-  return ['University', uni, fac, dep, prog].filter(Boolean).join(' • ');
 }
 
 function printStudentFullHistory(profileData: any) {
@@ -940,6 +845,7 @@ export function Student360Workspace({ initialStudentId }: { initialStudentId?: s
   const [students, setStudents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'suspended'>('all');
   const debouncedSearch = useDebounce(search, 300);
 
   // Opened from a link (/admin/student-360/:id, e.g. the Users table or search) → show that student.
@@ -947,16 +853,10 @@ export function Student360Workspace({ initialStudentId }: { initialStudentId?: s
   useEffect(() => {
     if (initialStudentId) setSelectedStudentId(initialStudentId);
   }, [initialStudentId]);
-  const [profileData, setProfileData] = useState<any | null>(null);
-  const [profileLoading, setProfileLoading] = useState(false);
-  const [reviewAttemptId, setReviewAttemptId] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<TabKey>('ALL');
-  const [expandedCourses, setExpandedCourses] = useState<Record<string, boolean>>({});
-  const [expandedVideoLogs, setExpandedVideoLogs] = useState<Record<string, boolean>>({});
-  const [timelineFilter, setTimelineFilter] = useState<string>('ALL');
-  const { confirm, state: confirmState, handleConfirm, handleCancel } = useConfirm();
+  // The open tab stays the same while the admin moves between students.
+  const [tab, setTab] = useState<DossierTab>('overview');
 
-  const fetchStudents = async (query = '') => {
+  const fetchStudents = useCallback(async (query = '') => {
     setLoading(true);
     try {
       const endpoint = `/admin/users?role=STUDENT&take=100${query ? `&search=${encodeURIComponent(query)}` : ''}`;
@@ -968,1141 +868,132 @@ export function Student360Workspace({ initialStudentId }: { initialStudentId?: s
       setStudents([]);
     }
     setLoading(false);
-  };
+  }, []);
 
   useEffect(() => {
     fetchStudents(debouncedSearch);
-  }, [debouncedSearch]);
+  }, [debouncedSearch, fetchStudents]);
 
-  const loadStudentProfile = async (studentId: string) => {
-    setProfileLoading(true);
-    try {
-      const [userDetail, progressData] = await Promise.all([
-        client.get<any>(`/admin/users/${studentId}`),
-        client.get<any>(`/admin/users/${studentId}/progress`),
-      ]);
-      const merged = { ...userDetail, ...progressData };
-      setProfileData(merged);
-      // Expand all courses by default so admin sees complete data immediately
-      const initialExpanded: Record<string, boolean> = {};
-      for (const c of merged.coursesHistory || []) {
-        initialExpanded[c.courseId] = true;
-      }
-      setExpandedCourses(initialExpanded);
-    } catch (e) {
-      console.error(e);
-      toast.error('Failed to load student 360 profile');
-    }
-    setProfileLoading(false);
-  };
-
+  // Keep the address in sync so the page can be refreshed or the link shared (without re-mounting the route).
   useEffect(() => {
-    if (!selectedStudentId) {
-      setProfileData(null);
-      return;
-    }
-    loadStudentProfile(selectedStudentId);
+    const target = selectedStudentId ? `#/admin/student-360/${selectedStudentId}` : '#/admin/student-360';
+    if (window.location.hash !== target) window.history.replaceState(null, '', target);
   }, [selectedStudentId]);
 
-  const handleResetDevice = async () => {
-    if (!selectedStudentId) return;
-    const ok = await confirm('Reset Device Lock', 'Confirm device lock reset?');
-    if (!ok) return;
-    try {
-      await client.post(`/admin/users/${selectedStudentId}/reset-device`);
-      toast.success('Device reset successfully');
-      await loadStudentProfile(selectedStudentId);
-    } catch (e) {
-      console.error(e);
-      toast.error('Failed to reset device');
+  const isActive = (s: any) => s.isActive ?? s.is_active ?? true;
+  const shown = students.filter((s) => statusFilter === 'all' || (statusFilter === 'active' ? isActive(s) : !isActive(s)));
+  const selected = !!selectedStudentId;
+
+  // Arrow keys move through the list while it has focus.
+  const onListKey = (e: KeyboardEvent) => {
+    if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
+    e.preventDefault();
+    const i = shown.findIndex((s) => s.id === selectedStudentId);
+    const next = shown[e.key === 'ArrowDown' ? Math.min(shown.length - 1, i + 1) : Math.max(0, i - 1)];
+    if (next) {
+      setSelectedStudentId(next.id);
+      document.getElementById(`s360-${next.id}`)?.focus();
     }
   };
-
-  const handleGrantViews = async (sv: any) => {
-    if (!selectedStudentId) return;
-    const remaining =
-      sv.effectiveMaxViews !== null
-        ? Math.max(0, sv.effectiveMaxViews - sv.usedViews)
-        : 0;
-    const input = window.prompt(
-      `How many additional views would you like to grant for ${sv.sessionTitle}? (Enter a positive integer)`,
-    );
-    if (!input) return;
-    const additionalViews = parseInt(input, 10);
-    if (isNaN(additionalViews) || additionalViews <= 0) {
-      toast.error('Please enter a valid positive integer.');
-      return;
-    }
-
-    const message = `
-Current:
-Used: ${sv.usedViews}
-Original limit: ${sv.maxViews}
-Previously granted: ${sv.grantedViews}
-Effective limit: ${sv.effectiveMaxViews}
-Remaining: ${remaining}
-
-Admin enters:
-Additional views: ${additionalViews}
-
-After:
-Used: ${sv.usedViews}
-Original limit: ${sv.maxViews}
-Granted: ${sv.grantedViews + additionalViews}
-Effective limit: ${sv.effectiveMaxViews + additionalViews}
-Remaining: ${Math.max(0, sv.effectiveMaxViews + additionalViews - sv.usedViews)}
-
-Are you sure you want to apply this grant?`;
-
-    const ok = await confirm('Grant New Viewing Allowance', message);
-    if (!ok) return;
-
-    try {
-      await client.post(
-        `/admin/users/${selectedStudentId}/sessions/${sv.sessionId}/grant-views`,
-        { additionalViews },
-      );
-      toast.success(`Successfully granted ${additionalViews} views`);
-      await loadStudentProfile(selectedStudentId);
-    } catch (e: any) {
-      toast.error(e.message || 'Failed to grant views');
-    }
-  };
-
-  const filtered = students;
-
-  const filteredTimeline = useMemo(() => {
-    const list: any[] = profileData?.timeline || [];
-    if (timelineFilter === 'ALL') return list;
-    return list.filter((item) => item.category === timelineFilter);
-  }, [profileData?.timeline, timelineFilter]);
-
-  const stats = profileData?.summaryStats || {};
 
   return (
-    <div className="space-y-6 animate-fade-up flex gap-6 h-[calc(100vh-140px)]">
-      {/* Left Panel: Student Directory */}
-      <div
-        className={`flex flex-col gap-4 ${selectedStudentId ? 'w-1/4 min-w-[260px]' : 'w-full'} transition-all duration-300`}
-      >
-        <SectionHeader
-          stacked={!!selectedStudentId}
-          title={
-            <span className="flex items-center gap-2 whitespace-nowrap">
-              <User className="w-7 h-7 text-accent-700 dark:text-accent-300" /> Student 360
-            </span>
-          }
-          subtitle={!selectedStudentId ? 'Comprehensive student lookup, watch history, and printable evidence dossier.' : undefined}
-          actions={
-            <div className={`relative ${selectedStudentId ? 'w-full' : ''}`}>
-              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-theme-muted" />
-              <input
-                dir="auto"
-                type="text"
-                placeholder="Search directory..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className={`pl-9 pr-4 py-2 bg-theme-card border border-theme-border rounded-xl text-sm focus:outline-none focus:border-accent-400 text-theme-text ${selectedStudentId ? 'w-full' : 'w-64'}`}
-              />
-            </div>
-          }
-        />
+    <div className="animate-fade-up flex gap-5 xl:h-[calc(100vh-7rem)] min-h-[32rem]">
+      {/* Student list */}
+      <aside className={`flex-col gap-3 min-h-0 ${selected ? 'hidden xl:flex xl:w-80 shrink-0' : 'flex w-full'}`}>
+        <div className="flex items-center justify-between gap-3">
+          <h1 className="text-2xl font-display font-bold text-theme-text flex items-center gap-2">
+            <User className="w-6 h-6 text-accent-700 dark:text-accent-300" /> Student 360
+          </h1>
+          {!loading && <span className="text-xs text-theme-muted">{shown.length} shown</span>}
+        </div>
+        {!selected && (
+          <p className="text-sm text-theme-muted -mt-2">Pick a student to see their courses, watch history, results and access, and to manage them.</p>
+        )}
+        <div className={`flex gap-2 ${selected ? 'flex-col' : 'flex-col sm:flex-row'}`}>
+          <div className="relative flex-1">
+            <Search className="w-4 h-4 absolute start-3 top-1/2 -translate-y-1/2 text-theme-muted" />
+            <input
+              dir="auto"
+              type="search"
+              placeholder="Name, email or phone…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full ps-9 pe-3 py-2 bg-theme-card border border-theme-border rounded-xl text-sm focus:outline-none focus:border-accent-400 text-theme-text"
+            />
+          </div>
+          <div className="inline-flex rounded-xl border border-theme-border p-0.5 bg-theme-card/50 self-start">
+            {(['all', 'active', 'suspended'] as const).map((f) => (
+              <button
+                key={f}
+                type="button"
+                onClick={() => setStatusFilter(f)}
+                aria-pressed={statusFilter === f}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold capitalize ${statusFilter === f ? 'bg-accent-500 text-white' : 'text-theme-muted hover:text-theme-text'}`}
+              >
+                {f}
+              </button>
+            ))}
+          </div>
+        </div>
 
-        <div className="glass rounded-2xl flex-1 overflow-hidden flex flex-col">
+        <div className="glass rounded-2xl flex-1 min-h-0 overflow-hidden flex flex-col">
           {loading ? (
-            <div className="p-4">
-              <Skeleton className="h-40" />
-            </div>
-          ) : filtered.length === 0 ? (
-            <EmptyState icon={<Users className="w-8 h-8" />} title="No students found" />
-          ) : (
-            <div className="flex-1 overflow-y-auto scrollbar-thin divide-y divide-white/[0.04]">
-              {filtered.map((s) => (
-                <button
-                  key={s.id}
-                  onClick={() => setSelectedStudentId(s.id)}
-                  className={`w-full text-left p-4 hover:bg-white/[0.02] transition-colors flex items-center gap-3 ${selectedStudentId === s.id ? 'bg-theme-card border-l-4 border-accent-400' : 'border-l-4 border-transparent'}`}
-                >
-                  {s.profilePictureUrl ? (
-                    <img
-                      src={s.profilePictureUrl}
-                      alt={s.fullName}
-                      className="w-10 h-10 rounded-full object-cover border border-white/[0.1]"
-                    />
-                  ) : (
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-accent-500 to-secondary-500 flex items-center justify-center text-white font-bold">
-                      {(s.fullName || '?').charAt(0).toUpperCase()}
-                    </div>
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <p className="font-bold text-theme-text truncate">{s.fullName}</p>
-                    <p className="text-xs text-theme-muted truncate">{s.email}</p>
-                    {s.phoneNumber && (
-                      <p className="text-[11px] text-theme-muted/80 font-mono truncate">
-                        {s.phoneNumber}
-                      </p>
-                    )}
-                  </div>
-                </button>
+            <div className="p-4 space-y-3">
+              {[1, 2, 3, 4].map((i) => (
+                <Skeleton key={i} className="h-12" />
               ))}
             </div>
-          )}
-        </div>
-      </div>
-
-      {/* Right Panel: Student 360 Drawer */}
-      {selectedStudentId && (
-        <div className="flex-1 glass rounded-2xl flex flex-col overflow-hidden animate-fade-in relative border border-theme-border">
-          <button
-            onClick={() => setSelectedStudentId(null)}
-            className="absolute top-4 right-4 text-theme-muted hover:text-theme-text z-10"
-            title="Close dossier"
-          >
-            <X className="w-5 h-5" />
-          </button>
-
-          {profileLoading || !profileData ? (
-            <div className="p-8 space-y-4">
-              <Skeleton className="h-24 w-full" />
-              <Skeleton className="h-24 w-full" />
-              <Skeleton className="h-48 w-full" />
-            </div>
+          ) : shown.length === 0 ? (
+            <EmptyState icon={<Users className="w-8 h-8" />} title="No students found" />
           ) : (
-            <div className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-thin">
-              {/* Header Info & Print Actions */}
-              <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4 pr-6">
-                <div className="flex items-start gap-4">
-                  {profileData.profilePictureUrl ? (
-                    <img
-                      src={profileData.profilePictureUrl}
-                      alt={profileData.fullName}
-                      className="w-20 h-20 rounded-full object-cover border-4 border-theme-bg shadow-lg shrink-0"
-                    />
-                  ) : (
-                    <div className="w-20 h-20 rounded-full bg-gradient-to-br from-accent-500 to-secondary-500 flex items-center justify-center text-white font-bold text-3xl shrink-0">
-                      {(profileData.fullName || '?').charAt(0).toUpperCase()}
-                    </div>
-                  )}
-                  <div className="space-y-1">
-                    <h2 className="text-2xl font-display font-bold text-theme-text">
-                      {profileData.fullName}
-                    </h2>
-                    <p className="text-theme-muted text-sm">
-                      {profileData.email}
-                      {profileData.phoneNumber ? ` • 📞 ${profileData.phoneNumber}` : ''}
-                      {profileData.parentPhoneNumber
-                        ? ` • 👨‍👩‍👧 Parent: ${profileData.parentPhoneNumber}`
-                        : ''}
-                    </p>
-                    <p className="text-xs text-theme-muted">
-                      {formatAcademicProfile(profileData)}
-                    </p>
-                    <div className="flex flex-wrap gap-3 text-xs text-theme-muted pt-1">
-                      <span className="flex items-center gap-1">
-                        <Calendar className="w-3.5 h-3.5 text-accent-400" />
-                        <strong>Registered:</strong> {formatDateTime(profileData.createdAt)}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Clock className="w-3.5 h-3.5 text-secondary-400" />
-                        <strong>Last Login:</strong> {formatDateTime(profileData.lastLoginAt)}
-                      </span>
-                    </div>
-                    <div className="flex gap-2 pt-1 flex-wrap">
-                      <Badge variant={profileData.isActive ? 'success' : 'error'}>
-                        {profileData.isActive ? 'Active Account' : 'Suspended'}
-                      </Badge>
-                      <Badge variant="gold">XP: {profileData.xp || 0}</Badge>
-                      <Badge variant="default">Streak: {profileData.streakDays || 0}d</Badge>
-                      {profileData.deviceId ? (
-                        <Badge variant="default">Device Bound</Badge>
-                      ) : (
-                        <Badge variant="warning">No Device</Badge>
-                      )}
-                      {profileData.isDemo && <Badge variant="accent">Demo Account</Badge>}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Action Buttons: Print Complete History, Export CSV, Reset Device */}
-                <div className="flex flex-wrap items-center gap-2 shrink-0">
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    onClick={() => printStudentFullHistory(profileData)}
-                    icon={<Printer className="w-4 h-4" />}
-                  >
-                    Print Full History / PDF
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => downloadStudentHistoryCsv(profileData)}
-                    icon={<Download className="w-4 h-4" />}
-                  >
-                    Export CSV
-                  </Button>
-                  <Button
-                    variant="danger"
-                    size="sm"
-                    disabled={!profileData.deviceId}
-                    onClick={handleResetDevice}
-                    icon={<Smartphone className="w-3.5 h-3.5" />}
-                  >
-                    Reset Device Lock
-                  </Button>
-                </div>
-              </div>
-
-              {/* Executive Summary Cards (From Registration to Now) */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-                <div className="glass bg-black/20 rounded-xl p-3 border border-white/[0.05] text-center">
-                  <p className="text-xl font-display font-bold text-accent-400">
-                    {stats.totalCoursesTouched ?? profileData.coursesHistory?.length ?? 0}
-                  </p>
-                  <p className="text-[11px] text-theme-muted uppercase font-semibold">
-                    Courses Accessed
-                  </p>
-                </div>
-                <div className="glass bg-black/20 rounded-xl p-3 border border-white/[0.05] text-center">
-                  <p className="text-xl font-display font-bold text-theme-text">
-                    {stats.totalLecturesUnlocked ?? profileData.lectures?.length ?? 0}
-                    <span className="text-xs text-theme-muted font-normal ml-1">
-                      ({stats.totalLecturesStarted ?? 0} started)
-                    </span>
-                  </p>
-                  <p className="text-[11px] text-theme-muted uppercase font-semibold">
-                    Lectures Unlocked
-                  </p>
-                </div>
-                <div className="glass bg-black/20 rounded-xl p-3 border border-white/[0.05] text-center">
-                  <p className="text-xl font-display font-bold text-success-400">
-                    {stats.totalUniqueVideosWatched ?? 0}
-                  </p>
-                  <p className="text-[11px] text-theme-muted uppercase font-semibold">
-                    Videos Watched
-                  </p>
-                </div>
-                <div className="glass bg-black/20 rounded-xl p-3 border border-white/[0.05] text-center">
-                  <p className="text-xl font-display font-bold text-gold-400">
-                    {stats.totalConfirmedVideoWatches ?? 0}
-                    <span className="text-xs text-theme-muted font-normal ml-1">
-                      ({stats.totalVideoStreamOpens ?? 0} opens)
-                    </span>
-                  </p>
-                  <p className="text-[11px] text-theme-muted uppercase font-semibold">
-                    Total Watch Count
-                  </p>
-                </div>
-                <div className="glass bg-black/20 rounded-xl p-3 border border-white/[0.05] text-center">
-                  <p className="text-xl font-display font-bold text-secondary-400">
-                    {stats.totalVideosCompleted ?? 0}
-                  </p>
-                  <p className="text-[11px] text-theme-muted uppercase font-semibold">
-                    Videos Completed
-                  </p>
-                </div>
-                <div className="glass bg-black/20 rounded-xl p-3 border border-white/[0.05] text-center">
-                  <p className="text-xl font-display font-bold text-theme-text">
-                    {stats.totalCodesRedeemed ?? 0} / {stats.totalQuizAttempts ?? 0}
-                  </p>
-                  <p className="text-[11px] text-theme-muted uppercase font-semibold">
-                    Codes / Quizzes
-                  </p>
-                </div>
-              </div>
-
-              {/* Navigation Tabs */}
-              <div className="flex flex-wrap gap-2 border-b border-theme-border pb-3">
-                {[
-                  { id: 'ALL', label: 'Full Dossier (All)', icon: Layers },
-                  { id: 'COURSES_VIDEOS', label: 'Courses, Lectures & Videos', icon: BookOpen },
-                  { id: 'VIDEO_LOG', label: 'Video Watch Counts & Limits', icon: Video },
-                  { id: 'QUIZZES_EXAMS', label: 'Quizzes & Exams', icon: ShieldAlert },
-                  { id: 'CODES_ACCESS', label: 'Codes & Unlocks', icon: KeyRound },
-                  { id: 'DEVICES', label: 'Devices & Logins', icon: Smartphone },
-                  { id: 'TIMELINE', label: 'Timeline (Reg → Now)', icon: Activity },
-                ].map((tab) => {
-                  const Icon = tab.icon;
-                  const active = activeTab === tab.id;
-                  return (
+            <ul
+              className={`flex-1 overflow-y-auto scrollbar-thin divide-y divide-theme-border/60 ${selected ? '' : 'sm:grid sm:grid-cols-2 2xl:grid-cols-3 sm:divide-y-0'}`}
+              onKeyDown={onListKey}
+            >
+              {shown.map((s) => {
+                const active = selectedStudentId === s.id;
+                return (
+                  <li key={s.id}>
                     <button
-                      key={tab.id}
-                      onClick={() => setActiveTab(tab.id as TabKey)}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors ${
-                        active
-                          ? 'bg-accent-500 text-white shadow-sm'
-                          : 'bg-white/[0.03] text-theme-muted hover:text-theme-text hover:bg-white/[0.06]'
+                      id={`s360-${s.id}`}
+                      type="button"
+                      onClick={() => setSelectedStudentId(s.id)}
+                      aria-current={active ? 'true' : undefined}
+                      className={`w-full text-start px-3 py-2.5 flex items-center gap-3 transition-colors border-s-4 ${
+                        active ? 'bg-accent-500/10 border-accent-500' : 'border-transparent hover:bg-theme-card'
                       }`}
                     >
-                      <Icon className="w-3.5 h-3.5" />
-                      {tab.label}
+                      <Avatar url={s.profilePictureUrl ?? s.avatar_url} name={s.fullName ?? s.full_name} />
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-sm text-theme-text truncate">{s.fullName ?? s.full_name}</p>
+                        <p className="text-xs text-theme-muted truncate" dir="ltr">
+                          {s.phoneNumber || s.email}
+                        </p>
+                      </div>
+                      {!isActive(s) && <span className="w-2 h-2 rounded-full bg-error-500 shrink-0" title="Suspended" />}
                     </button>
-                  );
-                })}
-              </div>
-
-              {/* SECTION: Complete Hierarchical Courses, Lectures & Videos Breakdown */}
-              {(activeTab === 'ALL' || activeTab === 'COURSES_VIDEOS') && (
-                <div className="glass bg-black/20 rounded-xl p-5 border border-white/[0.04] space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-bold text-theme-muted uppercase tracking-wider flex items-center gap-2">
-                      <BookOpen className="w-4 h-4 text-accent-400" /> Complete Courses, Lectures & Video Watch Breakdown
-                    </h3>
-                    <span className="text-xs text-theme-muted">
-                      {profileData.coursesHistory?.length || 0} Course(s)
-                    </span>
-                  </div>
-
-                  {profileData.coursesHistory?.length > 0 ? (
-                    <div className="space-y-4">
-                      {profileData.coursesHistory.map((course: any) => {
-                        const isExpanded = expandedCourses[course.courseId] !== false;
-                        return (
-                          <div
-                            key={course.courseId}
-                            className="rounded-xl border border-white/[0.08] bg-white/[0.01] overflow-hidden"
-                          >
-                            {/* Course Header */}
-                            <button
-                              type="button"
-                              onClick={() =>
-                                setExpandedCourses((prev) => ({
-                                  ...prev,
-                                  [course.courseId]: !isExpanded,
-                                }))
-                              }
-                              className="w-full p-4 bg-white/[0.03] hover:bg-white/[0.05] transition-colors flex flex-col md:flex-row md:items-center justify-between gap-2 text-left"
-                            >
-                              <div className="flex items-center gap-2">
-                                {isExpanded ? (
-                                  <ChevronDown className="w-4 h-4 text-accent-400 shrink-0" />
-                                ) : (
-                                  <ChevronRight className="w-4 h-4 text-theme-muted shrink-0" />
-                                )}
-                                <div>
-                                  <div className="flex items-center gap-2 flex-wrap">
-                                    <span className="font-bold text-theme-text text-base">
-                                      {course.courseTitle}
-                                    </span>
-                                    {course.isFree ? (
-                                      <Badge variant="success">Free Course</Badge>
-                                    ) : course.hasDirectCourseAccess ? (
-                                      <Badge variant={course.isExpired ? 'error' : 'accent'}>
-                                        {course.isExpired
-                                          ? 'Full Course Access (Expired)'
-                                          : 'Full Course Access'}
-                                      </Badge>
-                                    ) : (
-                                      <Badge variant="default">Lecture Access</Badge>
-                                    )}
-                                  </div>
-                                  <p className="text-xs text-theme-muted mt-0.5">
-                                    {course.unlockedAt
-                                      ? `Unlocked: ${formatDateTime(course.unlockedAt)} • `
-                                      : ''}
-                                    {course.expiresAt
-                                      ? `Expires: ${formatDateTime(course.expiresAt)}`
-                                      : 'No Course Expiry'}
-                                  </p>
-                                </div>
-                              </div>
-
-                              <div className="flex flex-wrap items-center gap-2 text-xs">
-                                <Badge variant="default">
-                                  Lectures: {course.unlockedLecturesCount}/{course.totalLecturesCount}
-                                </Badge>
-                                <Badge variant="success">
-                                  Videos Watched: {course.watchedVideosCount}/{course.totalVideosCount}
-                                </Badge>
-                                <Badge variant="gold">
-                                  Total Watches: {course.totalVideoWatchesCount} ({course.totalStreamOpensCount} opens)
-                                </Badge>
-                              </div>
-                            </button>
-
-                            {/* Lectures inside Course */}
-                            {isExpanded && (
-                              <div className="p-4 space-y-4 divide-y divide-white/[0.06]">
-                                {course.lectures?.map((lec: any) => (
-                                  <div key={lec.lectureId} className="pt-4 first:pt-0 space-y-3">
-                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                                      <div>
-                                        <div className="flex items-center gap-2 flex-wrap">
-                                          <span className="font-semibold text-theme-text text-sm">
-                                            {lec.lectureTitle}
-                                          </span>
-                                          {lec.chapterTitle && (
-                                            <span className="text-xs text-theme-muted">
-                                              ({lec.chapterTitle})
-                                            </span>
-                                          )}
-                                          <Badge
-                                            variant={
-                                              !lec.isUnlocked
-                                                ? 'default'
-                                                : lec.isExpired
-                                                  ? 'error'
-                                                  : lec.isStarted
-                                                    ? 'success'
-                                                    : 'warning'
-                                            }
-                                          >
-                                            {!lec.isUnlocked
-                                              ? 'Not Unlocked'
-                                              : lec.isExpired
-                                                ? 'Expired'
-                                                : lec.isStarted
-                                                  ? 'Started & Active'
-                                                  : 'Unlocked (Not Started)'}
-                                          </Badge>
-                                          <Badge variant="default">
-                                            Limit:{' '}
-                                            {lec.maxViews !== null
-                                              ? `${lec.maxViews} views/video`
-                                              : 'Unlimited'}
-                                          </Badge>
-                                        </div>
-                                        <div className="text-xs text-theme-muted mt-1 flex flex-wrap gap-x-4 gap-y-1">
-                                          <span>
-                                            <strong>Unlocked:</strong> {formatDateTime(lec.unlockedAt)}
-                                          </span>
-                                          <span>
-                                            <strong>Started:</strong> {formatDateTime(lec.activatedAt)}
-                                          </span>
-                                          <span>
-                                            <strong>Expires:</strong> {formatDateTime(lec.expiresAt)}
-                                          </span>
-                                          {lec.codesUsed?.length > 0 && (
-                                            <span>
-                                              <strong>Code(s):</strong>{' '}
-                                              {lec.codesUsed.map((c: any) => c.code).join(', ')}
-                                            </span>
-                                          )}
-                                        </div>
-                                      </div>
-
-                                      <div className="text-xs text-theme-muted shrink-0">
-                                        Watched{' '}
-                                        <strong className="text-theme-text">
-                                          {lec.watchedVideosCount}/{lec.totalVideosCount}
-                                        </strong>{' '}
-                                        videos •{' '}
-                                        <strong className="text-accent-400">
-                                          {lec.totalWatchesCount}
-                                        </strong>{' '}
-                                        watches
-                                      </div>
-                                    </div>
-
-                                    {/* Videos Table inside Lecture */}
-                                    {lec.videos?.length > 0 ? (
-                                      <div className="overflow-x-auto rounded-lg border border-white/[0.06]">
-                                        <table className="w-full text-xs">
-                                          <thead>
-                                            <tr className="bg-white/[0.03] text-theme-muted border-b border-white/[0.06]">
-                                              <th className="p-2.5 text-left">Video / Session</th>
-                                              <th className="p-2.5 text-center">Duration</th>
-                                              <th className="p-2.5 text-center">Confirmed Watches</th>
-                                              <th className="p-2.5 text-center">Stream Opens</th>
-                                              <th className="p-2.5 text-center">Limit & Allowance</th>
-                                              <th className="p-2.5 text-center">Status</th>
-                                              <th className="p-2.5 text-left">First / Last Watched</th>
-                                              <th className="p-2.5 text-right">Actions / Logs</th>
-                                            </tr>
-                                          </thead>
-                                          <tbody className="divide-y divide-white/[0.04]">
-                                            {lec.videos.map((v: any) => {
-                                              const showLogs = !!expandedVideoLogs[v.sessionId];
-                                              return (
-                                                <Fragment key={v.sessionId}>
-                                                  <tr
-                                                    className={`hover:bg-white/[0.02] ${v.isWatched ? 'bg-success-500/[0.03]' : ''}`}
-                                                  >
-                                                    <td className="p-2.5 font-medium text-theme-text">
-                                                      <div className="flex items-center gap-1.5">
-                                                        <PlayCircle
-                                                          className={`w-3.5 h-3.5 shrink-0 ${v.isWatched ? 'text-success-400' : 'text-theme-muted'}`}
-                                                        />
-                                                        <span>{v.sessionTitle}</span>
-                                                      </div>
-                                                    </td>
-                                                    <td className="p-2.5 text-center text-theme-muted">
-                                                      {formatDuration(v.duration)}
-                                                    </td>
-                                                    <td className="p-2.5 text-center">
-                                                      <span
-                                                        className={`font-bold text-sm ${v.watchCount > 0 ? 'text-accent-400' : 'text-theme-muted'}`}
-                                                      >
-                                                        {v.watchCount ?? v.usedViews ?? 0}x
-                                                      </span>
-                                                    </td>
-                                                    <td className="p-2.5 text-center text-theme-muted">
-                                                      {v.streamOpensCount ?? 0}x
-                                                    </td>
-                                                    <td className="p-2.5 text-center">
-                                                      {v.maxViews !== null ? (
-                                                        <span className="text-theme-text">
-                                                          {v.usedViews}/{v.effectiveMaxViews}
-                                                          {v.grantedViews > 0 && (
-                                                            <span className="text-gold-400 ml-1">
-                                                              (+{v.grantedViews} granted)
-                                                            </span>
-                                                          )}
-                                                          <span className="block text-[10px] text-theme-muted">
-                                                            {v.remainingViews} remaining
-                                                          </span>
-                                                        </span>
-                                                      ) : (
-                                                        <span className="text-theme-muted">
-                                                          Unlimited
-                                                        </span>
-                                                      )}
-                                                    </td>
-                                                    <td className="p-2.5 text-center">
-                                                      {v.isCompleted ? (
-                                                        <Badge variant="success">Completed</Badge>
-                                                      ) : v.isWatched ? (
-                                                        <Badge variant="accent">Watched</Badge>
-                                                      ) : (
-                                                        <Badge variant="default">Not Watched</Badge>
-                                                      )}
-                                                    </td>
-                                                    <td className="p-2.5 text-[11px] text-theme-muted">
-                                                      <div>
-                                                        <strong>First:</strong>{' '}
-                                                        {formatDateTime(v.firstWatchedAt)}
-                                                      </div>
-                                                      <div>
-                                                        <strong>Last:</strong>{' '}
-                                                        {formatDateTime(v.lastWatchedAt)}
-                                                      </div>
-                                                      {v.isCompleted && v.completedAt && (
-                                                        <div className="text-success-400">
-                                                          <strong>Done:</strong>{' '}
-                                                          {formatDateTime(v.completedAt)}
-                                                        </div>
-                                                      )}
-                                                    </td>
-                                                    <td className="p-2.5 text-right">
-                                                      <div className="flex items-center justify-end gap-1.5">
-                                                        {v.playbackLogs?.length > 0 && (
-                                                          <button
-                                                            type="button"
-                                                            onClick={() =>
-                                                              setExpandedVideoLogs((prev) => ({
-                                                                ...prev,
-                                                                [v.sessionId]: !prev[v.sessionId],
-                                                              }))
-                                                            }
-                                                            className="px-2 py-1 rounded bg-white/[0.05] hover:bg-white/[0.1] text-[11px] text-theme-text"
-                                                          >
-                                                            {showLogs
-                                                              ? 'Hide Timestamps'
-                                                              : `Timestamps (${v.playbackLogs.length})`}
-                                                          </button>
-                                                        )}
-                                                        {v.maxViews !== null && v.usedViews > 0 && (
-                                                          <button
-                                                            type="button"
-                                                            onClick={() => handleGrantViews(v)}
-                                                            className="px-2 py-1 rounded bg-accent-500/20 hover:bg-accent-500/30 text-[11px] text-accent-300 font-semibold"
-                                                            title="Grant additional views"
-                                                          >
-                                                            + Grant Views
-                                                          </button>
-                                                        )}
-                                                      </div>
-                                                    </td>
-                                                  </tr>
-                                                  {showLogs && v.playbackLogs?.length > 0 && (
-                                                    <tr className="bg-black/30">
-                                                      <td colSpan={8} className="p-3">
-                                                        <p className="text-[11px] font-bold text-theme-muted uppercase mb-1.5">
-                                                          Exact Watch Session Timestamps for "{v.sessionTitle}":
-                                                        </p>
-                                                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
-                                                          {v.playbackLogs.map((log: any) => (
-                                                            <div
-                                                              key={log.id}
-                                                              className="p-2 rounded bg-white/[0.03] border border-white/[0.05] flex items-center justify-between text-[11px]"
-                                                            >
-                                                              <span>
-                                                                <strong>#{log.index}:</strong>{' '}
-                                                                {formatDateTime(log.openedAt)}
-                                                              </span>
-                                                              <Badge
-                                                                variant={
-                                                                  log.consumed ? 'success' : 'default'
-                                                                }
-                                                              >
-                                                                {log.consumed
-                                                                  ? 'View Consumed'
-                                                                  : 'Stream Opened'}
-                                                              </Badge>
-                                                            </div>
-                                                          ))}
-                                                        </div>
-                                                      </td>
-                                                    </tr>
-                                                  )}
-                                                </Fragment>
-                                              );
-                                            })}
-                                          </tbody>
-                                        </table>
-                                      </div>
-                                    ) : (
-                                      <p className="text-xs text-theme-muted italic">
-                                        No videos in this lecture.
-                                      </p>
-                                    )}
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    <p className="text-sm text-theme-muted">
-                      No courses or lectures accessed by this student yet.
-                    </p>
-                  )}
-                </div>
-              )}
-
-              {/* SECTION: Video View Limits & All Watched Videos */}
-              {(activeTab === 'ALL' || activeTab === 'VIDEO_LOG') && (
-                <div className="glass bg-black/20 rounded-xl p-5 border border-white/[0.04] space-y-6">
-                  <div>
-                    <h3 className="text-sm font-bold text-theme-muted uppercase tracking-wider mb-4 flex items-center gap-2">
-                      <Video className="w-4 h-4 text-accent-400" /> Video View Limits & Allowance Controls
-                    </h3>
-                    {profileData.sessionViews?.filter((sv: any) => sv.maxViews !== null)?.length >
-                    0 ? (
-                      <div className="space-y-3">
-                        {profileData.sessionViews
-                          .filter((sv: any) => sv.maxViews !== null)
-                          .map((sv: any) => {
-                            const remaining = Math.max(0, sv.effectiveMaxViews - sv.usedViews);
-                            const isExhausted = remaining === 0;
-
-                            return (
-                              <div
-                                key={sv.sessionId}
-                                className="p-4 rounded-lg bg-white/[0.02] border border-white/[0.04] flex flex-col gap-2"
-                              >
-                                <div className="flex justify-between items-start">
-                                  <div>
-                                    <p className="text-sm text-theme-text font-medium">
-                                      {sv.sessionTitle}
-                                    </p>
-                                    <p className="text-xs text-theme-muted">
-                                      {sv.lectureTitle} • {sv.courseTitle}
-                                    </p>
-                                  </div>
-                                  <Badge variant={isExhausted ? 'error' : 'success'}>
-                                    {remaining} Remaining
-                                  </Badge>
-                                </div>
-
-                                <div className="flex justify-between items-end mt-2">
-                                  <div className="text-xs text-theme-muted space-y-1">
-                                    <p>
-                                      Used (Confirmed Watches):{' '}
-                                      <span className="text-theme-text font-medium">
-                                        {sv.usedViews}
-                                      </span>{' '}
-                                      ({sv.streamOpensCount ?? sv.usedViews} stream opens)
-                                    </p>
-                                    <p>
-                                      Original Limit:{' '}
-                                      <span className="text-theme-text font-medium">
-                                        {sv.maxViews}
-                                      </span>
-                                    </p>
-                                    <p>
-                                      Previously Granted:{' '}
-                                      <span className="text-theme-text font-medium">
-                                        {sv.grantedViews}
-                                      </span>
-                                    </p>
-                                    <p>
-                                      Effective Limit:{' '}
-                                      <span className="text-theme-text font-medium">
-                                        {sv.effectiveMaxViews}
-                                      </span>
-                                    </p>
-                                    <p>
-                                      First Watched:{' '}
-                                      <span className="text-theme-text">
-                                        {formatDateTime(sv.firstWatchedAt)}
-                                      </span>{' '}
-                                      • Last Watched:{' '}
-                                      <span className="text-theme-text">
-                                        {formatDateTime(sv.lastWatchedAt)}
-                                      </span>
-                                    </p>
-                                  </div>
-
-                                  <Button
-                                    variant="secondary"
-                                    size="sm"
-                                    onClick={() => handleGrantViews(sv)}
-                                  >
-                                    Grant Views
-                                  </Button>
-                                </div>
-                              </div>
-                            );
-                          })}
-                      </div>
-                    ) : (
-                      <p className="text-sm text-theme-muted">No limited videos accessed yet.</p>
-                    )}
-                  </div>
-
-                  {/* All Watched Videos Summary */}
-                  <div className="pt-4 border-t border-white/[0.06]">
-                    <h4 className="text-xs font-bold text-theme-muted uppercase tracking-wider mb-3">
-                      All Watched / Opened Videos ({profileData.allVideosWatched?.length || 0})
-                    </h4>
-                    {profileData.allVideosWatched?.length > 0 ? (
-                      <div className="overflow-x-auto rounded-lg border border-white/[0.06]">
-                        <table className="w-full text-xs">
-                          <thead>
-                            <tr className="bg-white/[0.03] text-theme-muted border-b border-white/[0.06]">
-                              <th className="p-2.5 text-left">Video</th>
-                              <th className="p-2.5 text-left">Course / Lecture</th>
-                              <th className="p-2.5 text-center">Confirmed Watches</th>
-                              <th className="p-2.5 text-center">Stream Opens</th>
-                              <th className="p-2.5 text-center">Completed</th>
-                              <th className="p-2.5 text-left">First / Last Watched</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-white/[0.04]">
-                            {profileData.allVideosWatched.map((v: any) => (
-                              <tr key={v.sessionId} className="hover:bg-white/[0.02]">
-                                <td className="p-2.5 font-semibold text-theme-text">
-                                  {v.sessionTitle}
-                                </td>
-                                <td className="p-2.5 text-theme-muted">
-                                  <div>{v.courseTitle}</div>
-                                  <div className="text-[11px]">{v.lectureTitle}</div>
-                                </td>
-                                <td className="p-2.5 text-center font-bold text-accent-400">
-                                  {v.watchCount ?? v.usedViews ?? 0}x
-                                </td>
-                                <td className="p-2.5 text-center text-theme-muted">
-                                  {v.streamOpensCount ?? 0}x
-                                </td>
-                                <td className="p-2.5 text-center">
-                                  {v.isCompleted ? (
-                                    <Badge variant="success">
-                                      Yes ({formatDateTime(v.completedAt)})
-                                    </Badge>
-                                  ) : (
-                                    <Badge variant="default">No</Badge>
-                                  )}
-                                </td>
-                                <td className="p-2.5 text-[11px] text-theme-muted">
-                                  <div>First: {formatDateTime(v.firstWatchedAt)}</div>
-                                  <div>Last: {formatDateTime(v.lastWatchedAt)}</div>
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    ) : (
-                      <p className="text-sm text-theme-muted">No videos watched yet.</p>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* SECTION: Activation Codes & Unlocks */}
-              {(activeTab === 'ALL' || activeTab === 'CODES_ACCESS') && (
-                <div className="glass bg-black/20 rounded-xl p-5 border border-white/[0.04] space-y-4">
-                  <h3 className="text-sm font-bold text-theme-muted uppercase tracking-wider flex items-center gap-2">
-                    <KeyRound className="w-4 h-4 text-gold-400" /> Redeemed Activation Codes & Access History
-                  </h3>
-                  {profileData.redeemedCodes?.length > 0 || profileData.codeHistory?.length > 0 ? (
-                    <div className="overflow-x-auto rounded-lg border border-white/[0.06]">
-                      <table className="w-full text-xs">
-                        <thead>
-                          <tr className="bg-white/[0.03] text-theme-muted border-b border-white/[0.06]">
-                            <th className="p-2.5 text-left">Code</th>
-                            <th className="p-2.5 text-left">Action / Status</th>
-                            <th className="p-2.5 text-left">Course</th>
-                            <th className="p-2.5 text-left">Lecture / File</th>
-                            <th className="p-2.5 text-left">Date & Time</th>
-                            <th className="p-2.5 text-left">IP / Browser</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-white/[0.04]">
-                          {(profileData.codeHistory?.length > 0
-                            ? profileData.codeHistory
-                            : profileData.redeemedCodes
-                          ).map((c: any) => (
-                            <tr key={c.id} className="hover:bg-white/[0.02]">
-                              <td className="p-2.5 font-mono font-bold text-gold-300">{c.code}</td>
-                              <td className="p-2.5">
-                                <Badge variant="success">
-                                  {c.action || c.status || 'REDEEMED'}
-                                </Badge>
-                              </td>
-                              <td className="p-2.5 text-theme-text">{c.courseTitle || '—'}</td>
-                              <td className="p-2.5 text-theme-muted">
-                                {c.lectureTitle || c.attachmentTitle || '—'}
-                              </td>
-                              <td className="p-2.5 text-theme-muted">
-                                {formatDateTime(c.createdAt || c.redeemedAt)}
-                              </td>
-                              <td className="p-2.5 text-theme-muted text-[11px]">
-                                {[c.ipAddress, c.browser].filter(Boolean).join(' • ') || '—'}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  ) : (
-                    <p className="text-sm text-theme-muted">No activation codes redeemed yet.</p>
-                  )}
-                </div>
-              )}
-
-              {/* SECTION: Quiz & Exam Attempts */}
-              {(activeTab === 'ALL' || activeTab === 'QUIZZES_EXAMS') && (
-                <div className="glass bg-black/20 rounded-xl p-5 border border-white/[0.04] space-y-4">
-                  <h3 className="text-sm font-bold text-theme-muted uppercase tracking-wider flex items-center gap-2">
-                    <ShieldAlert className="w-4 h-4 text-secondary-400" /> Quiz & Exam Attempts ({(profileData.quizAttempts?.length || 0) + (profileData.examAttempts?.length || 0)})
-                  </h3>
-                  {profileData.quizAttempts?.length > 0 || profileData.examAttempts?.length > 0 ? (
-                    <div className="space-y-2">
-                      {profileData.quizAttempts?.map((attempt: any, idx: number) => (
-                        <div
-                          key={attempt.attemptId || idx}
-                          className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-sm p-3 rounded-lg bg-white/[0.02] hover:bg-white/[0.04] transition-colors border border-white/[0.04]"
-                        >
-                          <div className="min-w-0">
-                            <p className="text-theme-text font-medium truncate">
-                              [Quiz] {attempt.quizTitle || 'Quiz'}
-                            </p>
-                            <p className="text-xs text-theme-muted">
-                              {[attempt.courseTitle, attempt.lectureTitle]
-                                .filter(Boolean)
-                                .join(' • ')}{' '}
-                              • {formatDateTime(attempt.submittedAt || attempt.startedAt)}
-                            </p>
-                          </div>
-                          <div className="flex items-center gap-2 shrink-0">
-                            <Badge
-                              variant={
-                                attempt.status === 'PASSED'
-                                  ? 'success'
-                                  : attempt.status === 'FAILED'
-                                    ? 'error'
-                                    : 'default'
-                              }
-                            >
-                              {attempt.earnedPoints != null &&
-                              attempt.totalPoints != null &&
-                              attempt.totalPoints > 0
-                                ? `${attempt.earnedPoints}/${attempt.totalPoints} (${attempt.score}%)`
-                                : `${attempt.score}%`}{' '}
-                              • {attempt.status}
-                            </Badge>
-                            {attempt.attemptId && (
-                              <button
-                                onClick={() => setReviewAttemptId(attempt.attemptId)}
-                                className="p-1.5 rounded hover:bg-accent-500/10 text-theme-muted hover:text-accent-400 transition-colors"
-                                title="Review attempt"
-                              >
-                                <Eye className="w-4 h-4" />
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-
-                      {profileData.examAttempts?.map((attempt: any, idx: number) => (
-                        <div
-                          key={attempt.attemptId || `exam_${idx}`}
-                          className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-sm p-3 rounded-lg bg-white/[0.02] hover:bg-white/[0.04] transition-colors border border-white/[0.04]"
-                        >
-                          <div className="min-w-0">
-                            <p className="text-theme-text font-medium truncate">
-                              [Exam] {attempt.examTitle || 'Exam'}
-                            </p>
-                            <p className="text-xs text-theme-muted">
-                              {[attempt.courseTitle, attempt.lectureTitle]
-                                .filter(Boolean)
-                                .join(' • ')}{' '}
-                              • {formatDateTime(attempt.submittedAt || attempt.startedAt)}
-                            </p>
-                          </div>
-                          <div className="flex items-center gap-2 shrink-0">
-                            <Badge
-                              variant={
-                                attempt.status === 'PASSED'
-                                  ? 'success'
-                                  : attempt.status === 'FAILED'
-                                    ? 'error'
-                                    : 'default'
-                              }
-                            >
-                              {attempt.earnedPoints != null &&
-                              attempt.totalPoints != null &&
-                              attempt.totalPoints > 0
-                                ? `${attempt.earnedPoints}/${attempt.totalPoints} (${attempt.score ?? 0}%)`
-                                : `${attempt.score ?? 0}%`}{' '}
-                              • {attempt.status}
-                            </Badge>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-sm text-theme-muted">No quiz or exam attempts yet.</p>
-                  )}
-                </div>
-              )}
-
-              {/* SECTION: Devices & Login Security History */}
-              {(activeTab === 'ALL' || activeTab === 'DEVICES') && (
-                <div className="glass bg-black/20 rounded-xl p-5 border border-white/[0.04] space-y-4">
-                  <h3 className="text-sm font-bold text-theme-muted uppercase tracking-wider flex items-center gap-2">
-                    <Smartphone className="w-4 h-4 text-accent-400" /> Device Binding & Security History
-                  </h3>
-                  {profileData.deviceHistory?.length > 0 ||
-                  profileData.deviceSessions?.length > 0 ? (
-                    <div className="overflow-x-auto rounded-lg border border-white/[0.06]">
-                      <table className="w-full text-xs">
-                        <thead>
-                          <tr className="bg-white/[0.03] text-theme-muted border-b border-white/[0.06]">
-                            <th className="p-2.5 text-left">Action</th>
-                            <th className="p-2.5 text-left">Device Fingerprint</th>
-                            <th className="p-2.5 text-left">IP Address</th>
-                            <th className="p-2.5 text-left">Browser</th>
-                            <th className="p-2.5 text-left">Date & Time</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-white/[0.04]">
-                          {profileData.deviceHistory?.map((dh: any) => (
-                            <tr key={dh.id} className="hover:bg-white/[0.02]">
-                              <td className="p-2.5">
-                                <Badge
-                                  variant={
-                                    dh.action === 'RESET'
-                                      ? 'warning'
-                                      : dh.action === 'REGISTERED'
-                                        ? 'success'
-                                        : 'default'
-                                  }
-                                >
-                                  {dh.action}
-                                </Badge>
-                              </td>
-                              <td className="p-2.5 font-mono text-theme-text">
-                                {dh.deviceFingerprint}
-                              </td>
-                              <td className="p-2.5 text-theme-muted">{dh.ipAddress || '—'}</td>
-                              <td className="p-2.5 text-theme-muted max-w-xs truncate" title={dh.browser}>
-                                {dh.browser || '—'}
-                              </td>
-                              <td className="p-2.5 text-theme-muted">
-                                {formatDateTime(dh.createdAt)}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  ) : (
-                    <p className="text-sm text-theme-muted">No device history recorded yet.</p>
-                  )}
-                </div>
-              )}
-
-              {/* SECTION: Complete Chronological Timeline (Registration to Now) */}
-              {(activeTab === 'ALL' || activeTab === 'TIMELINE') && (
-                <div className="glass bg-black/20 rounded-xl p-5 border border-white/[0.04] space-y-4">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                    <h3 className="text-sm font-bold text-theme-muted uppercase tracking-wider flex items-center gap-2">
-                      <Activity className="w-4 h-4 text-accent-400" /> Complete Chronological Evidence Timeline (Registration → Now)
-                    </h3>
-                    <select
-                      value={timelineFilter}
-                      onChange={(e) => setTimelineFilter(e.target.value)}
-                      className="bg-theme-card border border-theme-border rounded-lg px-2.5 py-1 text-xs text-theme-text"
-                    >
-                      <option value="ALL">All Events ({profileData.timeline?.length || 0})</option>
-                      <option value="REGISTRATION">Registration</option>
-                      <option value="COURSE_ACCESS">Course Access</option>
-                      <option value="LECTURE_ACCESS">Lecture Access</option>
-                      <option value="CODE_REDEMPTION">Code Redemptions</option>
-                      <option value="VIDEO_WATCH">Video Watches</option>
-                      <option value="VIDEO_COMPLETE">Video Completions</option>
-                      <option value="QUIZ_ATTEMPT">Quiz Attempts</option>
-                      <option value="EXAM_ATTEMPT">Exam Attempts</option>
-                      <option value="DEVICE_EVENT">Device Events</option>
-                      <option value="ADMIN_ACTION">Admin Actions</option>
-                    </select>
-                  </div>
-
-                  {filteredTimeline.length > 0 ? (
-                    <div className="max-h-96 overflow-y-auto scrollbar-thin rounded-lg border border-white/[0.06]">
-                      <table className="w-full text-xs">
-                        <thead className="sticky top-0 bg-base-900 z-10">
-                          <tr className="text-theme-muted border-b border-white/[0.06]">
-                            <th className="p-2.5 text-left w-10">#</th>
-                            <th className="p-2.5 text-left w-44">Date & Time</th>
-                            <th className="p-2.5 text-left w-32">Category</th>
-                            <th className="p-2.5 text-left">Event</th>
-                            <th className="p-2.5 text-left">Details</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-white/[0.04]">
-                          {filteredTimeline.map((ev: any, idx: number) => (
-                            <tr key={ev.id || idx} className="hover:bg-white/[0.02]">
-                              <td className="p-2.5 text-theme-muted">{idx + 1}</td>
-                              <td className="p-2.5 font-mono text-theme-text whitespace-nowrap">
-                                {formatDateTime(ev.timestamp)}
-                              </td>
-                              <td className="p-2.5">
-                                <Badge variant="default">{ev.category}</Badge>
-                              </td>
-                              <td className="p-2.5 font-semibold text-theme-text">{ev.title}</td>
-                              <td className="p-2.5 text-theme-muted">{ev.details}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  ) : (
-                    <p className="text-sm text-theme-muted">No timeline events found.</p>
-                  )}
-                </div>
-              )}
-            </div>
+                  </li>
+                );
+              })}
+            </ul>
           )}
         </div>
-      )}
-      <ConfirmDialog
-        open={confirmState.open}
-        title={confirmState.title}
-        message={confirmState.message}
-        onConfirm={handleConfirm}
-        onCancel={handleCancel}
-      />
-      {reviewAttemptId && (
-        <QuizAttemptReviewModal
-          attemptId={reviewAttemptId}
-          onClose={() => setReviewAttemptId(null)}
-        />
+      </aside>
+
+      {/* Student details */}
+      {selectedStudentId && (
+        <div className="flex-1 min-w-0 glass rounded-2xl border border-theme-border overflow-hidden animate-fade-in">
+          <StudentDossier
+            key={selectedStudentId}
+            studentId={selectedStudentId}
+            tab={tab}
+            onTabChange={setTab}
+            onClose={() => setSelectedStudentId(null)}
+            onAccountChanged={() => fetchStudents(debouncedSearch)}
+            onPrint={printStudentFullHistory}
+            onExportCsv={downloadStudentHistoryCsv}
+          />
+        </div>
       )}
     </div>
   );
