@@ -42,6 +42,7 @@ interface Stats {
   unhelpful: number;
   unansweredOpen: number;
   aiEnabled: boolean;
+  ai?: { gemini: 'ok' | 'rejected' | 'not_set'; groq: 'ok' | 'rejected' | 'not_set' };
 }
 
 type Draft = Omit<Faq, 'id' | 'timesShown' | 'helpfulCount' | 'unhelpfulCount'> & { id?: string };
@@ -175,7 +176,7 @@ export function AdminSupportBot() {
         <Stat
           label={t('supportAdmin.stats.helpful')}
           value={rated ? `${Math.round(((stats?.helpful ?? 0) / rated) * 100)}%` : '—'}
-          sub={stats ? (stats.aiEnabled ? t('supportAdmin.stats.aiOn') : t('supportAdmin.stats.aiOff')) : ''}
+          sub={stats ? aiLabel(stats, t) : ''}
         />
       </div>
 
@@ -497,4 +498,16 @@ function Field({ label, hint, bad, children }: { label: string; hint?: string; b
       {hint && <span className={`block text-[11px] ${bad ? 'text-error-500' : 'text-theme-muted'}`}>{hint}</span>}
     </label>
   );
+}
+
+/** "AI matching on", "AI off", or which key was rejected (and whether the other one is covering). */
+function aiLabel(stats: Stats, t: (k: string, o?: Record<string, unknown>) => string) {
+  if (!stats.aiEnabled) return t('supportAdmin.stats.aiOff');
+  const ai = stats.ai;
+  if (!ai) return t('supportAdmin.stats.aiOn');
+  const rejected = (['gemini', 'groq'] as const).filter((p) => ai[p] === 'rejected');
+  if (rejected.length === 0) return t('supportAdmin.stats.aiOn');
+  const names = rejected.map((p) => (p === 'gemini' ? 'Gemini' : 'Groq')).join(' + ');
+  const backup = (['gemini', 'groq'] as const).some((p) => ai[p] === 'ok');
+  return t(backup ? 'supportAdmin.stats.keyRejectedBackup' : 'supportAdmin.stats.keyRejected', { names });
 }

@@ -867,7 +867,9 @@
       "toReview": "waiting for an answer",
       "helpful": "Helpful",
       "aiOn": "AI matching on",
-      "aiOff": "AI off: word matching only"
+      "aiOff": "AI off: word matching only",
+      "keyRejected": "{{names}} key rejected: word matching only. Replace it in .env",
+      "keyRejectedBackup": "{{names}} key rejected: using the other AI. Replace it in .env"
     },
     "f": {
       "questionAr": "Question (Arabic)",
