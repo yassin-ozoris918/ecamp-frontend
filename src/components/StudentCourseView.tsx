@@ -1,5 +1,5 @@
 import toast from 'react-hot-toast';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   BookOpen,
   KeyRound,
@@ -8,11 +8,18 @@ import {
   Clock,
   Sparkles,
   CheckCircle2,
+  ChevronDown,
+  ShieldCheck,
+  Gift,
+  AlarmClock,
 } from 'lucide-react';
+import { LectureRow, lectureStatus } from './student/LectureRow';
+import { ProgressRing } from './common/ProgressRing';
+import { formatDate, percent } from '../lib/format';
 import { api } from '../lib/api';
 import { useAuth } from '../lib/authContext';
 import { Link, useRouter } from '../lib/router';
-import type { Course, Chapter, Lecture, CourseExamItem } from '../lib/types';
+import type { Course, Chapter, Lecture, CourseExamItem, CourseAccessSummary } from '../lib/types';
 import { Badge, Spinner } from './ui';
 import { Modal } from './Modal';
 import { useConfirm, ConfirmDialog } from '../hooks/useConfirm';
@@ -21,9 +28,12 @@ import { useTranslation } from 'react-i18next';
 export function StudentCourseView({ courseId }: { courseId: string }) {
   const { profile } = useAuth();
   const { navigate } = useRouter();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   const [course, setCourse] = useState<Course | null>(null);
+  const [access, setAccess] = useState<CourseAccessSummary | null>(null);
+  // Chapters the student collapsed (all start open).
+  const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const [chapters, setChapters] = useState<(Chapter & { lectures: Lecture[] })[]>([]);
   const [standaloneLectures, setStandaloneLectures] = useState<Lecture[]>([]);
   const [exams, setExams] = useState<(CourseExamItem & { isPassed?: boolean; attemptsCount?: number; passGrade?: number })[]>([]);
@@ -54,6 +64,7 @@ export function StudentCourseView({ courseId }: { courseId: string }) {
       setChapters(Array.isArray(data?.chapters) ? data.chapters : []);
       setStandaloneLectures(Array.isArray(data?.standaloneLectures) ? data.standaloneLectures : []);
       setExams(Array.isArray(data?.exams) ? data.exams : []);
+      setAccess(data?.access ?? null);
     } catch (e: unknown) {
       if (!silent) setError((e as any)?.response?.data?.message || t('courseView.failedLoadSyllabus'));
     } finally {
@@ -156,6 +167,30 @@ export function StudentCourseView({ courseId }: { courseId: string }) {
     }
   }
 
+  const allLectures = useMemo(
+    () => [...chapters.flatMap((c) => c.lectures), ...standaloneLectures],
+    [chapters, standaloneLectures],
+  );
+  const usable = allLectures.filter((l) => l.isUnlocked && !l.isExpired);
+  const completedCount = usable.filter((l) => lectureStatus(l) === 'completed').length;
+  const itemsDone = usable.reduce((n, l) => n + (l.progress?.done ?? 0), 0);
+  const itemsTotal = usable.reduce((n, l) => n + (l.progress?.total ?? 0), 0);
+  const coursePct = percent(itemsDone, itemsTotal);
+  // Next lecture to work on: one already in progress, else the first not started.
+  const nextLecture =
+    usable.find((l) => lectureStatus(l) === 'inProgress') ?? usable.find((l) => lectureStatus(l) === 'notStarted') ?? null;
+
+  const toggleChapter = (id: string) =>
+    setCollapsed((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+
+  const openLecture = (l: Lecture) => (l.isStarted ? navigate(`/lecture/${l.id}`) : startLecture(l));
+  const unlockLecture = (l: Lecture) => setRedeemModal({ type: 'LECTURE', targetId: l.id });
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -176,37 +211,82 @@ export function StudentCourseView({ courseId }: { courseId: string }) {
   return (
     <div className="space-y-8 animate-fade-up">
       {/* Course Hero */}
-      <div className="glass rounded-3xl p-8 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-accent-500/10 blur-[100px] rounded-full pointer-events-none" />
-        
-        <div className="relative z-10 flex flex-col md:flex-row gap-8 items-start">
-          <div className="w-full md:w-64 aspect-video rounded-2xl overflow-hidden bg-theme-secondary shrink-0">
+      <div className="glass rounded-3xl p-6 sm:p-8 relative overflow-hidden">
+        <div className="absolute top-0 end-0 w-96 h-96 bg-accent-500/10 blur-[100px] rounded-full pointer-events-none" />
+
+        <div className="relative z-10 flex flex-col md:flex-row gap-6 md:gap-8 items-start">
+          <div className={`${course.thumbnailUrl ? '' : 'hidden md:block'} w-full md:w-64 aspect-video rounded-2xl overflow-hidden shrink-0 bg-gradient-to-br from-accent-500/30 via-accent-700/20 to-secondary-500/20 border border-theme-border`}>
             {course.thumbnailUrl ? (
               <img src={course.thumbnailUrl} alt={course.title} loading="lazy" className="w-full h-full object-cover" />
             ) : (
-              <div className="w-full h-full flex items-center justify-center border border-white/[0.05]">
-                <BookOpen className="w-12 h-12 text-neutral-700" />
+              <div className="w-full h-full flex items-center justify-center">
+                <BookOpen className="w-12 h-12 text-accent-600/60 dark:text-accent-300/60" />
               </div>
             )}
           </div>
-          
-          <div className="flex-1">
-            <Badge variant="accent" className="mb-4">{t('courseView.courseSyllabus')}</Badge>
-            <h1 className="text-3xl md:text-4xl font-display font-bold text-theme-text tracking-tight mb-3">
+
+          <div className="flex-1 min-w-0 w-full">
+            <h1 dir="auto" className="text-3xl md:text-4xl font-display font-bold text-theme-text tracking-tight">
               {course.title}
             </h1>
-            <p className="text-theme-muted text-lg leading-relaxed max-w-3xl mb-6 whitespace-pre-wrap" dir="auto">
+            <p className="text-theme-muted text-base leading-relaxed max-w-3xl mt-2 whitespace-pre-wrap" dir="auto">
               {course.description || t('courseView.noDesc')}
             </p>
-            {!course.isFree && (
-              <div className="flex flex-col sm:flex-row gap-3 items-center">
-                <button 
-                  onClick={() => setRedeemModal({ type: 'COURSE', targetId: courseId })} 
-                  className="btn-primary w-full sm:w-auto"
+
+            {/* Access status */}
+            <div className="mt-4 flex flex-wrap items-center gap-2">
+              {access?.isFree || course.isFree ? (
+                <span className="badge bg-secondary-500/10 text-secondary-700 dark:text-secondary-300">
+                  <Gift className="w-3.5 h-3.5" />
+                  {t('courseView.freeCourse')}
+                </span>
+              ) : access?.hasFullCourse ? (
+                <span className="badge bg-secondary-500/10 text-secondary-700 dark:text-secondary-300">
+                  <ShieldCheck className="w-3.5 h-3.5" />
+                  {t('courseView.fullAccess')}
+                  {access.courseExpiresAt && (
+                    <span className="font-normal opacity-80">· {t('courseView.accessUntil', { date: formatDate(access.courseExpiresAt, i18n.language) })}</span>
+                  )}
+                </span>
+              ) : access?.courseExpired ? (
+                <span className="badge bg-error-500/10 text-error-600 dark:text-error-300">
+                  <AlarmClock className="w-3.5 h-3.5" />
+                  {t('courseView.courseExpired')}
+                </span>
+              ) : null}
+            </div>
+
+            {/* Progress + next step */}
+            {usable.length > 0 && (
+              <div className="mt-5 flex flex-col sm:flex-row sm:items-center gap-4">
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                  <ProgressRing value={coursePct} size={52} stroke={5} label={t('courseView.courseProgress')}>
+                    <span className="text-xs font-bold text-theme-text">{coursePct}%</span>
+                  </ProgressRing>
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-theme-text">{t('courseView.courseProgress')}</p>
+                    <p className="text-xs text-theme-muted">{t('courseView.lecturesCompleted', { done: completedCount, total: usable.length })}</p>
+                  </div>
+                </div>
+                {nextLecture && (
+                  <button type="button" onClick={() => openLecture(nextLecture)} className="btn-primary w-full sm:w-auto sm:max-w-sm">
+                    <PlayCircle className="w-4 h-4 shrink-0" />
+                    <span className="truncate">{t(nextLecture.isStarted ? 'courseView.continueLecture' : 'courseView.startNext', { title: nextLecture.title })}</span>
+                  </button>
+                )}
+              </div>
+            )}
+
+            {!course.isFree && !access?.hasFullCourse && (
+              <div className="mt-5 flex flex-col sm:flex-row sm:items-center gap-3">
+                <button
+                  onClick={() => setRedeemModal({ type: 'COURSE', targetId: courseId })}
+                  className={`${usable.length > 0 ? 'btn-secondary' : 'btn-primary'} w-full sm:w-auto`}
                 >
                   <KeyRound className="w-4 h-4" />
                   {t('courseView.unlockFullCourse')}
                 </button>
+                <p className="text-xs text-theme-muted">{t('courseView.unlockHint')}</p>
               </div>
             )}
           </div>
@@ -224,108 +304,63 @@ export function StudentCourseView({ courseId }: { courseId: string }) {
         ) : (
           <div className="space-y-6">
             {/* Chapters with lectures */}
-            {chapters.map((chapter) => (
-              <div key={chapter.id} className="glass rounded-2xl overflow-hidden">
-                <div className="p-4 bg-white/[0.02] border-b border-theme-border">
-                  <h3 className="text-lg font-display font-bold text-theme-text">{chapter.title}</h3>
-                  {chapter.description && (
-                    <p className="text-sm text-theme-muted mt-1">{chapter.description}</p>
+            {chapters.map((chapter) => {
+              const open = !collapsed.has(chapter.id);
+              const done = chapter.lectures.filter((l) => lectureStatus(l) === 'completed').length;
+              const avail = chapter.lectures.filter((l) => l.isUnlocked && !l.isExpired).length;
+              return (
+                <div key={chapter.id} className="glass rounded-2xl overflow-hidden">
+                  <button
+                    type="button"
+                    onClick={() => toggleChapter(chapter.id)}
+                    aria-expanded={open}
+                    className="w-full p-4 flex items-center gap-3 text-start bg-theme-card/40 hover:bg-theme-card transition-colors"
+                  >
+                    <ChevronDown className={`w-4 h-4 text-theme-muted shrink-0 transition-transform ${open ? '' : '-rotate-90 rtl:rotate-90'}`} />
+                    <div className="flex-1 min-w-0">
+                      <h3 dir="auto" className="text-lg font-display font-bold text-theme-text">{chapter.title}</h3>
+                      {chapter.description && <p dir="auto" className="text-sm text-theme-muted mt-0.5">{chapter.description}</p>}
+                    </div>
+                    <span className="shrink-0 text-xs text-theme-muted">
+                      {avail > 0
+                        ? t('courseView.chapterProgress', { done, total: chapter.lectures.length })
+                        : t('courseView.meta.lectures', { count: chapter.lectures.length })}
+                    </span>
+                  </button>
+                  {open && (
+                    <div className="divide-y divide-theme-border border-t border-theme-border">
+                      {chapter.lectures.length === 0 ? (
+                        <p className="p-4 text-sm text-theme-muted">{t('courseView.noLectures')}</p>
+                      ) : (
+                        chapter.lectures.map((lecture: Lecture, idx: number) => (
+                          <LectureRow
+                            key={lecture.id}
+                            lecture={lecture}
+                            index={idx}
+                            onStart={startLecture}
+                            onUnlock={unlockLecture}
+                            onExpired={() => setShowExpiredModal(true)}
+                          />
+                        ))
+                      )}
+                    </div>
                   )}
                 </div>
-                <div className="divide-y divide-white/[0.04]">
-                  {chapter.lectures.map((lecture: Lecture, idx: number) => (
-                    <div key={lecture.id} className="p-4 flex flex-col sm:flex-row sm:items-center gap-4 hover:bg-white/[0.02] transition-colors">
-                      <div className="w-10 h-10 shrink-0 rounded-xl bg-theme-secondary border border-white/[0.05] flex items-center justify-center font-display font-bold text-sm text-theme-muted">
-                        {idx + 1}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-3 mb-1">
-                          <span className="text-base font-bold text-theme-text truncate">{lecture.title}</span>
-                          {lecture.isUnlocked && !lecture.isExpired && (
-                            <Badge variant="success">{t('courseView.active')}</Badge>
-                          )}
-                          {lecture.isExpired && (
-                            <Badge variant="error">{t('courseView.expired')}</Badge>
-                          )}
-                          {!lecture.isUnlocked && !lecture.isExpired && (
-                            <Badge variant="default">{t('courseView.unowned')}</Badge>
-                          )}
-                          {lecture.requiresOwnCode && !lecture.isUnlocked && (
-                            <Badge variant="warning">{t('courseView.ownCodeRequired')}</Badge>
-                          )}
-                        </div>
-                        {lecture.description && (
-                          <p className="text-sm text-theme-muted truncate">{lecture.description}</p>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-3 shrink-0">
-                        {lecture.isUnlocked && !lecture.isExpired ? (
-                          lecture.isStarted ? (
-                            <Link to={`/lecture/${lecture.id}`} className="btn-secondary text-sm">
-                              <PlayCircle className="w-4 h-4" />
-                              {t('courseView.openLecture')}
-                            </Link>
-                          ) : (
-                            <button onClick={() => startLecture(lecture)} className="btn-primary text-sm">
-                              <PlayCircle className="w-4 h-4" />
-                              {t('courseView.startLecture')}
-                            </button>
-                          )
-                        ) : (
-                          <button onClick={() => lecture.isExpired ? setShowExpiredModal(true) : setRedeemModal({ type: 'LECTURE', targetId: lecture.id })} className="btn-ghost text-theme-muted hover:text-theme-text hover:bg-white/5 text-sm">
-                            <Lock className="w-4 h-4" />
-                            {lecture.isExpired ? t('courseView.renewAccess') : t('courseView.unlockLecture')}
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
+              );
+            })}
 
             {/* Standalone lectures (not in a chapter) */}
             {standaloneLectures.length > 0 && (
-              <div className="divide-y divide-white/[0.04] glass rounded-2xl">
+              <div className="glass rounded-2xl overflow-hidden divide-y divide-theme-border">
                 {standaloneLectures.map((lecture: Lecture, idx: number) => (
-                  <div key={lecture.id} className="p-4 flex flex-col sm:flex-row sm:items-center gap-4 hover:bg-white/[0.02] transition-colors">
-                    <div className="w-10 h-10 shrink-0 rounded-xl bg-theme-secondary border border-white/[0.05] flex items-center justify-center font-display font-bold text-sm text-theme-muted">
-                      {idx + 1}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-3 mb-1">
-                        <span className="text-base font-bold text-theme-text truncate">{lecture.title}</span>
-                        {lecture.isUnlocked && !lecture.isExpired && (
-                          <Badge variant="success">Active</Badge>
-                        )}
-                        {lecture.isExpired && (
-                          <Badge variant="error">Expired</Badge>
-                        )}
-                        {!lecture.isUnlocked && !lecture.isExpired && (
-                          <Badge variant="default">Unowned</Badge>
-                        )}
-                        {lecture.requiresOwnCode && !lecture.isUnlocked && (
-                          <Badge variant="warning">{t('courseView.ownCodeRequired')}</Badge>
-                        )}
-                      </div>
-                      {lecture.description && (
-                        <p className="text-sm text-theme-muted truncate">{lecture.description}</p>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-3 shrink-0">
-                      {lecture.isUnlocked && !lecture.isExpired ? (
-                        <Link to={`/lecture/${lecture.id}`} className="btn-secondary text-sm">
-                          <PlayCircle className="w-4 h-4" />
-                          Open Lecture
-                        </Link>
-                      ) : (
-                        <button onClick={() => lecture.isExpired ? setShowExpiredModal(true) : setRedeemModal({ type: 'LECTURE', targetId: lecture.id })} className="btn-ghost text-theme-muted hover:text-theme-text hover:bg-white/5 text-sm">
-                          <Lock className="w-4 h-4" />
-                          {lecture.isExpired ? 'Renew Access' : 'Unlock Lecture'}
-                        </button>
-                      )}
-                    </div>
-                  </div>
+                  <LectureRow
+                    key={lecture.id}
+                    lecture={lecture}
+                    index={idx}
+                    onStart={startLecture}
+                    onUnlock={unlockLecture}
+                    onExpired={() => setShowExpiredModal(true)}
+                  />
                 ))}
               </div>
             )}

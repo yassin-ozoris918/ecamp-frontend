@@ -57,6 +57,7 @@ export function LecturePlaylist({ lectureId }: { lectureId: string }) {
   const { navigate } = useRouter();
 
   const [course, setCourse] = useState<Course | null>(null);
+  const [chapterTitle, setChapterTitle] = useState<string | null>(null);
   const [lecture, setLecture] = useState<Lecture | null>(null);
   const [allLectures, setAllLectures] = useState<Lecture[]>([]);
   const [items, setItems] = useState<LectureItem[]>([]);
@@ -93,6 +94,7 @@ export function LecturePlaylist({ lectureId }: { lectureId: string }) {
 
       setLecture(data.lecture || null);
       setCourse(data.course || null);
+      setChapterTitle(typeof data.chapterTitle === 'string' ? data.chapterTitle : null);
       setAllLectures(Array.isArray(data.allLectures) ? data.allLectures : []);
       const playlistData = Array.isArray(data.playlist) ? data.playlist : [];
       setItems(playlistData);
@@ -268,14 +270,26 @@ export function LecturePlaylist({ lectureId }: { lectureId: string }) {
     <div className="animate-fade-up">
       {/* Header */}
       <div className="mb-6">
-        <Link to="/dashboard" className="inline-flex items-center gap-1.5 text-sm text-theme-muted hover:text-theme-text mb-3">
-          <ArrowLeft className="w-4 h-4" />
-          Back to Dashboard
-        </Link>
+        {/* Breadcrumb: course › chapter */}
+        <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-sm text-theme-muted mb-3 min-w-0">
+          <Link
+            to={course?.id ? `/course/${course.id}` : '/dashboard'}
+            className="inline-flex items-center gap-1.5 hover:text-theme-text shrink-0"
+            aria-label={t('playlist.backToCourse')}
+          >
+            <ArrowLeft className="w-4 h-4 rtl:rotate-180" />
+            <span dir="auto" className="truncate max-w-[14rem] sm:max-w-xs font-medium">{course?.title ?? t('playlist.backToCourse')}</span>
+          </Link>
+          {chapterTitle && (
+            <>
+              <ChevronRight className="w-3.5 h-3.5 shrink-0 rtl:rotate-180" aria-hidden="true" />
+              <span dir="auto" className="truncate">{chapterTitle}</span>
+            </>
+          )}
+        </nav>
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div>
-            <p className="text-xs text-theme-muted uppercase tracking-wide">{course?.title}</p>
-            <h1 className="text-2xl sm:text-3xl font-display font-bold text-theme-text mt-1">{lecture?.title}</h1>
+          <div className="min-w-0">
+            <h1 dir="auto" className="text-2xl sm:text-3xl font-display font-bold text-theme-text">{lecture?.title}</h1>
           </div>
           {timeLeftMs !== null && (
             <CountdownPill 
@@ -525,9 +539,10 @@ function CountdownPill({ ms, warningHours, warningMinutes }: { ms: number, warni
         : isCritical
           ? 'bg-warning-500/10 border-warning-500/30 text-warning-200'
           : 'bg-theme-card border-theme-border text-theme-muted'
-    }`}>
+    }`} title={t('time.accessEndsIn')}>
       <Clock className="w-4 h-4" />
-      <span className="font-mono text-sm font-semibold">
+      {!expired && <span className="text-xs">{t('time.accessEndsIn')}</span>}
+      <span className="font-mono text-sm font-semibold" dir="ltr">
         {expired ? t('playlist.expired') : `${days}d ${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`}
       </span>
     </div>

@@ -15,7 +15,16 @@
     "auditLogs": "سجلات المراجعة",
     "reports": "التقارير",
     "files": "الملفات",
-    "help": "الشروحات والتعليمات"
+    "help": "الشروحات والتعليمات",
+    "catalog": "تصفح المقررات",
+    "home": "الرئيسية",
+    "more": "المزيد",
+    "account": "الحساب",
+    "profile": "ملفي الشخصي",
+    "coursesShort": "المقررات",
+    "xp": "نقاط",
+    "streak": "أيام متتالية",
+    "daysShort": "ي"
   },
   "files": {
     "title": "الملفات",
@@ -36,7 +45,14 @@
     "codeAlreadyUsed": "الكود مستخدم من قبل",
     "accessDenied": "تم رفض الوصول",
     "fileNotAvailable": "الملف غير متاح",
-    "redeemSuccess": "تم التفعيل بنجاح."
+    "redeemSuccess": "تم التفعيل بنجاح.",
+    "unlockedVia": "مفتوح عبر: {{source}}",
+    "source": {
+      "COURSE": "الوصول الكامل للمقرر",
+      "LECTURE": "الوصول للمحاضرة",
+      "COURSE_FILES_CODE": "كود مواد المقرر",
+      "FILE_CODE": "كود ملف واحد"
+    }
   },
   "auth": {
     "signIn": "تسجيل الدخول",
@@ -232,7 +248,20 @@
     "enrollNow": "الانضمام الآن",
     "featuredCourses": "المقررات المميزة",
     "available": "متاح",
-    "searchPlaceholder": "ابحث عن الكورسات والمحاضرات..."
+    "searchPlaceholder": "ابحث عن الكورسات والمحاضرات...",
+    "continueTitle": "تابع من حيث توقفت",
+    "upNext": "التالي: {{title}}",
+    "resume": "استكمال",
+    "itemsDone": "{{done}} من {{total}} مكتمل",
+    "endingSoonTitle": "وصول ينتهي قريبًا",
+    "endingSoonDesc": "أكمل هذه قبل انتهاء وقتها.",
+    "courseEndsSoon": "ينتهي وصولك الكامل لمقرر {{course}} قريبًا",
+    "lecturesCount_zero": "لا محاضرات",
+    "lecturesCount_one": "محاضرة واحدة",
+    "lecturesCount_two": "محاضرتان",
+    "lecturesCount_few": "{{count}} محاضرات",
+    "lecturesCount_many": "{{count}} محاضرة",
+    "lecturesCount_other": "{{count}} محاضرة"
   },
   "playlist": {
     "playlist": "قائمة المحاضرة",
@@ -254,7 +283,8 @@
     "lectureXofY": "المحاضرة {{x}} من {{y}}",
     "courseOverview": "نظرة عامة على الدورة",
     "upNext": "التالي",
-    "completed": "مكتمل"
+    "completed": "مكتمل",
+    "backToCourse": "العودة إلى المقرر"
   },
   "quiz": {
     "title": "الاختبار",
@@ -415,7 +445,37 @@
     "pendingGrading": "امتحانات تنتظر التصحيح",
     "evaluateAi": "تصحيح بالذكاء الاصطناعي",
     "overrideGrade": "تعديل الدرجة",
-    "studentsList": "سجل الطلاب"
+    "studentsList": "سجل الطلاب",
+    "kpi": {
+      "courses": "مقرراتي",
+      "myStudents": "طلابي المسجلون",
+      "platformHs": "المنصة · ثانوي",
+      "platformUni": "المنصة · جامعي"
+    },
+    "pendingTitle": "امتحانات في انتظار التصحيح",
+    "pendingDesc_zero": "لا توجد إجابات بانتظارك",
+    "pendingDesc_one": "إجابة واحدة بانتظار مراجعتك",
+    "pendingDesc_two": "إجابتان بانتظار مراجعتك",
+    "pendingDesc_few": "{{count}} إجابات بانتظار مراجعتك",
+    "pendingDesc_many": "{{count}} إجابة بانتظار مراجعتك",
+    "pendingDesc_other": "{{count}} إجابة بانتظار مراجعتك",
+    "quizReviewTitle": "مراجعة إجابات الاختبارات",
+    "quizReviewDesc": "راجع إجابات الطلاب وعدّل درجات الأسئلة المقالية.",
+    "allCourses": "كل المقررات",
+    "noCoursesDesc": "لا توجد مقررات مسندة إليك بعد.",
+    "openCourse": "فتح المقرر",
+    "materialsOnly": "مواد فقط",
+    "studentsCount_zero": "لا طلاب",
+    "studentsCount_one": "طالب واحد",
+    "studentsCount_two": "طالبان",
+    "studentsCount_few": "{{count}} طلاب",
+    "studentsCount_many": "{{count}} طالبًا",
+    "studentsCount_other": "{{count}} طالب",
+    "status": {
+      "PUBLISHED": "منشور",
+      "DRAFT": "مسودة",
+      "ARCHIVED": "مؤرشف"
+    }
   },
   "admin": {
     "title": "إدارة النظام والمنصة",
@@ -475,7 +535,18 @@
     "heroDesc": "استكشف مكتبتنا الشاملة من المقررات الهندسية والتدريبية لتطوير مسارك المهني والأكاديمي.",
     "noCourses": "لا توجد كورسات منشورة حالياً",
     "checkBackSoon": "عد لزيارتنا قريباً!",
-    "noDescription": "لا يوجد وصف محدد."
+    "noDescription": "لا يوجد وصف محدد.",
+    "title": "تصفح المقررات",
+    "subtitle": "المقررات المتاحة لبرنامجك الدراسي.",
+    "highSchool": "الثانوية العامة",
+    "university": "الجامعة",
+    "search": "ابحث عن مقرر…",
+    "loadError": "تعذّر تحميل المقررات.",
+    "noMatch": "لا توجد نتائج",
+    "noMatchDesc": "جرّب كلمة أخرى.",
+    "enrolled": "مشترك",
+    "viewCourse": "عرض المقرر",
+    "loginRequired": "سجّل الدخول لعرض المقررات."
   },
   "contact": {
     "title": "الدعم والتواصل",
@@ -533,7 +604,52 @@
     "codePlaceholder": "XXXX-XXXX-XXXX",
     "redeeming": "جاري الاسترداد...",
     "redeem": "استرداد الرمز",
-    "redeemSuccess": "تم استرداد الرمز بنجاح! تم فتح المحتوى."
+    "redeemSuccess": "تم استرداد الرمز بنجاح! تم فتح المحتوى.",
+    "fullAccess": "وصول كامل للمقرر",
+    "accessUntil": "حتى {{date}}",
+    "freeCourse": "مقرر مجاني",
+    "courseExpired": "انتهى وصولك لهذا المقرر",
+    "courseProgress": "تقدمك",
+    "lecturesCompleted": "{{done}} من {{total}} محاضرات مكتملة",
+    "continueLecture": "تابع: {{title}}",
+    "startNext": "ابدأ: {{title}}",
+    "unlockHint": "لديك كود تفعيل؟ افتح المقرر كاملًا، أو محاضرة واحدة من القائمة.",
+    "chapterProgress": "{{done}} / {{total}} مكتملة",
+    "continue": "متابعة",
+    "review": "مراجعة",
+    "status": {
+      "notStarted": "لم تبدأ",
+      "inProgress": "قيد التقدم",
+      "completed": "مكتملة",
+      "locked": "مقفلة",
+      "expired": "منتهية"
+    },
+    "meta": {
+      "videos_zero": "لا فيديوهات",
+      "videos_one": "فيديو واحد",
+      "videos_two": "فيديوهان",
+      "videos_few": "{{count}} فيديوهات",
+      "videos_many": "{{count}} فيديو",
+      "videos_other": "{{count}} فيديو",
+      "quizzes_zero": "لا اختبارات",
+      "quizzes_one": "اختبار واحد",
+      "quizzes_two": "اختباران",
+      "quizzes_few": "{{count}} اختبارات",
+      "quizzes_many": "{{count}} اختبارًا",
+      "quizzes_other": "{{count}} اختبار",
+      "files_zero": "لا ملفات",
+      "files_one": "ملف واحد",
+      "files_two": "ملفان",
+      "files_few": "{{count}} ملفات",
+      "files_many": "{{count}} ملفًا",
+      "files_other": "{{count}} ملف",
+      "lectures_zero": "لا محاضرات",
+      "lectures_one": "محاضرة واحدة",
+      "lectures_two": "محاضرتان",
+      "lectures_few": "{{count}} محاضرات",
+      "lectures_many": "{{count}} محاضرة",
+      "lectures_other": "{{count}} محاضرة"
+    }
   },
   "viewLimit": {
     "exhaustedTitle": "تم الوصول إلى حد المشاهدات",
@@ -595,5 +711,20 @@
     "materialAdded_few": "تمت إضافة {{count}} ملفات جديدة إلى {{lectureTitle}} في {{courseTitle}}",
     "materialAdded_many": "تمت إضافة {{count}} ملفًا جديدًا إلى {{lectureTitle}} في {{courseTitle}}",
     "materialAdded_other": "تمت إضافة {{count}} ملف جديد إلى {{lectureTitle}} في {{courseTitle}}"
+  },
+  "time": {
+    "endsIn": "ينتهي خلال {{time}}",
+    "ended": "انتهى الوصول",
+    "dh": "{{d}} ي {{h}} س",
+    "hm": "{{h}} س {{m}} د",
+    "m": "{{m}} د",
+    "durMin": "{{m}} دقيقة",
+    "durHourMin": "{{h}} س {{m}} د",
+    "accessEndsIn": "ينتهي الوصول خلال"
+  },
+  "roles": {
+    "STUDENT": "طالب",
+    "INSTRUCTOR": "محاضر",
+    "ADMIN": "مسؤول"
   }
 }

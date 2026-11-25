@@ -90,6 +90,8 @@ export interface Course {
   introductoryVideoUrl?: string | null;
   status: ContentStatus;
   type?: 'NORMAL' | 'MATERIALS_ONLY';
+  /** Counts returned by staff course lists. */
+  _count?: { lectures?: number; chapters?: number; studentAccess?: number };
   audienceType?: EducationLevel;
 
   // --- Targeting Additions ---
@@ -159,6 +161,13 @@ export interface Lecture {
   isStarted?: boolean;
   /** Locked lecture: needs its own lecture code even with full-course access. */
   requiresOwnCode?: boolean;
+  /** When this student's own timer for the lecture ends (null = no timer / not started). */
+  accessEndsAt?: string | null;
+  /** Finished videos + passed quizzes, out of all videos + quizzes. */
+  progress?: { done: number; total: number };
+  counts?: { videos: number; quizzes: number; files: number };
+  /** Total video length in seconds. */
+  durationSec?: number;
   isPublished?: boolean;
   warningHours?: number;
   warningMinutes?: number;
@@ -739,4 +748,13 @@ export interface QuizAttemptReview {
   startedAt: string;
   passGrade: number;
   questions: QuizReviewQuestion[];
+}
+
+/** How the current student can use a course (from GET /progress/course/:id/syllabus). */
+export interface CourseAccessSummary {
+  hasFullCourse: boolean;
+  courseExpiresAt: string | null;
+  courseExpired: boolean;
+  isFree: boolean;
+  isDemo: boolean;
 }

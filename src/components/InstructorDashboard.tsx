@@ -48,9 +48,10 @@ export function InstructorDashboard() {
     setLoading(true);
 
     try {
-      const [coursesRes, statsRes] = await Promise.all([
+      const [coursesRes, statsRes, pendingRes] = await Promise.all([
         api.get('/instructor/courses').catch(() => ({ data: [] })),
-        api.get('/instructor/dashboard/stats').catch(() => ({ data: { myTotalStudents: 0, totalHighSchoolStudents: 0, totalUniversityStudents: 0 } }))
+        api.get('/instructor/dashboard/stats').catch(() => ({ data: { myTotalStudents: 0, totalHighSchoolStudents: 0, totalUniversityStudents: 0 } })),
+        api.get('/instructor-dashboard/exams/pending').catch(() => ({ data: [] })),
       ]);
 
       const fetched = coursesRes.data?.items || coursesRes.data || [];
@@ -58,7 +59,9 @@ export function InstructorDashboard() {
       setStudentCount(statsRes.data?.myTotalStudents || 0);
       setPlatformHs(statsRes.data?.totalHighSchoolStudents || 0);
       setPlatformUni(statsRes.data?.totalUniversityStudents || 0);
-      setPendingGrading(0);
+      // Exams waiting for manual (essay) grading — drives the "needs attention" card.
+      const pending = pendingRes.data?.items ?? pendingRes.data;
+      setPendingGrading(Array.isArray(pending) ? pending.length : 0);
       setCodesGenerated(0);
     } catch (e) {
       console.error(e);
@@ -84,10 +87,10 @@ export function InstructorDashboard() {
 
       {/* KPIs */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <KpiCard icon={<BookOpen className="w-5 h-5" />} label="Total Courses" value={courses.length} color="text-accent-700 dark:text-accent-300" bg="bg-accent-500/10" loading={loading} />
-        <KpiCard icon={<Users className="w-5 h-5" />} label="My Enrolled Students" value={studentCount} color="text-secondary-700 dark:text-secondary-300" bg="bg-secondary-500/10" loading={loading} />
-        <KpiCard icon={<Users className="w-5 h-5" />} label="Platform (High School)" value={platformHs} color="text-emerald-700 dark:text-emerald-300" bg="bg-emerald-500/10" loading={loading} />
-        <KpiCard icon={<Users className="w-5 h-5" />} label="Platform (University)" value={platformUni} color="text-blue-700 dark:text-blue-300" bg="bg-blue-500/10" loading={loading} />
+        <KpiCard icon={<BookOpen className="w-5 h-5" />} label={t('instructor.kpi.courses')} value={courses.length} color="text-accent-700 dark:text-accent-300" bg="bg-accent-500/10" loading={loading} />
+        <KpiCard icon={<Users className="w-5 h-5" />} label={t('instructor.kpi.myStudents')} value={studentCount} color="text-secondary-700 dark:text-secondary-300" bg="bg-secondary-500/10" loading={loading} />
+        <KpiCard icon={<Users className="w-5 h-5" />} label={t('instructor.kpi.platformHs')} value={platformHs} color="text-emerald-700 dark:text-emerald-300" bg="bg-emerald-500/10" loading={loading} />
+        <KpiCard icon={<Users className="w-5 h-5" />} label={t('instructor.kpi.platformUni')} value={platformUni} color="text-blue-700 dark:text-blue-300" bg="bg-blue-500/10" loading={loading} />
       </div>
 
       {/* Pending grading alert */}
@@ -100,10 +103,8 @@ export function InstructorDashboard() {
             <AlertCircle className="w-6 h-6" />
           </div>
           <div className="flex-1">
-            <p className="font-display font-bold text-theme-text">Exams pending manual grading</p>
-            <p className="text-sm text-theme-muted">
-              {pendingGrading} {pendingGrading === 1 ? 'submission' : 'submissions'} need{pendingGrading === 1 ? 's' : ''} your attention
-            </p>
+            <p className="font-display font-bold text-theme-text">{t('instructor.pendingTitle')}</p>
+            <p className="text-sm text-theme-muted">{t('instructor.pendingDesc', { count: pendingGrading })}</p>
           </div>
           <ChevronRight className="w-5 h-5 text-theme-muted" />
         </Link>
@@ -118,10 +119,8 @@ export function InstructorDashboard() {
           <Shield className="w-6 h-6" />
         </div>
         <div className="flex-1">
-          <p className="font-display font-bold text-theme-text">Quiz Answer Review</p>
-          <p className="text-sm text-theme-muted">
-            Review student quiz submissions and override subjective grades
-          </p>
+          <p className="font-display font-bold text-theme-text">{t('instructor.quizReviewTitle')}</p>
+          <p className="text-sm text-theme-muted">{t('instructor.quizReviewDesc')}</p>
         </div>
         <ChevronRight className="w-5 h-5 text-theme-muted" />
       </Link>
@@ -131,7 +130,7 @@ export function InstructorDashboard() {
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-display font-bold text-theme-text">{t('dashboard.yourCourses')}</h2>
           <Link to="/instructor/courses" className="text-sm text-accent-700 dark:text-accent-300 hover:text-accent-200">
-            {t('dashboard.viewDetails')}
+            {t('instructor.allCourses')}
           </Link>
         </div>
 
@@ -143,8 +142,8 @@ export function InstructorDashboard() {
           <EmptyState
             icon={<BookOpen className="w-8 h-8" />}
             title={t('dashboard.noCoursesYet')}
-            description="You don't have any assigned courses yet."
-          />
+            description={t('instructor.noCoursesDesc')}
+/>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {(Array.isArray(courses) ? courses : []).map((c) => {
@@ -159,29 +158,37 @@ export function InstructorDashboard() {
                   className="h-32 relative bg-gradient-to-br bg-theme-secondary shrink-0"
                   style={{ background: c.thumbnailUrl ? 'none' : cover.gradient }}
                 >
-                  {c.thumbnailUrl && (
+                  {c.thumbnailUrl ? (
                     <img src={c.thumbnailUrl} alt={c.title} className="w-full h-full object-cover absolute inset-0" />
+                  ) : (
+                    <BookOpen className="absolute bottom-3 end-4 w-12 h-12 text-white/25" aria-hidden="true" />
                   )}
                   <div className="absolute inset-0 bg-theme-bg/20" />
-                  <div className="absolute top-2 right-2 flex flex-col gap-2 items-end">
-                    <Badge variant={c.status === 'PUBLISHED' ? 'success' : 'warning'} className="bg-black/60 backdrop-blur-md border-theme-border">
-                      {c.status}
-                    </Badge>
-                  </div>
-                  {c.validity_days && (
-                    <div className="absolute top-2 left-2">
-                      <Badge variant="default" className="bg-black/60 backdrop-blur-md border-theme-border">
-                        {c.validity_days}d access
+                  {c.status && (
+                    <div className="absolute top-2 end-2 flex gap-2">
+                      {c.type === 'MATERIALS_ONLY' && (
+                        <Badge variant="default" className="bg-black/60 backdrop-blur-md border-theme-border text-white">
+                          {t('instructor.materialsOnly')}
+                        </Badge>
+                      )}
+                      <Badge variant={c.status === 'PUBLISHED' ? 'success' : 'warning'} className="bg-black/60 backdrop-blur-md border-theme-border">
+                        {t(`instructor.status.${c.status}`, c.status)}
                       </Badge>
                     </div>
                   )}
                 </div>
-                
+
                 <div className="p-5 flex-1 flex flex-col">
-                  <p className="font-display font-bold text-theme-text text-lg leading-snug group-hover:text-accent-200 transition-colors">{c.title}</p>
-                  <p className="text-sm text-theme-muted mt-1 line-clamp-2">{c.description}</p>
-                  <div className="mt-auto pt-4 flex items-center gap-2 text-sm text-accent-700 dark:text-accent-300">
-                    View Details <ChevronRight className="w-4 h-4" />
+                  <p dir="auto" className="font-display font-bold text-theme-text text-lg leading-snug group-hover:text-accent-600 dark:group-hover:text-accent-200 transition-colors">{c.title}</p>
+                  <p dir="auto" className="text-sm text-theme-muted mt-1 line-clamp-2">{c.description}</p>
+                  {c._count && (
+                    <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-theme-muted">
+                      <span className="inline-flex items-center gap-1"><BookOpen className="w-3.5 h-3.5" />{t('courseView.meta.lectures', { count: c._count.lectures ?? 0 })}</span>
+                      <span className="inline-flex items-center gap-1"><Users className="w-3.5 h-3.5" />{t('instructor.studentsCount', { count: c._count.studentAccess ?? 0 })}</span>
+                    </div>
+                  )}
+                  <div className="mt-auto pt-4 flex items-center gap-1 text-sm font-semibold text-accent-700 dark:text-accent-300">
+                    {t('instructor.openCourse')} <ChevronRight className="w-4 h-4 rtl:rotate-180" />
                   </div>
                 </div>
               </Link>

@@ -217,7 +217,7 @@ export function FilesTab({ hideHeader = false }: { hideHeader?: boolean }) {
                 <p className="line-clamp-1"><span className="font-medium">Course:</span> {file.course?.title}</p>
                 <p className="line-clamp-1"><span className="font-medium">Lecture:</span> {file.lecture?.title}</p>
                 {file.accessSource && (
-                  <p className="text-xs text-accent-400 mt-2">Unlocked via: {file.accessSource}</p>
+                  <p className="text-xs text-accent-600 dark:text-accent-400 mt-2">{t('files.unlockedVia', { source: t(`files.source.${file.accessSource}`, file.accessSource) })}</p>
                 )}
               </div>
 

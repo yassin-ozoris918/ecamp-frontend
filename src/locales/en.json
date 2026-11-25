@@ -15,7 +15,16 @@
     "auditLogs": "Audit Logs",
     "reports": "Reports",
     "files": "Files",
-    "help": "Help & Guides"
+    "help": "Help & Guides",
+    "catalog": "Browse courses",
+    "home": "Home",
+    "more": "More",
+    "account": "Account",
+    "profile": "My profile",
+    "coursesShort": "Courses",
+    "xp": "XP",
+    "streak": "Streak",
+    "daysShort": "d"
   },
   "files": {
     "title": "Files",
@@ -36,7 +45,14 @@
     "codeAlreadyUsed": "Code Already Used",
     "accessDenied": "Access Denied",
     "fileNotAvailable": "File Not Available",
-    "redeemSuccess": "Code redeemed successfully."
+    "redeemSuccess": "Code redeemed successfully.",
+    "unlockedVia": "Unlocked with: {{source}}",
+    "source": {
+      "COURSE": "full-course access",
+      "LECTURE": "lecture access",
+      "COURSE_FILES_CODE": "course materials code",
+      "FILE_CODE": "single-file code"
+    }
   },
   "auth": {
     "signIn": "Sign In",
@@ -194,7 +210,16 @@
     "enrollNow": "Enroll Now",
     "featuredCourses": "Featured Courses",
     "available": "available",
-    "searchPlaceholder": "Search for courses..."
+    "searchPlaceholder": "Search for courses...",
+    "continueTitle": "Continue where you left off",
+    "upNext": "Up next: {{title}}",
+    "resume": "Resume",
+    "itemsDone": "{{done}} of {{total}} done",
+    "endingSoonTitle": "Access ending soon",
+    "endingSoonDesc": "Finish these before their timer runs out.",
+    "courseEndsSoon": "Full access to {{course}} ends soon",
+    "lecturesCount_one": "{{count}} lecture",
+    "lecturesCount_other": "{{count}} lectures"
   },
   "playlist": {
     "playlist": "Lecture Playlist",
@@ -216,7 +241,8 @@
     "lectureXofY": "Lecture {{x}} of {{y}}",
     "courseOverview": "Course Overview",
     "upNext": "Up Next",
-    "completed": "Completed"
+    "completed": "Completed",
+    "backToCourse": "Back to course"
   },
   "quiz": {
     "title": "Quiz",
@@ -382,7 +408,29 @@
     "pendingGrading": "Pending Exam Grading",
     "evaluateAi": "Evaluate with AI",
     "overrideGrade": "Override Score",
-    "studentsList": "Student Roster"
+    "studentsList": "Student Roster",
+    "kpi": {
+      "courses": "My courses",
+      "myStudents": "My enrolled students",
+      "platformHs": "Platform · high school",
+      "platformUni": "Platform · university"
+    },
+    "pendingTitle": "Exams waiting for grading",
+    "pendingDesc_one": "{{count}} submission needs your attention",
+    "pendingDesc_other": "{{count}} submissions need your attention",
+    "quizReviewTitle": "Quiz answer review",
+    "quizReviewDesc": "Review students' quiz answers and adjust subjective grades.",
+    "allCourses": "All courses",
+    "noCoursesDesc": "You don't have any assigned courses yet.",
+    "openCourse": "Open course",
+    "materialsOnly": "Materials only",
+    "studentsCount_one": "{{count}} student",
+    "studentsCount_other": "{{count}} students",
+    "status": {
+      "PUBLISHED": "Published",
+      "DRAFT": "Draft",
+      "ARCHIVED": "Archived"
+    }
   },
   "admin": {
     "title": "System Administration",
@@ -480,7 +528,18 @@
     "heroDesc": "Explore our comprehensive library of professional courses designed to accelerate your career and personal growth.",
     "noCourses": "No courses published yet",
     "checkBackSoon": "Check back soon!",
-    "noDescription": "No description provided."
+    "noDescription": "No description provided.",
+    "title": "Browse courses",
+    "subtitle": "Courses available for your study program.",
+    "highSchool": "High school",
+    "university": "University",
+    "search": "Search courses…",
+    "loadError": "Couldn't load courses.",
+    "noMatch": "No matching courses",
+    "noMatchDesc": "Try a different word.",
+    "enrolled": "Enrolled",
+    "viewCourse": "View course",
+    "loginRequired": "Please sign in to view the catalog."
   },
   "contact": {
     "title": "Contact & Support",
@@ -538,7 +597,36 @@
     "codePlaceholder": "XXXX-XXXX-XXXX",
     "redeeming": "Redeeming...",
     "redeem": "Redeem Code",
-    "redeemSuccess": "Code redeemed successfully! Content unlocked."
+    "redeemSuccess": "Code redeemed successfully! Content unlocked.",
+    "fullAccess": "Full course access",
+    "accessUntil": "until {{date}}",
+    "freeCourse": "Free course",
+    "courseExpired": "Your course access has ended",
+    "courseProgress": "Your progress",
+    "lecturesCompleted": "{{done}} of {{total}} lectures completed",
+    "continueLecture": "Continue: {{title}}",
+    "startNext": "Start: {{title}}",
+    "unlockHint": "Have an activation code? Unlock the whole course, or a single lecture below.",
+    "chapterProgress": "{{done}} / {{total}} completed",
+    "continue": "Continue",
+    "review": "Review",
+    "status": {
+      "notStarted": "Not started",
+      "inProgress": "In progress",
+      "completed": "Completed",
+      "locked": "Locked",
+      "expired": "Expired"
+    },
+    "meta": {
+      "videos_one": "{{count}} video",
+      "videos_other": "{{count}} videos",
+      "quizzes_one": "{{count}} quiz",
+      "quizzes_other": "{{count}} quizzes",
+      "files_one": "{{count}} file",
+      "files_other": "{{count}} files",
+      "lectures_one": "{{count}} lecture",
+      "lectures_other": "{{count}} lectures"
+    }
   },
   "viewLimit": {
     "exhaustedTitle": "View Limit Reached",
@@ -584,5 +672,20 @@
     "sessionAdded_other": "{{count}} new sessions have been added to {{lectureTitle}} in {{courseTitle}}",
     "materialAdded_one": "New material has been added to {{lectureTitle}} in {{courseTitle}}",
     "materialAdded_other": "{{count}} new files have been added to {{lectureTitle}} in {{courseTitle}}"
+  },
+  "time": {
+    "endsIn": "Ends in {{time}}",
+    "ended": "Access ended",
+    "dh": "{{d}}d {{h}}h",
+    "hm": "{{h}}h {{m}}m",
+    "m": "{{m}}m",
+    "durMin": "{{m}} min",
+    "durHourMin": "{{h}} h {{m}} min",
+    "accessEndsIn": "Access ends in"
+  },
+  "roles": {
+    "STUDENT": "Student",
+    "INSTRUCTOR": "Instructor",
+    "ADMIN": "Admin"
   }
 }

@@ -17,14 +17,14 @@ import { Badge, EmptyState, ProgressBar, Skeleton } from './ui';
 import { useTranslation } from 'react-i18next';
 
 import { COURSE_COVERS } from '../lib/covers';
-import { FilesTab } from './FilesTab';
+import { ContinueLearning } from './student/ContinueLearning';
 import { HelpCenter } from './HelpCenter';
 
 export function StudentDashboard() {
   const { profile } = useAuth();
   const [courses, setCourses] = useState<CourseProgressItem[]>([]);
   const [catalogCourses, setCatalogCourses] = useState<Course[]>([]);
-  const [activeTab, setActiveTab] = useState<'my-courses' | 'catalog' | 'files' | 'help'>('my-courses');
+  const [activeTab, setActiveTab] = useState<'my-courses' | 'catalog' | 'help'>('my-courses');
   const [stats, setStats] = useState<{ xp: number; streakDays: number; rank: number | null } | null>(null);
   const [loading, setLoading] = useState(true);
   const { t } = useTranslation();
@@ -66,8 +66,11 @@ export function StudentDashboard() {
         </div>
       </div>
 
+      {/* Resume + access ending soon */}
+      <ContinueLearning />
+
       {/* Stats row */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <StatCard
           icon={<Star className="w-5 h-5" />}
           label={t('dashboard.totalXp')}
@@ -104,39 +107,32 @@ export function StudentDashboard() {
 
       {/* Active courses */}
       <div>
-        <div className="flex items-center justify-between mb-4 border-b border-theme-border pb-2">
-          <div className="flex gap-6">
+        <div className="flex items-center justify-between gap-4 mb-4 border-b border-theme-border pb-2">
+          <div className="flex gap-5 sm:gap-6 overflow-x-auto scrollbar-thin -mb-2 pb-2 min-w-0">
             <button
               onClick={() => setActiveTab('my-courses')}
-              className={`text-lg font-display font-bold pb-2 transition-colors relative ${activeTab === 'my-courses' ? 'text-theme-text' : 'text-theme-muted hover:text-theme-muted'}`}
+              className={`shrink-0 whitespace-nowrap text-base sm:text-lg font-display font-bold pb-2 transition-colors relative ${activeTab === 'my-courses' ? 'text-theme-text' : 'text-theme-muted hover:text-theme-text'}`}
             >
               {t('dashboard.yourCourses')}
-              {activeTab === 'my-courses' && <div className="absolute -bottom-[9px] left-0 right-0 h-[2px] bg-accent-400 rounded-t" />}
+              {activeTab === 'my-courses' && <div className="absolute -bottom-[9px] inset-x-0 h-[2px] bg-accent-400 rounded-t" />}
             </button>
             <button
               onClick={() => setActiveTab('catalog')}
-              className={`text-lg font-display font-bold pb-2 transition-colors relative ${activeTab === 'catalog' ? 'text-theme-text' : 'text-theme-muted hover:text-theme-muted'}`}
+              className={`shrink-0 whitespace-nowrap text-base sm:text-lg font-display font-bold pb-2 transition-colors relative ${activeTab === 'catalog' ? 'text-theme-text' : 'text-theme-muted hover:text-theme-text'}`}
             >
               {t('dashboard.courseCatalog')}
-              {activeTab === 'catalog' && <div className="absolute -bottom-[9px] left-0 right-0 h-[2px] bg-accent-400 rounded-t" />}
-            </button>
-            <button
-              onClick={() => setActiveTab('files')}
-              className={`text-lg font-display font-bold pb-2 transition-colors relative ${activeTab === 'files' ? 'text-theme-text' : 'text-theme-muted hover:text-theme-muted'}`}
-            >
-              {t('nav.files', 'Files')}
-              {activeTab === 'files' && <div className="absolute -bottom-[9px] left-0 right-0 h-[2px] bg-accent-400 rounded-t" />}
+              {activeTab === 'catalog' && <div className="absolute -bottom-[9px] inset-x-0 h-[2px] bg-accent-400 rounded-t" />}
             </button>
             <button
               onClick={() => setActiveTab('help')}
-              className={`text-lg font-display font-bold pb-2 transition-colors relative ${activeTab === 'help' ? 'text-theme-text' : 'text-theme-muted hover:text-theme-muted'}`}
+              className={`shrink-0 whitespace-nowrap text-base sm:text-lg font-display font-bold pb-2 transition-colors relative ${activeTab === 'help' ? 'text-theme-text' : 'text-theme-muted hover:text-theme-text'}`}
             >
               {t('nav.help', 'Help & Guides')}
-              {activeTab === 'help' && <div className="absolute -bottom-[9px] left-0 right-0 h-[2px] bg-accent-400 rounded-t" />}
+              {activeTab === 'help' && <div className="absolute -bottom-[9px] inset-x-0 h-[2px] bg-accent-400 rounded-t" />}
             </button>
           </div>
           {courses.length > 0 && activeTab === 'my-courses' && (
-            <Link to="/leaderboard" className="text-sm text-accent-700 dark:text-accent-300 hover:text-accent-200">
+            <Link to="/leaderboard" className="hidden sm:inline shrink-0 text-sm text-accent-700 dark:text-accent-300 hover:text-accent-200">
               {t('dashboard.viewLeaderboard')}
             </Link>
           )}
@@ -179,8 +175,10 @@ export function StudentDashboard() {
                       className="h-32 relative bg-gradient-to-br bg-theme-secondary"
                       style={{ background: course.thumbnailUrl ? 'none' : cover.gradient }}
                     >
-                      {course.thumbnailUrl && (
+                      {course.thumbnailUrl ? (
                         <img src={course.thumbnailUrl} alt={course.title} className="w-full h-full object-cover absolute inset-0" />
+                      ) : (
+                        <BookOpen className="absolute bottom-3 end-4 w-14 h-14 text-white/25" aria-hidden="true" />
                       )}
                       <div className="absolute inset-0 bg-theme-bg/20" />
                       {pct >= 100 ? (
@@ -345,8 +343,6 @@ export function StudentDashboard() {
               })}
             </div>
           )
-        ) : activeTab === 'files' ? (
-          <FilesTab hideHeader />
         ) : null}
       </div>
 
@@ -370,14 +366,16 @@ function StatCard({
   loading?: boolean;
 }) {
   return (
-    <div className="glass rounded-2xl p-5">
-      <div className={`w-10 h-10 rounded-xl ${bg} flex items-center justify-center ${color}`}>
+    <div className="glass rounded-2xl p-4 flex items-center gap-3">
+      <div className={`w-10 h-10 shrink-0 rounded-xl ${bg} flex items-center justify-center ${color}`}>
         {icon}
       </div>
-      <p className="text-2xl font-bold text-theme-text mt-3">
-        {loading ? <Skeleton className="h-7 w-16" /> : typeof value === 'number' ? value.toLocaleString() : value}
-      </p>
-      <p className="text-xs text-theme-muted uppercase tracking-wide mt-1">{label}</p>
+      <div className="min-w-0">
+        <p className="text-xl sm:text-2xl font-bold text-theme-text leading-tight">
+          {loading ? <Skeleton className="h-7 w-16" /> : typeof value === 'number' ? value.toLocaleString() : value}
+        </p>
+        <p className="text-[11px] sm:text-xs text-theme-muted uppercase tracking-wide truncate">{label}</p>
+      </div>
     </div>
   );
 }

@@ -18,6 +18,8 @@ import {
   Star,
   ChevronRight,
   MessageCircle,
+  Compass,
+  UserCircle2,
 } from 'lucide-react';
 import { Link, useRouter } from '../lib/router';
 import { useAuth } from '../lib/authContext';
@@ -37,6 +39,7 @@ interface NavItem {
 const NAV: Record<UserRole, NavItem[]> = {
   STUDENT: [
     { to: '/dashboard', label: 'nav.dashboard', icon: <LayoutGrid className="w-4 h-4" /> },
+    { to: '/catalog', label: 'nav.catalog', icon: <Compass className="w-4 h-4" /> },
     { to: '/files', label: 'nav.files', icon: <BookOpen className="w-4 h-4" /> },
     { to: '/leaderboard', label: 'nav.leaderboard', icon: <Trophy className="w-4 h-4" /> },
     { to: '/stats', label: 'nav.stats', icon: <BarChart3 className="w-4 h-4" /> },
@@ -61,11 +64,22 @@ const NAV: Record<UserRole, NavItem[]> = {
   ],
 };
 
-const ROLE_LABEL: Record<UserRole, string> = {
-  STUDENT: 'Student',
-  INSTRUCTOR: 'Instructor',
-  ADMIN: 'Admin',
-};
+// Home routes only match exactly — otherwise "Dashboard" (/instructor, /admin) would also light up
+// on every nested page such as /instructor/courses.
+const HOME_ROUTES = new Set(['/dashboard', '/instructor', '/admin']);
+function isNavActive(itemTo: string, path: string) {
+  if (HOME_ROUTES.has(itemTo)) return path === itemTo;
+  return path === itemTo || path.startsWith(itemTo + '/');
+}
+
+// Phone bottom bar for students (the most used destinations, one tap away).
+const STUDENT_TABS: NavItem[] = [
+  { to: '/dashboard', label: 'nav.home', icon: <LayoutGrid className="w-5 h-5" /> },
+  { to: '/catalog', label: 'nav.coursesShort', icon: <Compass className="w-5 h-5" /> },
+  { to: '/files', label: 'nav.files', icon: <BookOpen className="w-5 h-5" /> },
+  { to: '/stats', label: 'nav.stats', icon: <BarChart3 className="w-5 h-5" /> },
+  { to: '/profile', label: 'nav.account', icon: <UserCircle2 className="w-5 h-5" /> },
+];
 
 const ROLE_BADGE: Record<UserRole, string> = {
   STUDENT: 'bg-secondary-500/10 text-secondary-700 dark:text-secondary-300 border border-secondary-500/20',
@@ -111,7 +125,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <SidebarContent
           nav={nav}
           currentPath={path}
-          roleLabel={ROLE_LABEL[role]}
+          roleLabel={t(`roles.${role}`)}
           roleBadgeClass={ROLE_BADGE[role]}
           fullName={profile?.full_name ?? ''}
           email={profile?.email ?? ''}
@@ -120,6 +134,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           streak={profile?.streak_days ?? 0}
           onSignOut={signOut}
           onOpenAbout={() => setAboutOpen(true)}
+          showGamification={role === 'STUDENT'}
           t={t}
         />
       </aside>
@@ -163,7 +178,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               <SidebarContent
                 nav={nav}
                 currentPath={path}
-                roleLabel={ROLE_LABEL[role]}
+                roleLabel={t(`roles.${role}`)}
                 roleBadgeClass={ROLE_BADGE[role]}
                 fullName={profile?.full_name ?? ''}
                 email={profile?.email ?? ''}
@@ -173,6 +188,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 onSignOut={signOut}
                 onNavigate={() => setMobileOpen(false)}
                 onOpenAbout={() => setAboutOpen(true)}
+                showGamification={role === 'STUDENT'}
                 t={t}
               />
             </div>
@@ -187,8 +203,35 @@ export function AppShell({ children }: { children: ReactNode }) {
             <NotificationBell />
           </div>
         )}
-        <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">{children}</div>
+        <div className={`p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto ${showNotifications ? 'pb-24 lg:pb-8' : ''}`}>{children}</div>
       </main>
+
+      {/* Phone bottom navigation (students) */}
+      {showNotifications && (
+        <nav
+          aria-label={t('nav.more')}
+          className="lg:hidden fixed bottom-0 inset-x-0 z-30 border-t border-theme-border bg-theme-bg/95 backdrop-blur-xl pb-[env(safe-area-inset-bottom)]"
+        >
+          <ul className="grid grid-cols-5">
+            {STUDENT_TABS.map((item) => {
+              const active = isNavActive(item.to, path);
+              return (
+                <li key={item.to}>
+                  <Link
+                    to={item.to}
+                    className={`flex flex-col items-center gap-1 py-2.5 text-[11px] font-medium transition-colors ${
+                      active ? 'text-accent-600 dark:text-accent-300' : 'text-theme-muted hover:text-theme-text'
+                    }`}
+                  >
+                    {item.icon}
+                    <span className="truncate max-w-full px-1">{t(item.label)}</span>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
+      )}
     </div>
   );
 }
@@ -206,6 +249,7 @@ function SidebarContent({
   onSignOut,
   onNavigate,
   onOpenAbout,
+  showGamification = true,
   t,
 }: {
   nav: NavItem[];
@@ -220,6 +264,7 @@ function SidebarContent({
   onSignOut: () => void;
   onNavigate?: () => void;
   onOpenAbout?: () => void;
+  showGamification?: boolean;
   t: (key: string) => string;
 }) {
   return (
@@ -249,7 +294,7 @@ function SidebarContent({
       {/* Nav */}
       <nav className="px-3 flex-1 space-y-1">
         {nav.map((item) => {
-          const active = currentPath === item.to || currentPath.startsWith(item.to + '/');
+          const active = isNavActive(item.to, currentPath);
           return (
             <Link
               key={item.to}
@@ -269,38 +314,40 @@ function SidebarContent({
         })}
       </nav>
 
-      {/* XP / streak card */}
+      {/* XP / streak card (students only — gamification means nothing to staff) */}
+      {showGamification && (
       <div className="p-3">
         <div className="glass rounded-xl p-4 space-y-3">
           <div className="flex items-center gap-2">
             <span className={`badge ${roleBadgeClass}`}>
               <Shield className="w-3 h-3" />
-              {roleLabel === 'Student' ? (t('auth.educationLevel') === 'المستوى التعليمي' ? 'طالب' : 'Student') : roleLabel === 'Instructor' ? 'Instructor' : 'Admin'}
+              {roleLabel}
             </span>
           </div>
           <div className="grid grid-cols-2 gap-2">
             <div className="rounded-lg bg-theme-card p-2.5 shadow-sm border border-theme-border">
               <div className="flex items-center gap-1 text-amber-600 dark:text-amber-700 dark:text-amber-300">
                 <Star className="w-3 h-3 fill-current" />
-                <span className="text-[10px] uppercase tracking-wide">XP</span>
+                <span className="text-[10px] uppercase tracking-wide">{t('nav.xp')}</span>
               </div>
               <p className="text-lg font-bold text-theme-text mt-0.5">{xp.toLocaleString()}</p>
             </div>
             <div className="rounded-lg bg-theme-card p-2.5 shadow-sm border border-theme-border">
               <div className="flex items-center gap-1 text-orange-600 dark:text-orange-700 dark:text-orange-300">
                 <Flame className="w-3 h-3 fill-current" />
-                <span className="text-[10px] uppercase tracking-wide">Streak</span>
+                <span className="text-[10px] uppercase tracking-wide">{t('nav.streak')}</span>
               </div>
-              <p className="text-lg font-bold text-theme-text mt-0.5">{streak}<span className="text-xs text-theme-muted"> d</span></p>
+              <p className="text-lg font-bold text-theme-text mt-0.5">{streak}<span className="text-xs text-theme-muted"> {t('nav.daysShort')}</span></p>
             </div>
           </div>
         </div>
       </div>
+      )}
 
       {/* User */}
       <div className="p-3 border-t border-theme-border space-y-2">
-        <div className="flex items-center gap-3 px-2 py-2 group">
-          <Link to="/profile" onClick={onNavigate} className="flex-1 min-w-0 flex items-center gap-3 hover:opacity-80 transition-opacity">
+        <div className="px-2 py-1 group">
+          <Link to="/profile" onClick={onNavigate} className="min-w-0 flex items-center gap-3 rounded-xl p-1 -m-1 hover:bg-theme-card transition-colors">
             {profilePictureUrl ? (
               <img 
                 src={profilePictureUrl} 
@@ -318,17 +365,20 @@ function SidebarContent({
               <p className="text-xs text-theme-muted truncate">{email}</p>
             </div>
           </Link>
-          <LanguageToggle />
-          <ThemeToggle />
-          <button
-            type="button"
-            onClick={onSignOut}
-            className="p-2 rounded-lg text-theme-muted hover:text-rose-700 dark:text-rose-300 hover:bg-rose-500/10 transition-colors"
-            aria-label={t('nav.signOut')}
-            title={t('nav.signOut')}
-          >
-            <LogOut className="w-5 h-5" />
-          </button>
+          <div className="mt-2 flex items-center gap-1">
+            <LanguageToggle />
+            <ThemeToggle />
+            <button
+              type="button"
+              onClick={onSignOut}
+              className="ms-auto inline-flex items-center gap-1.5 px-2.5 py-2 rounded-lg text-sm text-theme-muted hover:text-rose-600 dark:hover:text-rose-300 hover:bg-rose-500/10 transition-colors"
+              aria-label={t('nav.signOut')}
+              title={t('nav.signOut')}
+            >
+              <LogOut className="w-4 h-4 rtl:rotate-180" />
+              <span>{t('nav.signOut')}</span>
+            </button>
+          </div>
         </div>
 
         {/* Developer Credit Button */}
