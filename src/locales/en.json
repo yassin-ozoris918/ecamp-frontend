@@ -564,6 +564,10 @@
     "contactSupport": "Contact Support"
   },
   "notifications": {
+    "sessionLabel": "Session: {{title}}",
+    "fileLabel": "File: {{title}}",
+    "sessionsCount_one": "{{count}} session",
+    "sessionsCount_other": "{{count}} sessions",
     "title": "Notifications",
     "open": "Open notifications",
     "unreadAria_one": "{{count}} unread notification",

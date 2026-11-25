@@ -559,6 +559,14 @@
     "contactSupport": "تواصل مع الدعم"
   },
   "notifications": {
+    "sessionLabel": "الجلسة: {{title}}",
+    "fileLabel": "الملف: {{title}}",
+    "sessionsCount_zero": "لا توجد جلسات",
+    "sessionsCount_one": "جلسة واحدة",
+    "sessionsCount_two": "جلستان",
+    "sessionsCount_few": "{{count}} جلسات",
+    "sessionsCount_many": "{{count}} جلسة",
+    "sessionsCount_other": "{{count}} جلسة",
     "title": "الإشعارات",
     "open": "فتح الإشعارات",
     "unreadAria_zero": "لا توجد إشعارات غير مقروءة",

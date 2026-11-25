@@ -9,7 +9,7 @@ export interface StudentNotification {
   courseId: string;
   lectureId: string;
   link: string;
-  params: { courseTitle?: string; lectureTitle?: string; itemTitle?: string; count?: number };
+  params: { courseTitle?: string; chapterTitle?: string | null; lectureTitle?: string; itemTitle?: string; count?: number };
   readAt: string | null;
   createdAt: string;
 }

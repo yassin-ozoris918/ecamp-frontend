@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState } from 'react';
-import { Bell, CheckCheck, FileText, Loader2, PlayCircle, Video } from 'lucide-react';
+import { Bell, CheckCheck, ChevronRight, FileText, FolderOpen, Loader2, PlayCircle, Video } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useRouter } from '../lib/router';
 import {
@@ -49,30 +49,47 @@ function NotificationText({ n }: { n: StudentNotification }) {
   const { t } = useTranslation();
   const p = {
     courseTitle: n.params?.courseTitle ?? '',
+    chapterTitle: n.params?.chapterTitle ?? '',
     lectureTitle: n.params?.lectureTitle ?? '',
     itemTitle: n.params?.itemTitle ?? '',
     count: Math.max(1, Number(n.params?.count) || 1),
   };
+
   let title: string;
-  let detail: string | null = null;
+  // The exact item (session / file), when the notification is about a single one.
+  let item: string | null = null;
   if (n.type === 'LECTURE_ADDED') {
     title = t('notifications.lectureAdded', p);
-    detail = p.lectureTitle;
+    item = p.count === 1 ? (p.itemTitle ? t('notifications.sessionLabel', { title: p.itemTitle }) : null) : t('notifications.sessionsCount', { count: p.count });
   } else if (n.type === 'SESSION_ADDED') {
     title = t('notifications.sessionAdded', p);
-    detail = p.count === 1 ? p.itemTitle : null;
+    item = p.count === 1 && p.itemTitle ? t('notifications.sessionLabel', { title: p.itemTitle }) : null;
   } else {
     title = t('notifications.materialAdded', p);
-    detail = p.count === 1 ? p.itemTitle : null;
+    item = p.count === 1 && p.itemTitle ? t('notifications.fileLabel', { title: p.itemTitle }) : null;
   }
+
   return (
     <>
       <p dir="auto" className={`text-sm leading-snug ${n.readAt ? 'text-theme-muted' : 'text-theme-text font-semibold'}`}>
         {title}
       </p>
-      {detail && (
+      {/* Where it is: chapter › lecture */}
+      {p.lectureTitle && (
+        <p className="mt-1 flex items-center gap-1 min-w-0 text-xs text-accent-700 dark:text-accent-300" title={[p.chapterTitle, p.lectureTitle].filter(Boolean).join(' › ')}>
+          <FolderOpen className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+          {p.chapterTitle && (
+            <>
+              <span dir="auto" className="truncate">{p.chapterTitle}</span>
+              <ChevronRight className="w-3 h-3 shrink-0 opacity-70 rtl:rotate-180" aria-hidden="true" />
+            </>
+          )}
+          <span dir="auto" className="truncate font-medium">{p.lectureTitle}</span>
+        </p>
+      )}
+      {item && (
         <p dir="auto" className="text-xs text-theme-muted truncate mt-0.5">
-          {detail}
+          {item}
         </p>
       )}
     </>
