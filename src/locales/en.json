@@ -51,7 +51,8 @@
       "COURSE": "Open with your course",
       "LECTURE": "Open with your lecture",
       "COURSE_FILES_CODE": "Open with your course files code",
-      "FILE_CODE": "Open with a code for this file"
+      "FILE_CODE": "Open with a code for this file",
+      "ADMIN_GRANT": "Opened for you by the platform"
     },
     "subtitle": "Notes, sheets and references from your courses, grouped by course and chapter.",
     "course": "Course",

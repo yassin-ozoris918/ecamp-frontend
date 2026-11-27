@@ -144,7 +144,8 @@ export function StudentDossier({ studentId, tab, onTabChange, onClose, onAccount
       await load(true);
       if (accountLevel) onAccountChanged?.();
     } catch (e: any) {
-      toast.error(e?.message || 'Action failed');
+      const msg = e?.response?.data?.message;
+      toast.error((Array.isArray(msg) ? msg[0] : msg) || e?.message || 'Action failed');
     }
   };
 
@@ -179,6 +180,17 @@ export function StudentDossier({ studentId, tab, onTabChange, onClose, onAccount
       grantCourse: async (course: any) => {
         const ok = await confirm('Give full course access', `Unlock every lecture of "${course.courseTitle}" for this student, with no expiry.`);
         if (ok) await run(() => client.post(`${base}/grant-course`, { courseId: course.courseId }), 'Course unlocked');
+      },
+      grantHandouts: async (course: any) => {
+        const ok = await confirm(
+          'Give handouts only',
+          `Open the files of "${course.courseTitle}" for this student, as if they redeemed a course-files code. Videos stay locked, and files of lectures sold separately stay locked. No expiry.`,
+        );
+        if (ok) await run(() => client.post(`${base}/grant-course-files`, { courseId: course.courseId }), 'Handouts unlocked');
+      },
+      removeHandouts: async (course: any) => {
+        const ok = await confirm('Remove handouts access', `The files of "${course.courseTitle}" will be locked again for this student. Files opened with their own single-file code stay open.`);
+        if (ok) await run(() => client.post(`${base}/remove-course-files`, { courseId: course.courseId }), 'Handouts access removed');
       },
       grantLecture: async (lec: any) => {
         const ok = await confirm('Unlock lecture', `Unlock "${lec.lectureTitle}" for this student, with no expiry.`);
@@ -387,6 +399,10 @@ export function StudentDossier({ studentId, tab, onTabChange, onClose, onAccount
         onClose={() => setGrantAccessOpen(false)}
         onGrant={async (type, id, days) => {
           setGrantAccessOpen(false);
+          if (type === 'COURSE_FILES') {
+            await run(() => client.post(`/admin/users/${studentId}/grant-course-files`, { courseId: id }), 'Handouts unlocked');
+            return;
+          }
           await run(
             () => client.post(`/admin/users/${studentId}/${type === 'COURSE' ? 'grant-course' : 'grant-lecture'}`, type === 'COURSE' ? { courseId: id, validityDays: days } : { lectureId: id, validityDays: days }),
             type === 'COURSE' ? 'Course unlocked' : 'Lecture unlocked',
@@ -751,6 +767,15 @@ function CoursesTab({
               course.hasDirectCourseAccess && !course.isExpired
                 ? { label: 'Remove full course access', icon: <XCircle className="w-4 h-4" />, danger: true, onClick: () => actions.removeCourse(course) }
                 : { label: course.isExpired ? 'Give full access again' : 'Give full course access', icon: <KeyRound className="w-4 h-4" />, onClick: () => actions.grantCourse(course), disabled: course.isFree, hint: 'Free course: everyone has access' },
+              course.hasHandoutsAccess
+                ? { label: 'Remove handouts access', icon: <XCircle className="w-4 h-4" />, danger: true, onClick: () => actions.removeHandouts(course) }
+                : {
+                    label: 'Give handouts only',
+                    icon: <FileText className="w-4 h-4" />,
+                    onClick: () => actions.grantHandouts(course),
+                    disabled: course.isFree || (course.hasDirectCourseAccess && !course.isExpired),
+                    hint: course.isFree ? 'Free course: everyone has access' : 'Full course access already includes the handouts',
+                  },
             ];
             return (
               <section key={course.courseId} id={`course-${course.courseId}`} className="rounded-2xl border border-theme-border overflow-hidden scroll-mt-4">
@@ -1183,6 +1208,7 @@ function AssessmentsTab({
 function AccessTab({ courses, codes, onGrant, onExtend, actions }: { courses: any[]; codes: any[]; onGrant: () => void; onExtend: (l: any) => void; actions: any }) {
   const ownLectures = courses.flatMap((c) => (c.lectures ?? []).filter((l: any) => l.hasLectureAccess).map((l: any) => ({ ...l, courseTitle: c.courseTitle })));
   const fullCourses = courses.filter((c) => c.hasDirectCourseAccess || c.isFree);
+  const handoutCourses = courses.filter((c) => c.hasHandoutsAccess);
   return (
     <div className="space-y-6">
       <Section
@@ -1190,7 +1216,7 @@ function AccessTab({ courses, codes, onGrant, onExtend, actions }: { courses: an
         icon={<KeyRound className="w-4 h-4" />}
         action={{ label: 'Give access', onClick: onGrant }}
       >
-        {fullCourses.length === 0 && ownLectures.length === 0 ? (
+        {fullCourses.length === 0 && ownLectures.length === 0 && handoutCourses.length === 0 ? (
           <Empty text="No access granted yet." />
         ) : (
           <div className="space-y-2">
@@ -1211,6 +1237,22 @@ function AccessTab({ courses, codes, onGrant, onExtend, actions }: { courses: an
                     Remove
                   </Button>
                 )}
+              </div>
+            ))}
+            {handoutCourses.map((c) => (
+              <div key={`h-${c.courseId}`} className="flex items-center gap-3 rounded-xl border border-theme-border bg-theme-card/50 p-3 text-sm">
+                <FileText className="w-4 h-4 text-theme-muted shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-theme-text truncate">{c.courseTitle}</p>
+                  <p className="text-xs text-theme-muted">
+                    Handouts only · {c.handoutsSource === 'ADMIN_GRANT' ? 'given by admin' : 'course-files code'}
+                    {c.handoutsSince ? ` · since ${formatShort(c.handoutsSince)}` : ''} · no expiry
+                  </p>
+                </div>
+                <Badge variant="info">Handouts</Badge>
+                <Button size="sm" variant="ghost" onClick={() => actions.removeHandouts(c)}>
+                  Remove
+                </Button>
               </div>
             ))}
             {ownLectures.map((l) => (
@@ -1627,7 +1669,7 @@ function ExtendAccessModal({ lecture, onClose, onSubmit }: { lecture: any | null
   );
 }
 
-function GrantAccessModal({ open, studentName, onClose, onGrant }: { open: boolean; studentName: string; onClose: () => void; onGrant: (type: 'COURSE' | 'LECTURE', id: string, days?: number) => void }) {
+function GrantAccessModal({ open, studentName, onClose, onGrant }: { open: boolean; studentName: string; onClose: () => void; onGrant: (type: 'COURSE' | 'COURSE_FILES' | 'LECTURE', id: string, days?: number) => void }) {
   const [search, setSearch] = useState('');
   const [days, setDays] = useState('');
   const [results, setResults] = useState<{ courses: any[]; lectures: any[] }>({ courses: [], lectures: [] });
@@ -1661,7 +1703,7 @@ function GrantAccessModal({ open, studentName, onClose, onGrant }: { open: boole
   const daysValid = validity === undefined || (Number.isInteger(validity) && validity > 0);
 
   return (
-    <Modal open={open} onClose={onClose} title="Give access" description={`Unlock a course or a single lecture for ${studentName}.`} size="lg">
+    <Modal open={open} onClose={onClose} title="Give access" description={`Unlock a course, only its handouts, or a single lecture for ${studentName}.`} size="lg">
       <div className="space-y-4">
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="flex-1">
@@ -1674,7 +1716,7 @@ function GrantAccessModal({ open, studentName, onClose, onGrant }: { open: boole
           </label>
         </div>
         {search.trim().length < 2 ? (
-          <p className="text-sm text-theme-muted text-center py-6">Type at least 2 letters. Leave days empty for no expiry.</p>
+          <p className="text-sm text-theme-muted text-center py-6">Type at least 2 letters. Leave days empty for no expiry. Handouts never expire, like a course-files code.</p>
         ) : loading ? (
           <Skeleton className="h-32" />
         ) : results.courses.length === 0 && results.lectures.length === 0 ? (
@@ -1685,6 +1727,9 @@ function GrantAccessModal({ open, studentName, onClose, onGrant }: { open: boole
               <li key={c.id} className="flex items-center gap-3 p-3">
                 <Badge variant="gold">Course</Badge>
                 <span className="flex-1 min-w-0 truncate text-sm text-theme-text">{c.title}</span>
+                <Button size="sm" variant="ghost" icon={<FileText className="w-3.5 h-3.5" />} onClick={() => onGrant('COURSE_FILES', c.id)} title="Only the course files, as if the student bought a course-files code">
+                  Handouts only
+                </Button>
                 <Button size="sm" variant="secondary" disabled={!daysValid} onClick={() => onGrant('COURSE', c.id, validity)}>
                   Unlock course
                 </Button>
@@ -1888,6 +1933,9 @@ function Table({ head, children }: { head: string[]; children: ReactNode }) {
 
 function CourseAccessBadge({ course }: { course: any }) {
   if (course.isFree) return <Badge variant="success">Free</Badge>;
-  if (course.hasDirectCourseAccess) return <Badge variant={course.isExpired ? 'error' : 'accent'}>{course.isExpired ? 'Full access expired' : 'Full access'}</Badge>;
+  if (course.hasDirectCourseAccess && !(course.isExpired && course.hasHandoutsAccess)) {
+    return <Badge variant={course.isExpired ? 'error' : 'accent'}>{course.isExpired ? 'Full access expired' : 'Full access'}</Badge>;
+  }
+  if (course.hasHandoutsAccess) return <Badge variant="info">Handouts only</Badge>;
   return <Badge>Per lecture</Badge>;
 }

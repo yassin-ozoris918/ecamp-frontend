@@ -1328,6 +1328,20 @@ function GrantAccessModal({
     } catch(e) { console.error(e); } finally { setBusy(false); }
   };
 
+  // Handouts only: the course files, as if the student redeemed a course-files code (no expiry).
+  const handleHandouts = async (id: string, remove: boolean) => {
+    if (!user) return;
+    if (remove && !confirm('Remove handouts access for this course?')) return;
+    setBusy(true);
+    try {
+      const res = await api.post(`/admin/users/${user.id}/${remove ? 'remove-course-files' : 'grant-course-files'}`, { courseId: id });
+      toast.success(res.data?.message || (remove ? 'Handouts access removed' : 'Handouts unlocked'));
+      onClose();
+    } catch (e: any) {
+      toast.error(e?.response?.data?.message || 'Action failed');
+    } finally { setBusy(false); }
+  };
+
   const handleRevoke = async (type: string, id: string) => {
     if (!user) return;
     if (!confirm('Are you sure you want to revoke access?')) return;
@@ -1343,7 +1357,7 @@ function GrantAccessModal({
   };
 
   return (
-    <Modal open={!!user} onClose={onClose} title="Direct Grant Access" description={user ? `Grant a course or lecture to ${user.full_name}.` : ''} size="lg">
+    <Modal open={!!user} onClose={onClose} title="Direct Grant Access" description={user ? `Grant a course, only its handouts, or a lecture to ${user.full_name}.` : ''} size="lg">
       <div className="space-y-4">
         <div className="flex flex-col sm:flex-row items-center gap-3">
           <div className="flex-1 w-full">
@@ -1367,7 +1381,9 @@ function GrantAccessModal({
                 </div>
                 <div className="flex items-center gap-2">
                   <button onClick={() => handleGrant('COURSE', c.id)} disabled={busy} className="shrink-0 btn-secondary text-xs px-3">Grant Access</button>
+                  <button onClick={() => handleHandouts(c.id, false)} disabled={busy} className="shrink-0 btn-secondary text-xs px-3" title="Only the course files, as if the student bought a course-files code">Handouts Only</button>
                   <button onClick={() => handleRevoke('COURSE', c.id)} disabled={busy} className="shrink-0 btn-danger text-xs px-3">Revoke Access</button>
+                  <button onClick={() => handleHandouts(c.id, true)} disabled={busy} className="shrink-0 btn-danger text-xs px-3">Revoke Handouts</button>
                 </div>
               </div>
             ))}
