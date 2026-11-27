@@ -146,9 +146,25 @@ export function generateDeviceFingerprint(): string {
 
   // Return cached identity immediately.
   // This also preserves existing students' Device IDs stored in the database.
-  const cached = localStorage.getItem(IDENTITY_KEY);
+  let cached: string | null = null;
+  try {
+    cached = localStorage.getItem(IDENTITY_KEY);
+  } catch {
+    /* storage blocked */
+  }
   if (cached) return cached;
 
+  const identity = computeLegacyFingerprint();
+  try {
+    localStorage.setItem(IDENTITY_KEY, identity);
+  } catch {
+    /* storage blocked */
+  }
+  return identity;
+}
+
+/** The old single-hash device id, computed fresh (used only to upgrade students bound before the new system). */
+export function computeLegacyFingerprint(): string {
   const signals: string[] = [];
 
   // 1. OS family — parsed from UA pattern, browser-agnostic result
@@ -180,9 +196,7 @@ export function generateDeviceFingerprint(): string {
   const gpu = normalizeGpuRenderer(getRawGpuRenderer());
   if (gpu) signals.push(gpu);
 
-  const identity = djb2(signals.join('||'));
-  localStorage.setItem(IDENTITY_KEY, identity);
-  return identity;
+  return djb2(signals.join('||'));
 }
 
 // ─── In-app browser detection ─────────────────────────────────────────────────
@@ -317,3 +331,184 @@ export function getClientDeviceDetails(): ClientDeviceDetails {
   };
 }
 
+
+
+// ─── Trusted device (current system) ──────────────────────────────────────────
+//
+// 1. Hardware details are sent as separate fields, so the server can recognise the same machine in
+//    another browser even when some details differ (external monitor, other graphics chip, Brave…).
+// 2. Each browser creates a private key that can't be exported (WebCrypto) and keeps it in IndexedDB.
+//    It signs a fresh challenge on sign-in and on login renewal, so copying a value to another device
+//    doesn't work.
+
+export interface DeviceSignals {
+  v: 1;
+  os: string;
+  platform: string;
+  mobile: boolean;
+  cores: number;
+  memory: number | null;
+  screen: string;
+  colorDepth: number;
+  touch: number;
+  tz: string;
+  gpu: string;
+  gpuVendor: string;
+  model: string | null;
+}
+
+export interface DevicePayload {
+  signals: DeviceSignals;
+  key: { jwk: JsonWebKey; proof: DeviceProof } | null;
+  keyError?: string;
+  legacyId: string | null;
+  legacyFresh: string | null;
+}
+
+export interface DeviceProof {
+  ts: number;
+  nonce: string;
+  sig: string;
+}
+
+function gpuVendorOf(gpu: string): string {
+  const g = gpu.toLowerCase();
+  if (/nvidia|geforce|quadro|rtx|gtx/.test(g)) return 'nvidia';
+  if (/amd|radeon|ati /.test(g)) return 'amd';
+  if (/intel|iris|uhd|hd graphics/.test(g)) return 'intel';
+  if (/apple|m1|m2|m3|m4/.test(g)) return 'apple';
+  if (/adreno|qualcomm/.test(g)) return 'qualcomm';
+  if (/mali|arm/.test(g)) return 'arm';
+  if (/powervr|img/.test(g)) return 'imagination';
+  return g ? 'other' : '';
+}
+
+/** Hardware details of this machine, as separate fields. */
+export async function collectDeviceSignals(): Promise<DeviceSignals> {
+  const uaData = (navigator as any).userAgentData;
+  let model: string | null = null;
+  try {
+    if (uaData?.getHighEntropyValues) {
+      const hv = await uaData.getHighEntropyValues(['model']);
+      model = (hv?.model || '').trim() || null;
+    }
+  } catch {
+    /* not available */
+  }
+  const gpu = normalizeGpuRenderer(getRawGpuRenderer());
+  const screenW = Math.max(screen.width, screen.height);
+  const screenH = Math.min(screen.width, screen.height);
+  const os = getOSType();
+  return {
+    v: 1,
+    os,
+    platform: getPlatformInfo(),
+    mobile: Boolean(uaData?.mobile) || /Mobi|iPhone|Android.+Mobile/i.test(navigator.userAgent),
+    cores: navigator.hardwareConcurrency ?? 0,
+    memory: typeof (navigator as any).deviceMemory === 'number' ? (navigator as any).deviceMemory : null,
+    screen: `${screenW}x${screenH}`,
+    colorDepth: screen.colorDepth ?? 24,
+    touch: navigator.maxTouchPoints ?? 0,
+    tz: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
+    gpu,
+    gpuVendor: gpuVendorOf(gpu),
+    model,
+  };
+}
+
+// ── Browser key, kept in IndexedDB (CryptoKey objects can be stored but the private key can't be read) ──
+
+const DB_NAME = 'ecamp-device';
+const STORE = 'keys';
+const KEY_ID = 'browser-key-v1';
+
+function openDb(): Promise<IDBDatabase> {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, 1);
+    req.onupgradeneeded = () => req.result.createObjectStore(STORE);
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+function idb<T>(mode: IDBTransactionMode, fn: (store: IDBObjectStore) => IDBRequest): Promise<T> {
+  return openDb().then(
+    (db) =>
+      new Promise<T>((resolve, reject) => {
+        const tx = db.transaction(STORE, mode);
+        const req = fn(tx.objectStore(STORE));
+        req.onsuccess = () => resolve(req.result as T);
+        req.onerror = () => reject(req.error);
+        tx.oncomplete = () => db.close();
+      }),
+  );
+}
+
+interface StoredKey {
+  privateKey: CryptoKey;
+  publicJwk: JsonWebKey;
+}
+
+let keyPromise: Promise<StoredKey> | null = null;
+
+/** This browser's key pair, created once. The private key is non-exportable. */
+export function getBrowserKey(): Promise<StoredKey> {
+  if (!keyPromise) {
+    keyPromise = (async () => {
+      if (!window.crypto?.subtle || typeof indexedDB === 'undefined') throw new Error('unsupported');
+      const existing = await idb<StoredKey | undefined>('readonly', (st) => st.get(KEY_ID)).catch(() => undefined);
+      if (existing?.privateKey && existing.publicJwk) return existing;
+      const pair = await crypto.subtle.generateKey({ name: 'ECDSA', namedCurve: 'P-256' }, false, ['sign', 'verify']);
+      const publicJwk = await crypto.subtle.exportKey('jwk', pair.publicKey);
+      const stored: StoredKey = { privateKey: pair.privateKey, publicJwk: { kty: publicJwk.kty, crv: publicJwk.crv, x: publicJwk.x, y: publicJwk.y } };
+      await idb('readwrite', (st) => st.put(stored, KEY_ID));
+      return stored;
+    })().catch((e) => {
+      keyPromise = null;
+      throw e;
+    });
+  }
+  return keyPromise;
+}
+
+function b64url(bytes: ArrayBuffer | Uint8Array): string {
+  const arr = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
+  let bin = '';
+  arr.forEach((b) => (bin += String.fromCharCode(b)));
+  return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+/** Signs "purpose|ts|nonce" with this browser's private key. */
+export async function signDeviceProof(purpose: 'login' | 'register' | 'refresh'): Promise<{ jwk: JsonWebKey; proof: DeviceProof }> {
+  const key = await getBrowserKey();
+  const ts = Date.now();
+  const nonce = b64url(crypto.getRandomValues(new Uint8Array(16)));
+  const data = new TextEncoder().encode(`${purpose}|${ts}|${nonce}`);
+  const sig = await crypto.subtle.sign({ name: 'ECDSA', hash: 'SHA-256' }, key.privateKey, data);
+  return { jwk: key.publicJwk, proof: { ts, nonce, sig: b64url(sig) } };
+}
+
+/** Everything the server needs to recognise this device, for sign-in, registration and login renewal. */
+export async function buildDevicePayload(purpose: 'login' | 'register' | 'refresh'): Promise<DevicePayload> {
+  const signals = await collectDeviceSignals();
+  let key: DevicePayload['key'] = null;
+  let keyError: string | undefined;
+  try {
+    key = await signDeviceProof(purpose);
+  } catch (e: any) {
+    keyError = String(e?.message || e).slice(0, 100);
+  }
+  let legacyId: string | null = null;
+  try {
+    legacyId = localStorage.getItem('ecamp_device_identity');
+  } catch {
+    /* storage blocked */
+  }
+  let legacyFresh: string | null = null;
+  try {
+    legacyFresh = computeLegacyFingerprint();
+  } catch {
+    /* ignore */
+  }
+  return { signals, key, keyError, legacyId, legacyFresh };
+}

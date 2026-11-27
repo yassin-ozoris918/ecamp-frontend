@@ -12,6 +12,7 @@ export interface AdminAttention {
   activeStudents7d: number;
   unusedCodes: number;
   draftCourses: number;
+  deviceRequests: number;
 }
 
 /** Shared by the sidebar badges and the dashboard; refreshes every minute while the tab is open. */

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { api } from './api';
 import type { Profile, UserRole } from './types';
 import i18n from './i18n';
+import { buildDevicePayload } from './device';
 
 export interface DeviceInfo {
   deviceType?: string;
@@ -14,11 +15,23 @@ export interface DeviceInfo {
   date?: string;
 }
 
+/** The device a blocked student should use instead (from the server). */
+export interface RegisteredDevice {
+  label?: string | null;
+  kind?: string;
+  since?: string | null;
+}
+
 export type AuthError = {
   message: string;
   code?: string;
-  registeredDevice?: DeviceInfo;
+  registeredDevice?: DeviceInfo & RegisteredDevice;
   currentDevice?: DeviceInfo;
+  /** Blocked by the trusted-device check: "other_device" or "needs_approval". */
+  deviceReason?: string;
+  /** Short-lived token to request a device change from the blocked screen. */
+  changeToken?: string;
+  pendingRequest?: boolean;
 };
 
 interface RegisterInput {
@@ -86,7 +99,8 @@ export function useAuth() {
     async (input: RegisterInput): Promise<{ error: AuthError | null; status?: string }> => {
       setError(null);
       try {
-        const res = await api.post('/auth/register', input);
+        const device = await buildDevicePayload('register').catch(() => undefined);
+        const res = await api.post('/auth/register', { ...input, device });
         const data = res.data;
 
         if (data.status === 'PENDING_APPROVAL') {
@@ -126,7 +140,8 @@ export function useAuth() {
     ): Promise<{ error: AuthError | null }> => {
       setError(null);
       try {
-        const { data } = await api.post('/auth/login', { email, password, deviceId });
+        const device = await buildDevicePayload('login').catch(() => undefined);
+        const { data } = await api.post('/auth/login', { email, password, deviceId, device });
 
         localStorage.setItem('access_token', data.accessToken);
         localStorage.setItem('refresh_token', data.refreshToken);
@@ -150,6 +165,9 @@ export function useAuth() {
             code,
             registeredDevice: errorData?.registeredDevice,
             currentDevice: errorData?.currentDevice,
+            deviceReason: errorData?.reason,
+            changeToken: errorData?.changeToken,
+            pendingRequest: errorData?.pendingRequest,
           },
         };
       }

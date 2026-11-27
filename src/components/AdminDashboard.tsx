@@ -227,6 +227,7 @@ export function AdminDashboard() {
     { key: 'profileRequests', to: '/admin/profile-requests', icon: <UserCog className="w-5 h-5" />, tone: 'accent' },
     { key: 'quizAnswersToReview', to: '/admin/quiz-review', icon: <FileCheck2 className="w-5 h-5" />, tone: 'warning' },
     { key: 'examsToGrade', to: '/instructor/grading', icon: <ClipboardList className="w-5 h-5" />, tone: 'warning' },
+    { key: 'deviceRequests', to: '/admin/device-logs', icon: <Smartphone className="w-5 h-5" />, tone: 'accent' },
     { key: 'failedNotifications', to: '/admin/audit-logs', icon: <BellRing className="w-5 h-5" />, tone: 'error' },
   ] as const;
   const pendingTodo = todo.filter((item) => (attention?.[item.key] ?? 0) > 0);

@@ -1,5 +1,5 @@
 import axios, { type AxiosRequestConfig } from 'axios';
-import { generateDeviceFingerprint } from './device';
+import { buildDevicePayload, generateDeviceFingerprint } from './device';
 
 const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
@@ -23,6 +23,32 @@ instance.interceptors.request.use(
 );
 
 let isRedirectingForMaintenance = false;
+
+/** One renewal at a time: parallel 401s wait for the same refresh instead of racing (which logged students out). */
+let refreshing: Promise<string> | null = null;
+
+function renewLogin(): Promise<string> {
+  if (!refreshing) {
+    refreshing = (async () => {
+      const refreshToken = localStorage.getItem('refresh_token');
+      if (!refreshToken) throw new Error('No refresh token available');
+      // The renewal is signed by this browser's device key (students), so a copied token can't be renewed elsewhere.
+      const device = await buildDevicePayload('refresh').catch(() => undefined);
+      const res = await axios.post(
+        `${BASE_URL}/auth/refresh`,
+        { device },
+        { headers: { Authorization: `Bearer ${refreshToken}`, 'x-device-id': generateDeviceFingerprint() } },
+      );
+      localStorage.setItem('access_token', res.data.accessToken);
+      localStorage.setItem('refresh_token', res.data.refreshToken);
+      if (res.data.user) localStorage.setItem('user', JSON.stringify(res.data.user));
+      return res.data.accessToken as string;
+    })().finally(() => {
+      refreshing = null;
+    });
+  }
+  return refreshing;
+}
 
 instance.interceptors.response.use(
   (response) => response,
@@ -50,29 +76,15 @@ instance.interceptors.response.use(
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
       try {
-        const refreshToken = localStorage.getItem('refresh_token');
-        
-        if (!refreshToken) throw new Error('No refresh token available');
-        
-        const res = await axios.post(
-          `${BASE_URL}/auth/refresh`,
-          {},
-          {
-            headers: {
-              Authorization: `Bearer ${refreshToken}`
-            }
-          }
-        );
-
-        localStorage.setItem('access_token', res.data.accessToken);
-        localStorage.setItem('refresh_token', res.data.refreshToken);
-        if (res.data.user) {
-          localStorage.setItem('user', JSON.stringify(res.data.user));
-        }
-
-        originalRequest.headers.Authorization = `Bearer ${res.data.accessToken}`;
+        const accessToken = await renewLogin();
+        originalRequest.headers.Authorization = `Bearer ${accessToken}`;
         return instance(originalRequest);
-      } catch (err) {
+      } catch (err: any) {
+        // Tell the sign-in screen why (device removed or changed by an admin).
+        const code = err?.response?.data?.code;
+        if (code === 'DEVICE_REVOKED' || code === 'UNRECOGNIZED_DEVICE' || code === 'DEVICE_PROOF_FAILED') {
+          sessionStorage.setItem('device_signout', code);
+        }
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');
         localStorage.removeItem('user');

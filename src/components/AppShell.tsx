@@ -94,7 +94,7 @@ const ADMIN_GROUPS: NavGroup[] = [
   {
     label: 'adminNav.system',
     items: [
-      { to: '/admin/device-logs', label: 'adminNav.deviceLogs', icon: <Smartphone className="w-4 h-4" /> },
+      { to: '/admin/device-logs', label: 'adminNav.devices', icon: <Smartphone className="w-4 h-4" />, badge: 'deviceRequests' },
       { to: '/admin/audit-logs', label: 'adminNav.audit', icon: <Database className="w-4 h-4" /> },
       { to: '/contact', label: 'nav.contact', icon: <MessageCircle className="w-4 h-4" /> },
     ],

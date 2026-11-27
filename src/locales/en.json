@@ -159,7 +159,10 @@
       "missingFaculty": "Please select a faculty.",
       "missingOtherFaculty": "Please enter the faculty name.",
       "missingDepartment": "Please select a department.",
-      "missingProgram": "Please select a program."
+      "missingProgram": "Please select a program.",
+      "deviceRevoked": "This device was removed from your account. Please sign in again.",
+      "deviceProofFailed": "This browser couldn't be verified. Please sign in again.",
+      "deviceChangeExpired": "This request expired. Sign in again from this device to send a new one."
     },
     "program": "Program",
     "facultyName": "Faculty Name",
@@ -472,7 +475,9 @@
         "examsToGrade_one": "exam to grade",
         "examsToGrade_other": "exams to grade",
         "failedNotifications_one": "notification failed to send",
-        "failedNotifications_other": "notifications failed to send"
+        "failedNotifications_other": "notifications failed to send",
+        "deviceRequests_one": "device change request",
+        "deviceRequests_other": "device change requests"
       },
       "kpi": {
         "students": "Students",
@@ -770,7 +775,8 @@
     "risk": "Academic risk",
     "deviceLogs": "Device logs",
     "audit": "Audit & exports",
-    "supportBot": "Support assistant"
+    "supportBot": "Support assistant",
+    "devices": "Devices"
   },
   "palette": {
     "title": "Search",
@@ -887,5 +893,164 @@
       "order": "Order",
       "active": "Active"
     }
+  },
+  "player": {
+    "playingElsewhereTitle": "Playing on another browser",
+    "playingElsewhereDesc": "Your account started a video somewhere else, so it stopped here. Only one device can play at a time.",
+    "watchHere": "Watch here instead"
+  },
+  "deviceBlock": {
+    "title": "This account is linked to another device",
+    "useDevice": "Please sign in from your {{device}}.",
+    "linkedOn": "Linked on {{date}}.",
+    "tooManyBrowsers": "This device already has 3 browsers linked to your account. Use one of them, or ask to switch.",
+    "request": "Request a device change",
+    "notePlaceholder": "Optional: why you're changing device (e.g. new phone)",
+    "send": "Send request",
+    "sending": "Sending…",
+    "sendFailed": "Couldn't send. Please try again.",
+    "expired": "This request expired. Sign in again to send a new one.",
+    "pending": "Your request to use this device is waiting for approval.",
+    "pendingHint": "Once it's approved, just sign in again from this device.",
+    "whatsapp": "WhatsApp support",
+    "whatsappText": "Hello, I'd like to use a new device for my E.Camp account.\nEmail: {{email}}\nLinked device: {{device}}",
+    "signedOut": "You were signed out because your device was changed or removed by the E.Camp team.",
+    "kind": {
+      "windows": "Windows computer",
+      "mac": "Mac",
+      "linux": "Linux computer",
+      "iphone": "iPhone",
+      "ipad": "iPad",
+      "android_phone": "Android phone",
+      "android_tablet": "Android tablet",
+      "unknown": "device",
+      "registered": "registered device"
+    }
+  },
+  "devicesAdmin": {
+    "title": "Devices",
+    "subtitle": "Each student can use one device. Other browsers on the same device are allowed automatically; a different device needs your approval. Accounts that look shared are flagged here.",
+    "stats": {
+      "requests": "Change requests",
+      "blocked24h": "Blocked sign-ins (24 h)",
+      "newBrowsers7d": "New browsers (7 days)",
+      "highRisk": "High-risk accounts",
+      "linked": "Students with a device"
+    },
+    "tabs": {
+      "requests": "Change requests",
+      "suspicious": "Possible sharing",
+      "activity": "Sign-in activity"
+    },
+    "status": {
+      "PENDING": "Waiting",
+      "APPROVED": "Approved",
+      "REJECTED": "Rejected"
+    },
+    "noRequests": "No device change requests waiting.",
+    "nothingHere": "Nothing here yet.",
+    "currentDevice": "Current device",
+    "requestedDevice": "Wants to use",
+    "noDevice": "No device linked",
+    "lastUsed": "last used {{when}}",
+    "linkedSince": "linked {{when}}",
+    "approve": "Approve",
+    "reject": "Reject",
+    "approveTitle": "Approve device change",
+    "approveMsg": "{{name}} will use {{device}} from now on. The old device stops working immediately.",
+    "rejectTitle": "Reject request",
+    "rejectMsg": "{{name}} keeps the current device.",
+    "approved": "Device change approved",
+    "rejected": "Request rejected",
+    "noSuspicious": "No accounts look shared",
+    "noSuspiciousDesc": "Accounts show up here when there are several signs of sharing in the last 30 days.",
+    "suspiciousHint": "Signs of account sharing in the last 30 days. A high score isn't proof: check the student's activity before acting.",
+    "openStudent": "Open student",
+    "searchPlaceholder": "Name, email, phone, IP or device…",
+    "filter": {
+      "all": "All",
+      "problems": "Blocked"
+    },
+    "noActivity": "No sign-ins recorded yet.",
+    "col": {
+      "when": "When",
+      "student": "Student",
+      "result": "Result",
+      "device": "Device",
+      "why": "Why"
+    },
+    "match": "{{pct}}% hardware match",
+    "loadMore": "Load more",
+    "outcome": {
+      "BOUND": "First device",
+      "ALLOWED": "Allowed",
+      "NEW_BROWSER": "New browser",
+      "LEGACY": "Old app",
+      "BLOCKED": "Blocked",
+      "NEEDS_APPROVAL": "Needs approval"
+    },
+    "risk": {
+      "high": "High risk",
+      "medium": "Medium risk",
+      "low": "Low risk"
+    },
+    "reason": {
+      "known_browser": "Known browser on the trusted device",
+      "known_browser_hardware_changed": "Known browser (its hardware details changed)",
+      "hardware_match": "New browser on the same device",
+      "probable_match": "New browser, very likely the same device",
+      "legacy_match": "New browser, matched by the old device ID",
+      "first_device": "First device linked to the account",
+      "upgraded": "Upgraded from the old device check",
+      "no_key": "Browser without a device key (old browser)",
+      "legacy_id": "Old app version (old device check)",
+      "legacy_first_device": "Old app version, first device",
+      "legacy_mismatch": "Different device (old device check)",
+      "different_hardware": "A different device",
+      "different_os": "A different device (other operating system)",
+      "different_model": "A different phone model",
+      "different_form_factor": "A different device (phone vs. tablet)",
+      "too_many_browsers": "Already 3 browsers on this device",
+      "bad_proof": "Device proof was forged or broken",
+      "no_key_doubtful": "No device key and the hardware didn't clearly match"
+    },
+    "riskReason": {
+      "blocked_attempts_one": "1 sign-in attempt from another device",
+      "blocked_attempts_other": "{{count}} sign-in attempts from other devices",
+      "several_devices_other": "Tried from {{count}} different devices",
+      "several_devices_one": "Tried from another device",
+      "many_new_browsers_one": "1 new browser added",
+      "many_new_browsers_other": "{{count}} new browsers added",
+      "bad_proof_one": "1 forged or broken device proof",
+      "bad_proof_other": "{{count}} forged or broken device proofs",
+      "browser_shared_with_other_account": "The same browser is used by another account",
+      "same_hardware_as_other_account": "Identical hardware to another account (could just be the same model)",
+      "playback_taken_over_one": "Video playback moved to another browser once",
+      "playback_taken_over_other": "Video playback moved to another browser {{count}} times",
+      "device_changes_one": "Device changed once in 90 days",
+      "device_changes_other": "Device changed {{count}} times in 90 days"
+    },
+    "ended": {
+      "change_approved": "replaced",
+      "admin_reset": "reset by admin"
+    },
+    "pendingForStudent": "Waiting device change request",
+    "trustedDevice": "Trusted device",
+    "browsersOn": "Browsers on this device: {{count}} of {{max}}",
+    "removedOn": "removed {{when}}",
+    "remove": "Remove",
+    "removeBrowserTitle": "Remove browser",
+    "removeBrowserMsg": "{{browser}} will be signed out and must be added again.",
+    "browserRemoved": "Browser removed",
+    "noBrowsers": "No browsers yet.",
+    "oldLinkOnly": "Linked with the old device check. It upgrades automatically at the next sign-in.",
+    "noDeviceYet": "No device linked yet. The next sign-in links one.",
+    "resetDevice": "Reset device",
+    "signOutEverywhere": "Sign out everywhere",
+    "sharingCheck": "Sharing check (30 days)",
+    "noSigns": "No signs of account sharing.",
+    "pastDevices": "Previous devices",
+    "recentSignIns": "Recent sign-ins",
+    "olderHistory": "Older device history ({{count}})"
   }
 }

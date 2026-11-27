@@ -658,6 +658,10 @@ function VideoPlayer({
 
   const [isCompleting, setIsCompleting] = useState(false);
 
+  // One device streaming at a time: when this account starts playing in another browser, stop here.
+  const [playingElsewhere, setPlayingElsewhere] = useState(false);
+  const [streamReloadKey, setStreamReloadKey] = useState(0);
+
   const speeds = [0.5, 0.75, 1, 1.25, 1.5, 2];
 
   const cycleSpeed = (e: React.MouseEvent) => {
@@ -719,6 +723,7 @@ function VideoPlayer({
     setAmaanError(null);
     setStreamData(null);
     
+    setPlayingElsewhere(false);
     api.get(`/lectures/sessions/${item.id}/stream-token`)
       .then((res) => {
         if (!mounted) return;
@@ -754,7 +759,32 @@ function VideoPlayer({
       mounted = false;
       playerInstanceRef.current = null;
     };
-  }, [item.id, hasVideo]);
+  }, [item.id, hasVideo, streamReloadKey]);
+
+  // Check in every 30 s while a video is loaded; stop if the account is now playing elsewhere.
+  useEffect(() => {
+    if (!streamData || playingElsewhere) return;
+    let stopped = false;
+    const check = async () => {
+      const psId = playbackSessionIdRef.current;
+      if (!psId || psId === 'instructor-bypass') return;
+      try {
+        const { data } = await api.post(`/lectures/sessions/${item.id}/heartbeat`, { playbackSessionId: psId });
+        if (!stopped && data && data.active === false) {
+          videoRef.current?.pause();
+          setStreamData(null);
+          setPlayingElsewhere(true);
+        }
+      } catch {
+        /* network hiccup: try again next time */
+      }
+    };
+    const timer = setInterval(check, 30_000);
+    return () => {
+      stopped = true;
+      clearInterval(timer);
+    };
+  }, [streamData, playingElsewhere, item.id]);
 
   useEffect(() => {
     if (streamData?.provider !== 'AMAAN' || !iframeRef.current) return;
@@ -1014,7 +1044,20 @@ function VideoPlayer({
         className="relative bg-black aspect-video flex items-center justify-center overflow-hidden group select-none"
       >
         <FloatingWatermark />
-        {loadingToken ? (
+        {playingElsewhere ? (
+          <div className="text-center p-6 max-w-sm">
+            <AlertCircle className="w-8 h-8 mx-auto text-warning-400 mb-3" />
+            <p className="text-white font-semibold">{t('player.playingElsewhereTitle')}</p>
+            <p className="text-white/70 text-sm mt-1">{t('player.playingElsewhereDesc')}</p>
+            <button
+              type="button"
+              onClick={() => setStreamReloadKey((k) => k + 1)}
+              className="mt-4 inline-flex items-center gap-2 rounded-xl bg-accent-500 hover:bg-accent-400 text-white px-4 py-2 text-sm font-semibold"
+            >
+              {t('player.watchHere')}
+            </button>
+          </div>
+        ) : loadingToken ? (
           <Spinner className="w-8 h-8 text-accent-400" />
         ) : amaanError ? (
           <div className="text-center p-4">

@@ -41,6 +41,8 @@ import { Badge, Button, Modal, ProgressBar, Skeleton } from '../ui';
 import { ActionsMenu, type ActionItem } from '../common/ActionsMenu';
 import { ConfirmDialog, useConfirm } from '../../hooks/useConfirm';
 import { QuizAttemptReviewModal } from '../QuizAttemptReviewModal';
+import { useTranslation } from 'react-i18next';
+import { DeviceLabel, OutcomeBadge, RiskBadge, useReasonText } from '../admin/AdminDevices';
 import { formatAcademicProfile, formatDateTime, formatDuration, formatRelative, formatShort } from './format';
 
 export type DossierTab = 'overview' | 'courses' | 'assessments' | 'access' | 'devices' | 'timeline';
@@ -233,8 +235,6 @@ export function StudentDossier({ studentId, tab, onTabChange, onClose, onAccount
       label: 'Reset device lock',
       icon: <Smartphone className="w-4 h-4" />,
       onClick: actions.resetDevice,
-      disabled: !data.deviceId,
-      hint: 'No device is bound yet',
     },
     {
       label: 'Copy link to this student',
@@ -358,7 +358,7 @@ export function StudentDossier({ studentId, tab, onTabChange, onClose, onAccount
           <AccessTab courses={courses} codes={codes} onGrant={() => setGrantAccessOpen(true)} onExtend={setExtendFor} actions={actions} />
         )}
         {tab === 'devices' && (
-          <DevicesTab data={data} history={deviceHistory} onReset={actions.resetDevice} onSignOut={actions.forceLogout} />
+          <DevicesTab studentId={studentId} data={data} history={deviceHistory} onReset={actions.resetDevice} onSignOut={actions.forceLogout} />
         )}
         {tab === 'timeline' && <TimelineTab timeline={timeline} />}
       </div>
@@ -1279,63 +1279,172 @@ function AccessTab({ courses, codes, onGrant, onExtend, actions }: { courses: an
 // Device & sign-in
 // ═══════════════════════════════════════════════════════════════════════════
 
-function DevicesTab({ data, history, onReset, onSignOut }: { data: any; history: any[]; onReset: () => void; onSignOut: () => void }) {
+function DevicesTab({ studentId, data, history, onReset, onSignOut }: { studentId: string; data: any; history: any[]; onReset: () => void; onSignOut: () => void }) {
+  const { t, i18n } = useTranslation();
+  const reasons = useReasonText();
+  const { confirm, state: confirmState, handleConfirm, handleCancel } = useConfirm();
+  const [info, setInfo] = useState<any | null>(null);
+  const [loading, setLoading] = useState(true);
+  const load = useCallback(async () => {
+    try {
+      setInfo(await client.get<any>(`/admin/devices/students/${studentId}`));
+    } catch {
+      setInfo(null);
+    }
+    setLoading(false);
+  }, [studentId]);
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const fmt = (d?: string | null) => (d ? new Date(d).toLocaleString(i18n.language?.startsWith('ar') ? 'ar-EG' : 'en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—');
+  const run = async (fn: () => Promise<unknown>, ok: string) => {
+    try {
+      await fn();
+      toast.success(ok);
+      await load();
+    } catch (e: any) {
+      toast.error(e?.message || 'Action failed');
+    }
+  };
+  const removeBrowser = async (b: any) => {
+    if (await confirm(t('devicesAdmin.removeBrowserTitle'), t('devicesAdmin.removeBrowserMsg', { browser: b.name })))
+      run(() => client.post(`/admin/devices/browsers/${b.id}/revoke`), t('devicesAdmin.browserRemoved'));
+  };
+  const review = async (r: any, action: 'approve' | 'reject') => {
+    const ok = await confirm(
+      action === 'approve' ? t('devicesAdmin.approveTitle') : t('devicesAdmin.rejectTitle'),
+      action === 'approve' ? t('devicesAdmin.approveMsg', { name: data.fullName, device: r.label }) : t('devicesAdmin.rejectMsg', { name: data.fullName }),
+    );
+    if (ok) run(() => client.post(`/admin/devices/requests/${r.id}/${action}`, {}), action === 'approve' ? t('devicesAdmin.approved') : t('devicesAdmin.rejected'));
+  };
+
+  if (loading) return <Skeleton className="h-48" />;
+  const active = info?.activeDevice;
+  const pending = info?.requests?.find((r: any) => r.status === 'PENDING');
+  const liveBrowsers = (active?.browsers ?? []).filter((b: any) => !b.revokedAt);
+
   return (
     <div className="space-y-6">
+      {/* Pending change request */}
+      {pending && (
+        <div className="rounded-2xl border border-warning-500/30 bg-warning-500/5 p-4 space-y-3">
+          <p className="font-semibold text-theme-text">{t('devicesAdmin.pendingForStudent')}</p>
+          <DeviceLabel kind={pending.kind} label={pending.label} sub={[pending.browserName, fmt(pending.createdAt)].filter(Boolean).join(' · ')} />
+          {pending.note && <p className="text-sm text-theme-muted" dir="auto">“{pending.note}”</p>}
+          <div className="flex gap-2">
+            <Button size="sm" onClick={() => review(pending, 'approve')}>{t('devicesAdmin.approve')}</Button>
+            <Button size="sm" variant="ghost" onClick={() => review(pending, 'reject')}>{t('devicesAdmin.reject')}</Button>
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-        <div className="rounded-2xl border border-theme-border bg-theme-card/50 p-4 flex items-start gap-3">
-          <span className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${data.deviceId ? 'bg-secondary-500/10 text-secondary-600 dark:text-secondary-300' : 'bg-warning-500/10 text-warning-700 dark:text-warning-300'}`}>
-            <Smartphone className="w-5 h-5" />
-          </span>
-          <div className="flex-1 min-w-0">
-            <p className="font-semibold text-theme-text">{data.deviceId ? 'Bound to one device' : 'No device bound yet'}</p>
-            <p className="text-xs text-theme-muted mt-0.5 break-all">
-              {data.deviceId ? `Fingerprint ${data.deviceId}` : 'The next device the student signs in from will be bound.'}
-            </p>
-            <Button size="sm" variant="secondary" className="mt-3" icon={<RotateCcw className="w-3.5 h-3.5" />} disabled={!data.deviceId} onClick={onReset}>
-              Reset device lock
+        {/* Trusted device */}
+        <div className="rounded-2xl border border-theme-border bg-theme-card/50 p-4 space-y-3">
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-xs font-semibold uppercase tracking-wide text-theme-muted">{t('devicesAdmin.trustedDevice')}</p>
+            {info?.risk && info.risk.level !== 'low' && <RiskBadge level={info.risk.level} score={info.risk.score} />}
+          </div>
+          {active ? (
+            <>
+              <DeviceLabel kind={active.kind} label={active.label} sub={`${t('devicesAdmin.linkedSince', { when: fmt(active.createdAt) })} · ${t('devicesAdmin.lastUsed', { when: fmt(active.lastSeenAt) })}`} />
+              <div>
+                <p className="text-[11px] text-theme-muted mb-1.5">{t('devicesAdmin.browsersOn', { count: liveBrowsers.length, max: info.maxBrowsers })}</p>
+                <ul className="space-y-1.5">
+                  {active.browsers.map((b: any) => (
+                    <li key={b.id} className={`flex items-center gap-2 rounded-xl bg-theme-bg/40 px-3 py-2 text-sm ${b.revokedAt ? 'opacity-50' : ''}`}>
+                      <span className="flex-1 min-w-0">
+                        <span className="text-theme-text">{b.name}</span>
+                        <span className="block text-[11px] text-theme-muted truncate">
+                          {b.revokedAt ? t('devicesAdmin.removedOn', { when: fmt(b.revokedAt) }) : `${t('devicesAdmin.lastUsed', { when: fmt(b.lastSeenAt) })}${b.lastIp ? ` · ${b.lastIp}` : ''}`}
+                        </span>
+                      </span>
+                      {!b.revokedAt && (
+                        <Button size="sm" variant="ghost" onClick={() => removeBrowser(b)}>
+                          {t('devicesAdmin.remove')}
+                        </Button>
+                      )}
+                    </li>
+                  ))}
+                  {active.browsers.length === 0 && <li className="text-xs text-theme-muted">{t('devicesAdmin.noBrowsers')}</li>}
+                </ul>
+              </div>
+            </>
+          ) : (
+            <p className="text-sm text-theme-muted">{data.deviceId ? t('devicesAdmin.oldLinkOnly') : t('devicesAdmin.noDeviceYet')}</p>
+          )}
+          <div className="flex flex-wrap gap-2 pt-1">
+            <Button size="sm" variant="secondary" icon={<RotateCcw className="w-3.5 h-3.5" />} onClick={async () => { await onReset(); await load(); }}>
+              {t('devicesAdmin.resetDevice')}
+            </Button>
+            <Button size="sm" variant="ghost" icon={<LogOut className="w-3.5 h-3.5" />} onClick={onSignOut}>
+              {t('devicesAdmin.signOutEverywhere')}
             </Button>
           </div>
         </div>
-        <div className="rounded-2xl border border-theme-border bg-theme-card/50 p-4 flex items-start gap-3">
-          <span className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-accent-500/10 text-accent-700 dark:text-accent-300">
-            <LogOut className="w-5 h-5" />
-          </span>
-          <div className="flex-1 min-w-0">
-            <p className="font-semibold text-theme-text">Last sign-in {data.lastLoginAt ? formatRelative(data.lastLoginAt) : 'never'}</p>
-            <p className="text-xs text-theme-muted mt-0.5">{formatDateTime(data.lastLoginAt)}</p>
-            <Button size="sm" variant="secondary" className="mt-3" icon={<LogOut className="w-3.5 h-3.5" />} onClick={onSignOut}>
-              Sign out everywhere
-            </Button>
-          </div>
+
+        {/* Risk */}
+        <div className="rounded-2xl border border-theme-border bg-theme-card/50 p-4 space-y-2">
+          <p className="text-xs font-semibold uppercase tracking-wide text-theme-muted">{t('devicesAdmin.sharingCheck')}</p>
+          {info?.risk?.reasons?.length ? (
+            <ul className="space-y-1">
+              {info.risk.reasons.map((r: any, i: number) => (
+                <li key={i} className="text-sm text-theme-text">• {reasons.risk(r)}</li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-sm text-secondary-700 dark:text-secondary-300">{t('devicesAdmin.noSigns')}</p>
+          )}
+          {info?.pastDevices?.length > 0 && (
+            <div className="pt-2">
+              <p className="text-[11px] text-theme-muted mb-1">{t('devicesAdmin.pastDevices')}</p>
+              <ul className="space-y-1">
+                {info.pastDevices.map((d: any) => (
+                  <li key={d.id} className="text-xs text-theme-muted">
+                    {d.label} · {fmt(d.createdAt)} → {fmt(d.endedAt)} ({t(`devicesAdmin.ended.${d.endReason}`, d.endReason ?? '')})
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       </div>
 
-      <Section title={`Device history (${history.length})`} icon={<History className="w-4 h-4" />}>
-        {history.length === 0 ? (
-          <Empty text="No device events recorded yet." />
+      <Section title={t('devicesAdmin.recentSignIns')} icon={<History className="w-4 h-4" />}>
+        {!info?.attempts?.length ? (
+          <Empty text={t('devicesAdmin.noActivity')} />
         ) : (
-          <Table head={['Event', 'Device', 'IP address', 'Browser', 'When']}>
-            {history.map((dh: any) => (
-              <tr key={dh.id} className="hover:bg-theme-card/40">
-                <td className="p-2.5">
-                  <Badge variant={dh.action === 'RESET' ? 'warning' : dh.action === 'REGISTERED' ? 'success' : 'default'}>{String(dh.action).toLowerCase()}</Badge>
-                </td>
-                <td className="p-2.5 font-mono text-[11px] text-theme-text max-w-[10rem] truncate" title={dh.deviceFingerprint}>
-                  {dh.deviceFingerprint}
-                </td>
-                <td className="p-2.5 text-theme-muted">{dh.ipAddress || '—'}</td>
-                <td className="p-2.5 text-theme-muted max-w-xs truncate" title={dh.browser}>
-                  {dh.browser || '—'}
-                </td>
-                <td className="p-2.5 text-theme-muted whitespace-nowrap" title={formatDateTime(dh.createdAt)}>
-                  {formatShort(dh.createdAt)}
-                </td>
+          <Table head={[t('devicesAdmin.col.when'), t('devicesAdmin.col.result'), t('devicesAdmin.col.device'), t('devicesAdmin.col.why')]}>
+            {info.attempts.map((a: any) => (
+              <tr key={a.id} className="hover:bg-theme-card/40 align-top">
+                <td className="p-2.5 text-theme-muted whitespace-nowrap">{fmt(a.createdAt)}</td>
+                <td className="p-2.5"><OutcomeBadge outcome={a.outcome} /></td>
+                <td className="p-2.5"><DeviceLabel kind={a.kind} label={a.label} sub={[a.browserName, a.ipAddress].filter(Boolean).join(' · ')} /></td>
+                <td className="p-2.5 text-theme-muted">{reasons.attempt(a.reason)}</td>
               </tr>
             ))}
           </Table>
         )}
       </Section>
+
+      {history.length > 0 && (
+        <Section title={t('devicesAdmin.olderHistory', { count: history.length })} icon={<History className="w-4 h-4" />}>
+          <Table head={['Event', 'IP address', 'Browser', 'When']}>
+            {history.map((dh: any) => (
+              <tr key={dh.id} className="hover:bg-theme-card/40">
+                <td className="p-2.5">
+                  <Badge variant={dh.action === 'RESET' ? 'warning' : dh.action === 'REGISTERED' ? 'success' : 'default'}>{String(dh.action).toLowerCase()}</Badge>
+                </td>
+                <td className="p-2.5 text-theme-muted">{dh.ipAddress || '—'}</td>
+                <td className="p-2.5 text-theme-muted max-w-xs truncate" title={dh.browser}>{dh.browser || '—'}</td>
+                <td className="p-2.5 text-theme-muted whitespace-nowrap">{fmt(dh.createdAt)}</td>
+              </tr>
+            ))}
+          </Table>
+        </Section>
+      )}
+      <ConfirmDialog open={confirmState.open} title={confirmState.title} message={confirmState.message} onConfirm={handleConfirm} onCancel={handleCancel} />
     </div>
   );
 }
