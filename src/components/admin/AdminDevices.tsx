@@ -2,7 +2,7 @@ import { useState } from 'react';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { AlertTriangle, ArrowRight, Check, ExternalLink, Inbox, Laptop, Search, ShieldAlert, Smartphone, Tablet, X } from 'lucide-react';
+import { AlertTriangle, ArrowRight, Check, ExternalLink, Fingerprint, Inbox, Laptop, Search, ShieldAlert, Smartphone, Tablet, X } from 'lucide-react';
 import { api } from '../../lib/api';
 import { Link } from '../../lib/router';
 import { Badge, Button, EmptyState, Skeleton } from '../ui';
@@ -79,7 +79,7 @@ function when(d: string, lang: string) {
 /** Admin › System › Devices: change requests, accounts that look shared, and every sign-in decision. */
 export function AdminDevices() {
   const { t } = useTranslation();
-  const [tab, setTab] = useState<'requests' | 'suspicious' | 'activity'>('requests');
+  const [tab, setTab] = useState<'requests' | 'suspicious' | 'activity' | 'watermark'>('requests');
   const overview = useQuery({ queryKey: ['devices', 'overview'], queryFn: async () => (await api.get('/admin/devices/overview')).data });
   const o = overview.data;
 
@@ -118,6 +118,7 @@ export function AdminDevices() {
             ['requests', t('devicesAdmin.tabs.requests'), o?.pendingRequests],
             ['suspicious', t('devicesAdmin.tabs.suspicious'), (o?.highRisk ?? 0) + (o?.mediumRisk ?? 0)],
             ['activity', t('devicesAdmin.tabs.activity'), undefined],
+            ['watermark', t('devicesAdmin.tabs.watermark'), undefined],
           ] as const
         ).map(([id, label, count]) => (
           <button
@@ -137,6 +138,7 @@ export function AdminDevices() {
       {tab === 'requests' && <Requests />}
       {tab === 'suspicious' && <Suspicious />}
       {tab === 'activity' && <Activity />}
+      {tab === 'watermark' && <WatermarkLookup />}
     </div>
   );
 }
@@ -244,6 +246,100 @@ function Requests() {
         </ul>
       )}
       <ConfirmDialog open={state.open} title={state.title} message={state.message} onConfirm={handleConfirm} onCancel={handleCancel} />
+    </div>
+  );
+}
+
+/** Paste the code seen on a leaked screenshot or recording to find whose account it was. */
+function WatermarkLookup() {
+  const { t, i18n } = useTranslation();
+  const reasons = useReasonText();
+  const [code, setCode] = useState('');
+  const [submitted, setSubmitted] = useState('');
+  const clean = code.replace(/[^0-9a-f]/gi, '').toUpperCase();
+  const q = useQuery({
+    queryKey: ['devices', 'watermark', submitted],
+    enabled: submitted.length === 8,
+    queryFn: async () => (await api.get(`/admin/devices/watermark/${submitted}`)).data as any[],
+  });
+
+  return (
+    <div className="space-y-4 max-w-3xl">
+      <div className="rounded-2xl border border-theme-border bg-theme-card/50 p-4 space-y-3">
+        <p className="text-sm text-theme-muted flex items-start gap-2">
+          <Fingerprint className="w-4 h-4 mt-0.5 shrink-0 text-accent-600 dark:text-accent-300" />
+          {t('devicesAdmin.watermark.hint')}
+        </p>
+        <form
+          className="flex gap-2"
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (clean.length === 8) setSubmitted(clean);
+          }}
+        >
+          <input
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+            placeholder="4F9A2C1B"
+            dir="ltr"
+            maxLength={12}
+            className="input flex-1 font-mono tracking-widest uppercase"
+            aria-label={t('devicesAdmin.watermark.label')}
+          />
+          <Button type="submit" disabled={clean.length !== 8} icon={<Search className="w-4 h-4" />}>
+            {t('devicesAdmin.watermark.find')}
+          </Button>
+        </form>
+        <p className="text-[11px] text-theme-muted">{t('devicesAdmin.watermark.faintTip')}</p>
+      </div>
+
+      {submitted && (q.isLoading ? (
+        <Skeleton className="h-28" />
+      ) : q.isError ? (
+        <p className="text-sm text-error-600">{errMsg(q.error)}</p>
+      ) : !q.data?.length ? (
+        <EmptyState icon={<Fingerprint className="w-8 h-8" />} title={t('devicesAdmin.watermark.none')} description={t('devicesAdmin.watermark.noneDesc')} />
+      ) : (
+        <ul className="space-y-2">
+          {q.data.map((s) => (
+            <li key={s.id} className="rounded-2xl border border-theme-border bg-theme-card/50 p-4 flex flex-col sm:flex-row sm:items-start gap-3">
+              <div className="flex-1 min-w-0 space-y-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-semibold text-theme-text">{s.fullName}</span>
+                  {s.risk?.level !== 'low' && <RiskBadge level={s.risk.level} score={s.risk.score} />}
+                  {!s.isActive && <Badge variant="warning">{t('devicesAdmin.watermark.inactive')}</Badge>}
+                </div>
+                <p className="text-xs text-theme-muted" dir="ltr">
+                  {[s.email, s.phoneNumber].filter(Boolean).join(' · ')}
+                </p>
+                {s.risk?.reasons?.length > 0 && (
+                  <ul className="pt-1 space-y-0.5">
+                    {s.risk.reasons.map((r: RiskReason, i: number) => (
+                      <li key={i} className="text-sm text-theme-muted">• {reasons.risk(r)}</li>
+                    ))}
+                  </ul>
+                )}
+                {s.tampers?.length > 0 && (
+                  <div className="pt-2">
+                    <p className="text-[11px] font-semibold text-theme-muted">{t('devicesAdmin.watermark.tamperedVideos')}</p>
+                    <ul className="space-y-0.5">
+                      {s.tampers.map((tp: any, i: number) => (
+                        <li key={i} className="text-xs text-theme-muted">
+                          {tp.video ?? '—'} · {tp.at ? when(tp.at, i18n.language) : ''}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+              <Link to={`/admin/student-360/${s.id}`} className="btn-secondary !py-2 text-sm shrink-0">
+                <ExternalLink className="w-4 h-4" />
+                {t('devicesAdmin.openStudent')}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      ))}
     </div>
   );
 }

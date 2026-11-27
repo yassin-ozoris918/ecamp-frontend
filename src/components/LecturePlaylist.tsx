@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { api } from '../lib/api';
 import { useAuth } from '../lib/authContext';
+import { mountWatermark, viewerCode, type TamperKind } from '../lib/watermark';
 import { SecureFileViewer } from './SecureFileViewer';
 import { Link, useRouter } from '../lib/router';
 import type {
@@ -550,69 +551,23 @@ function CountdownPill({ ms, warningHours, warningMinutes }: { ms: number, warni
 }
 
 /**
- * Wrapper that holds the tamper-key so React truly remounts FloatingWatermarkInner
- * when tampering is detected (deleting/hiding the element via DevTools).
+ * Mounts the protected watermark into the player box (see lib/watermark.ts) for as long as it is on screen.
+ * `onTamper` is read through a ref so the layer isn't rebuilt on every render.
  */
-function FloatingWatermark() {
-  const [tamperKey, setTamperKey] = useState(0);
-
-  useEffect(() => {
-    const checkTamper = setInterval(() => {
-      const el = document.getElementById('floating-watermark');
-      if (!el || !document.body.contains(el)) {
-        setTamperKey(k => k + 1);
-        return;
-      }
-      const style = window.getComputedStyle(el);
-      if (
-        style.display === 'none' ||
-        style.visibility === 'hidden' ||
-        parseFloat(style.opacity) < 0.05
-      ) {
-        setTamperKey(k => k + 1);
-      }
-    }, 800);
-    return () => clearInterval(checkTamper);
-  }, []);
-
-  // The key on FloatingWatermarkInner forces React to fully unmount+remount it.
-  return <FloatingWatermarkInner key={tamperKey} />;
-}
-
-function FloatingWatermarkInner() {
+function useVideoWatermark(containerRef: React.RefObject<HTMLDivElement>, onTamper: (kind: TamperKind) => void) {
   const { profile } = useAuth();
-  const [pos, setPos] = useState({ top: 20, left: 20 });
+  const onTamperRef = useRef(onTamper);
+  onTamperRef.current = onTamper;
+  const userId = profile?.id;
 
   useEffect(() => {
-    setPos({
-      top: Math.random() * 70 + 10,
-      left: Math.random() * 60 + 10,
-    });
-    const interval = setInterval(() => {
-      setPos({
-        top: Math.random() * 70 + 10,
-        left: Math.random() * 60 + 10,
-      });
-    }, 4000);
-    return () => clearInterval(interval);
-  }, []);
-
-  if (!profile?.email) return null;
-
-  return (
-    <div
-      id="floating-watermark"
-      className="absolute text-white/70 text-xl sm:text-2xl md:text-3xl font-extrabold pointer-events-none select-none z-[99999] whitespace-nowrap"
-      style={{
-        top: `${pos.top}%`,
-        left: `${pos.left}%`,
-        transition: 'top 4s linear, left 4s linear',
-        textShadow: '2px 2px 6px rgba(0,0,0,0.95), -2px -2px 6px rgba(0,0,0,0.95), 0 0 10px rgba(0,0,0,0.9)'
-      }}
-    >
-      {profile.email}
-    </div>
-  );
+    const el = containerRef.current;
+    if (!el || !userId) return;
+    const now = new Date();
+    const pad = (n: number) => String(n).padStart(2, '0');
+    const stamp = `${pad(now.getDate())}/${pad(now.getMonth() + 1)}/${now.getFullYear()} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
+    return mountWatermark(el, { code: viewerCode(userId), stamp, onTamper: (k) => onTamperRef.current(k) });
+  }, [containerRef, userId]);
 }
 
 type StreamTokenResponse =
@@ -661,6 +616,28 @@ function VideoPlayer({
   // One device streaming at a time: when this account starts playing in another browser, stop here.
   const [playingElsewhere, setPlayingElsewhere] = useState(false);
   const [streamReloadKey, setStreamReloadKey] = useState(0);
+
+  // Watermark protection: if someone hides or removes it, stop the video and tell the admins (once per video).
+  const [protectionStopped, setProtectionStopped] = useState(false);
+  const tamperReportedRef = useRef(false);
+  useVideoWatermark(containerRef, (kind) => {
+    try {
+      videoRef.current?.pause();
+    } catch {
+      /* not a native video */
+    }
+    try {
+      cfPlayerRef.current?.pause?.();
+    } catch {
+      /* player not ready */
+    }
+    setStreamData(null);
+    setProtectionStopped(true);
+    if (!tamperReportedRef.current) {
+      tamperReportedRef.current = true;
+      api.post(`/lectures/sessions/${item.id}/protection-event`, { playbackSessionId: playbackSessionIdRef.current, kind }).catch(() => {});
+    }
+  });
 
   const speeds = [0.5, 0.75, 1, 1.25, 1.5, 2];
 
@@ -726,7 +703,7 @@ function VideoPlayer({
     setPlayingElsewhere(false);
     api.get(`/lectures/sessions/${item.id}/stream-token`)
       .then((res) => {
-        if (!mounted) return;
+        if (!mounted || tamperReportedRef.current) return;
         const data = res.data;
         // Reset view tracking for this new stream session
         accumulatedPlaySecondsRef.current = 0;
@@ -1043,8 +1020,20 @@ function VideoPlayer({
         onDoubleClick={toggleFullscreen}
         className="relative bg-black aspect-video flex items-center justify-center overflow-hidden group select-none"
       >
-        <FloatingWatermark />
-        {playingElsewhere ? (
+        {protectionStopped ? (
+          <div className="text-center p-6 max-w-sm">
+            <AlertCircle className="w-8 h-8 mx-auto text-warning-400 mb-3" />
+            <p className="text-white font-semibold">{t('player.protectionTitle')}</p>
+            <p className="text-white/70 text-sm mt-1">{t('player.protectionDesc')}</p>
+            <button
+              type="button"
+              onClick={() => window.location.reload()}
+              className="mt-4 inline-flex items-center gap-2 rounded-xl bg-accent-500 hover:bg-accent-400 text-white px-4 py-2 text-sm font-semibold"
+            >
+              {t('player.reload')}
+            </button>
+          </div>
+        ) : playingElsewhere ? (
           <div className="text-center p-6 max-w-sm">
             <AlertCircle className="w-8 h-8 mx-auto text-warning-400 mb-3" />
             <p className="text-white font-semibold">{t('player.playingElsewhereTitle')}</p>
@@ -1132,7 +1121,7 @@ function VideoPlayer({
             <button 
               onClick={(e) => { e.stopPropagation(); toggleFullscreen(); }}
               className="p-2.5 bg-black/60 hover:bg-black/90 text-white rounded-xl shadow-lg flex items-center gap-2 text-xs font-semibold"
-              title="Toggle Fullscreen (Watermarked)"
+              title="Toggle Fullscreen"
             >
               {isFullscreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
               <span>{isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}</span>

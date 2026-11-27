@@ -897,7 +897,10 @@
   "player": {
     "playingElsewhereTitle": "Playing on another browser",
     "playingElsewhereDesc": "Your account started a video somewhere else, so it stopped here. Only one device can play at a time.",
-    "watchHere": "Watch here instead"
+    "watchHere": "Watch here instead",
+    "protectionTitle": "Video stopped",
+    "protectionDesc": "The video's protection layer was changed, so playback stopped. Reload the page to keep watching.",
+    "reload": "Reload page"
   },
   "deviceBlock": {
     "title": "This account is linked to another device",
@@ -940,7 +943,8 @@
     "tabs": {
       "requests": "Change requests",
       "suspicious": "Possible sharing",
-      "activity": "Sign-in activity"
+      "activity": "Sign-in activity",
+      "watermark": "Find a leak"
     },
     "status": {
       "PENDING": "Waiting",
@@ -1028,7 +1032,9 @@
       "playback_taken_over_one": "Video playback moved to another browser once",
       "playback_taken_over_other": "Video playback moved to another browser {{count}} times",
       "device_changes_one": "Device changed once in 90 days",
-      "device_changes_other": "Device changed {{count}} times in 90 days"
+      "device_changes_other": "Device changed {{count}} times in 90 days",
+      "watermark_tampered_one": "Tried to hide the video watermark once",
+      "watermark_tampered_other": "Tried to hide the video watermark in {{count}} videos"
     },
     "ended": {
       "change_approved": "replaced",
@@ -1051,6 +1057,16 @@
     "noSigns": "No signs of account sharing.",
     "pastDevices": "Previous devices",
     "recentSignIns": "Recent sign-ins",
-    "olderHistory": "Older device history ({{count}})"
+    "olderHistory": "Older device history ({{count}})",
+    "watermark": {
+      "hint": "Every video shows a small 8-character code that belongs to the student watching. Type the code from a leaked screenshot or recording to see whose account it came from.",
+      "label": "Watermark code",
+      "find": "Find",
+      "faintTip": "Code cropped out? The whole video also carries a very faint repeated copy of the code with the date and time. Open a screenshot in any photo editor and push the contrast (or levels) up hard to read it.",
+      "none": "No account has this code",
+      "noneDesc": "Check the letters and numbers again: 0–9 and A–F only.",
+      "inactive": "Deactivated",
+      "tamperedVideos": "Videos where the watermark was tampered with"
+    }
   }
 }
