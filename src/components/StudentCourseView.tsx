@@ -23,6 +23,7 @@ import type { Course, Chapter, Lecture, CourseExamItem, CourseAccessSummary } fr
 import { Badge, Spinner } from './ui';
 import { Modal } from './Modal';
 import { useConfirm, ConfirmDialog } from '../hooks/useConfirm';
+import { codeErrorLine } from '../lib/codeErrors';
 import { useTranslation } from 'react-i18next';
 
 export function StudentCourseView({ courseId }: { courseId: string }) {
@@ -99,7 +100,7 @@ export function StudentCourseView({ courseId }: { courseId: string }) {
       // Reload the syllabus to unlock the content!
       await loadData();
     } catch (err: unknown) {
-      setRedeemError((err as any)?.response?.data?.message || t('courseView.failedRedeem'));
+      setRedeemError(codeErrorLine(t, err));
     } finally {
       setRedeemBusy(false);
     }

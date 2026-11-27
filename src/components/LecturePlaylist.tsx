@@ -22,6 +22,7 @@ import {
 import { api } from '../lib/api';
 import { useAuth } from '../lib/authContext';
 import { mountWatermark, viewerCode, type TamperKind } from '../lib/watermark';
+import { codeErrorLine } from '../lib/codeErrors';
 import { SecureFileViewer } from './SecureFileViewer';
 import { Link, useRouter } from '../lib/router';
 import type {
@@ -229,7 +230,7 @@ export function LecturePlaylist({ lectureId }: { lectureId: string }) {
       setCode('');
       await loadData();
     } catch (e: unknown) {
-      setError((e as any)?.response?.data?.message || 'Invalid or expired code.');
+      setError(codeErrorLine(t, e));
     }
     setCodeBusy(false);
   }

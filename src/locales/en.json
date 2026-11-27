@@ -28,16 +28,16 @@
   },
   "files": {
     "title": "Files",
-    "search": "Search files...",
-    "allCourses": "All Courses",
+    "search": "Search by file, lecture or chapter…",
+    "allCourses": "All courses",
     "myFiles": "MY FILES",
     "lockedFiles": "LOCKED FILES",
-    "unlocked": "Unlocked",
+    "unlocked": "Open",
     "locked": "Locked",
-    "open": "Open File",
-    "enterCode": "Enter Access Code",
+    "open": "Open",
+    "enterCode": "Enter code",
     "unlock": "Unlock File",
-    "noFilesFound": "No Files Found",
+    "noFilesFound": "No files match",
     "noLockedFiles": "No Locked Files",
     "noUnlockedFiles": "No Unlocked Files",
     "accessGranted": "Access Granted",
@@ -45,13 +45,54 @@
     "codeAlreadyUsed": "Code Already Used",
     "accessDenied": "Access Denied",
     "fileNotAvailable": "File Not Available",
-    "redeemSuccess": "Code redeemed successfully.",
+    "redeemSuccess": "Code accepted.",
     "unlockedVia": "Unlocked with: {{source}}",
     "source": {
-      "COURSE": "full-course access",
-      "LECTURE": "lecture access",
-      "COURSE_FILES_CODE": "course materials code",
-      "FILE_CODE": "single-file code"
+      "COURSE": "Open with your course",
+      "LECTURE": "Open with your lecture",
+      "COURSE_FILES_CODE": "Open with your course files code",
+      "FILE_CODE": "Open with a code for this file"
+    },
+    "subtitle": "Notes, sheets and references from your courses, grouped by course and chapter.",
+    "course": "Course",
+    "status": "Status",
+    "filter": {
+      "ALL": "All",
+      "UNLOCKED": "Open",
+      "LOCKED": "Locked"
+    },
+    "view": "View",
+    "download": "Download",
+    "unlockThis": "Unlock",
+    "unlockAllHere": "Unlock with a code",
+    "openOf": "{{open}} of {{total}} open",
+    "otherFiles": "Other files",
+    "soldWithLecture": "Sold with the lecture",
+    "soldWithLectureHint": "These files open with this lecture's own code, or with a code for one file. A code for all of the course's files doesn't open them.",
+    "rowHint": "Type the code you have for this file. A code for all of this course's files also works: we'll ask before using it.",
+    "rowHintLocked": "This file opens with a code for this file only, or with this lecture's code.",
+    "noFilesYet": "No files yet",
+    "noFilesYetDesc": "Files from your courses will appear here as soon as your teachers add them.",
+    "noMatchDesc": "Try another word, or clear the course and status filters.",
+    "loadFailed": "Couldn't load your files. Check your connection and try again.",
+    "openFailed": "Couldn't open this file. Try again.",
+    "signInFirst": "Please sign in to see your files.",
+    "codePanel": {
+      "title": "Have a code?",
+      "desc": "Choose the course, then type your code. It works for a code that opens one file and for a code that opens all of the course's files. We'll work out which one you have.",
+      "course": "Course",
+      "chooseCourse": "Choose the course…",
+      "codeLabel": "Activation code",
+      "unlock": "Unlock",
+      "hint": "Capital or small letters, spaces and dashes don't matter. Got a code for one lecture? Enter it on that lecture's page."
+    },
+    "type": {
+      "PDF": "PDF",
+      "SHEET": "Sheet",
+      "HOMEWORK": "Homework",
+      "ASSIGNMENT": "Assignment",
+      "REFERENCE": "Reference",
+      "OTHER": "File"
     }
   },
   "auth": {
@@ -1067,6 +1108,116 @@
       "noneDesc": "Check the letters and numbers again: 0–9 and A–F only.",
       "inactive": "Deactivated",
       "tamperedVideos": "Videos where the watermark was tampered with"
+    }
+  },
+  "codes": {
+    "locale": "en-GB",
+    "level": {
+      "HIGH_SCHOOL": "high school",
+      "UNIVERSITY": "university"
+    },
+    "kind": {
+      "FILE": "one file",
+      "COURSE_FILES": "all of a course's files",
+      "LECTURE": "a lecture",
+      "COURSE": "a full course"
+    },
+    "formatLabel": "A code looks like this:",
+    "noLockedFiles": "All files in this course are already open, so you don't need this code here. Keep it.",
+    "whatsappText": "Hi E.Camp support, I have a problem with an activation code: {{code}}",
+    "success": {
+      "FILE": "Done! “{{title}}” is now open.",
+      "COURSE_FILES": "Done! All the files of {{title}} are now open.",
+      "LECTURE": "Done! The lecture “{{title}}” is unlocked, and its files are open too.",
+      "COURSE": "Done! You now have the full course {{title}}, including its files."
+    },
+    "actions": {
+      "CONFIRM_COURSE_FILES": "Yes, open all files",
+      "CONFIRM_LECTURE": "Yes, unlock the lecture",
+      "CONFIRM_COURSE": "Yes, unlock the whole course",
+      "keepCode": "No, keep my code",
+      "cancel": "Cancel",
+      "unlockPicked": "Open this file",
+      "openCourse": "Go to the course",
+      "support": "Contact support on WhatsApp"
+    },
+    "errors": {
+      "CODE_NOT_FOUND": {
+        "title": "We couldn't find this code",
+        "body": "Check every character and try again. Codes use the numbers 0–9 and the letters A–F only, so the letter O is always the number 0."
+      },
+      "CODE_ALREADY_USED": {
+        "title": "This code has already been used",
+        "body": "Each code works only once, and this one was used on another account. If you just bought it and never used it, contact support with the code."
+      },
+      "CODE_ALREADY_USED_BY_YOU": {
+        "title": "You already used this code",
+        "body": "You used it on “{{usedOn}}” on {{date}}. Each code works only once, so you need a new code to open more.",
+        "bodyNoTarget": "You used it on {{date}}. Each code works only once, so you need a new code to open more."
+      },
+      "CODE_WRONG_LEVEL": {
+        "title": "This code is for {{codeLevel}} students",
+        "body": "Your account is set to {{yourLevel}}. Ask for a {{yourLevel}} code, or contact support if your account is set wrong."
+      },
+      "CODE_WRONG_TYPE": {
+        "title": "This code isn't for this place",
+        "body": "It's a code for {{codeKind}}, but you're unlocking {{expectedKind}} here. Enter it in the right place, or use a code made for this."
+      },
+      "TARGET_NOT_FOUND": {
+        "title": "This item isn't available anymore",
+        "body": "Refresh the page. Your code wasn't used."
+      },
+      "NOT_ELIGIBLE": {
+        "title": "This course isn't in your study plan",
+        "body": "Your account's grade or study track doesn't match {{courseTitle}}. Your code wasn't used. Contact support if this looks wrong."
+      },
+      "ALREADY_HAVE_ACCESS": {
+        "title": "You already have this",
+        "body": "{{title}} is already open for you, so your code wasn't used. Keep it for something else."
+      },
+      "COURSE_CODE_MATERIALS_ONLY": {
+        "title": "This is a full-course code",
+        "body": "{{courseTitle}} only sells files, so it needs a files code. Your code wasn't used."
+      },
+      "PICK_COURSE": {
+        "title": "Choose the course first",
+        "body": "Choose the course whose files you want to open, then press Unlock."
+      },
+      "LECTURE_CODE_USE_LECTURE_PAGE": {
+        "title": "This is a lecture code",
+        "body": "Lecture codes go on the lecture's own page: open the course, choose the lecture you bought, and enter the code there. Unlocking the lecture opens its files too. Your code wasn't used."
+      },
+      "FILE_CODE_PICK_FILE": {
+        "title": "This code opens one file",
+        "body": "Choose which file in {{courseTitle}} you want to open with it."
+      },
+      "CONFIRM_COURSE_FILES": {
+        "title": "This code opens all the files of {{courseTitle}}",
+        "body": "It's not a code for one file. Using it will open {{opens}} files in this course.",
+        "staysLocked_one": "1 file sold with its lecture will stay locked.",
+        "staysLocked_other": "{{count}} files sold with their lectures will stay locked.",
+        "thisFileStaysLocked": "The file you chose is one of them."
+      },
+      "CONFIRM_LECTURE": {
+        "title": "This is a lecture code",
+        "body": "Use it to unlock the lecture “{{lectureTitle}}”? That opens its videos and its files, this one included."
+      },
+      "CONFIRM_COURSE": {
+        "title": "This is a full-course code",
+        "body": "Use it to unlock the whole course {{courseTitle}}? That opens its lectures and its files."
+      },
+      "TOO_MANY": {
+        "title": "Too many tries",
+        "body": "Wait a minute, then try again."
+      },
+      "NETWORK": {
+        "title": "No connection",
+        "body": "Check your internet and try again. Your code wasn't used."
+      },
+      "UNKNOWN": {
+        "title": "Something went wrong",
+        "body": "Try again in a moment. If it keeps happening, contact support."
+      }
     }
   }
 }
